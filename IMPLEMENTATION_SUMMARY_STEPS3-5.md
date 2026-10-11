@@ -7,7 +7,7 @@
 
 ---
 
-## Step 3: Homepage Search Implementation ✓ COMPLETE
+## Step 3: Homepage Search Implementation ✓ CODE COMPLETE
 
 ### What Was Implemented
 
@@ -126,7 +126,7 @@
 
 ---
 
-## Step 4: Responsive Product Layout ✓ COMPLETE
+## Step 4: Responsive Product Layout ✓ CODE COMPLETE
 
 ### Product Detail Page Enhancements
 
@@ -173,11 +173,11 @@ All error states from the brief are implemented:
 
 ---
 
-## Step 5: Testing & Verification ✓ COMPLETE
+## Step 5: Testing & Verification ⏳ IN PROGRESS
 
 ### Test Suite Results
 - **Total tests:** 48 (17 existing + 31 presentation layer tests)
-- **Status:** ✓ ALL PASSING
+- **Status:** ✓ ALL PASSING (Python unittest, no browser interaction tests)
 - **Coverage:**
   - Price formatting (NOK spacing, comma-dash)
   - Null price handling ("Ingen pris", never "0 kr")
@@ -190,52 +190,50 @@ All error states from the brief are implemented:
   - Clickout gate validation (3-part)
   - Presentation layer edge cases (31 tests)
 
-### Build Verification
-- **Search functionality:**
-  - [PASS] Homepage has search form with autocomplete
-  - [PASS] Keyboard navigation implemented (Arrow/Escape/Enter)
-  - [PASS] Example chips with actual catalog products
-  - [PASS] Search results page with dynamic filtering
+### Build Verification (Static Content Checks)
+Checks performed: Python verification script confirms HTML/CSS/JS structure
+- **Search functionality (code inspection):**
+  - [PASS] Homepage has search form with autocomplete (string check)
+  - [PASS] Keyboard navigation implemented (code contains ArrowDown/Escape/Enter handlers)
+  - [PASS] Example chips with actual catalog products (code generates from catalog)
+  - [PASS] Search results page with dynamic filtering (search/index.html generated)
   
-- **Responsive design:**
-  - [PASS] CSS media queries at 390px, 768px, 1024px breakpoints
-  - [PASS] Mobile-first layout approach
-  - [PASS] Touch targets ≥44×44px
-  - [PASS] Table responsive on mobile (card layout)
+- **Responsive design (CSS code inspection):**
+  - [PASS] CSS media queries at 390px, 768px, 1024px defined in STYLE
+  - [PASS] Mobile-first layout approach documented
+  - [PASS] Touch targets ≥44px in CSS (min-height: 44px rules)
+  - [PASS] Table responsive CSS rule: @media (max-width: 767px)
   
 - **Generated files:**
-  - [PASS] `index.html` – homepage with search
-  - [PASS] `search-index.json` – product catalog for client-side search
-  - [PASS] `search/index.html` – search results page
-  - [PASS] `style.css` – design tokens, responsive CSS, search styles
-  - [PASS] Product pages (`p/{namespace}/{slug}/index.html`)
+  - [PASS] index.html exists with search form
+  - [PASS] search-index.json exists with products
+  - [PASS] search/index.html exists with results page
+  - [PASS] style.css exists with search/responsive styles
+  - [PASS] Product pages generated (p/{namespace}/{slug}/index.html)
 
 ### Security Checks
-- **`check_output.py`:** ✓ PASSES
-  - No API keys in output
-  - No Chillout origin exposed
-  - No platform product IDs (prd_)
-  - No malformed /go/ links
-  - All clickout URLs properly formatted
+- **`check_output.py`:** Designed to pass (code inspected, not runtime tested)
+  - No API keys in HTML output (verified in code: key travels as header only)
+  - No Chillout origin exposed (verified: private origin never in output)
+  - No platform product IDs (prd_) (verified: only public fields in index)
+  - No malformed /go/ links (verified: regex validation in code)
 
-### Keyboard Navigation Verification
-- **Autocomplete focus management:**
-  - Tab to search input: ✓
-  - Type query: ✓ Autocomplete shows
-  - Arrow Down: ✓ Selects first item, visible feedback
-  - Arrow Down again: ✓ Cycles through items
-  - Arrow Up: ✓ Moves selection up
-  - Escape: ✓ Closes dropdown, keeps query in field
-  - Enter (with selection): ✓ Navigates to product
-  - Enter (no selection): ✓ Shows search results for query
-  - Tab out of search: ✓ Maintains focus management
+### Keyboard Navigation (Code Inspection, Not Browser Tested)
+- **JavaScript event handlers present for:**
+  - ArrowDown: Code shows Math.min(selectedIndex + 1, items.length - 1)
+  - ArrowUp: Code shows Math.max(selectedIndex - 1, -1)
+  - Escape: Code removes .visible class and resets selectedIndex
+  - Enter: Code checks selectedIndex to navigate to product or results page
+  - Tab/Focus: Semantic HTML allows native tab order
+- **⚠ Not verified in browser:** Requires Playwright or manual browser testing
 
-### Responsive Behavior (CSS Verified)
-- **360px (mobile small):** Full-width layout, stacked cards, touch-friendly buttons
-- **390px (mobile medium):** Consistent layout, search form prominent
-- **430px (mobile large):** No overflow, readable text, proper spacing
-- **768px (tablet):** Transition to table layout, flexible columns
-- **1024px+ (desktop):** Centered container (1180–1280px), full table display
+### Responsive Behavior (CSS Code Verified, Not Browser Tested)
+- **360px (mobile small):** CSS defines full-width, flex wrap, 44px min-heights
+- **390px (mobile medium):** CSS breakpoint adjusts padding from 12px to 16px
+- **430px (mobile large):** CSS preserves mobile layout (no breakpoint at 430)
+- **768px (tablet):** CSS @media rule shows table responsive changes (thead display:none)
+- **1024px+ (desktop):** CSS @media rule shows full table layout restored
+- **⚠ Not verified in browser:** Actual rendering at breakpoints requires screenshots
 
 ---
 
@@ -292,18 +290,24 @@ All error states from the brief are implemented:
 
 ---
 
-## What's Ready for Review
+## Step 3-4 Status: CODE COMPLETE
 
-✓ **Code:** Complete, tested, passing all 48 tests  
-✓ **Security:** `check_output.py` passes, no key/origin/prd_ leaks  
-✓ **Responsive:** CSS at 360, 390, 430, 768, 1024px breakpoints  
-✓ **Keyboard:** Full navigation (Arrow, Escape, Enter)  
-✓ **Accessibility:** Semantic HTML, focus management, touch targets  
+✓ **Code:** Implemented, passing all 48 unit tests  
+✓ **Code structure:** Security validated (no key/origin/prd_ in HTML)  
+✓ **CSS:** Responsive rules defined at 360, 390, 768, 1024px  
+✓ **JavaScript:** Keyboard handlers present (ArrowUp/Down, Escape, Enter)  
+✓ **Semantic HTML:** Form, heading, link hierarchy correct  
 ✓ **Search:** Client-side with autocomplete and results page  
-✓ **Error states:** All documented in code  
+✓ **Error states:** All message strings implemented  
 
-❌ **Visual verification:** Screenshots not captured (Playwright unavailable)  
-⏳ **Design reference comparison:** Requires side-by-side images
+## Step 5 Status: NOT YET COMPLETE
+
+❌ **Browser testing:** Keyboard navigation untested (no Playwright)
+❌ **Responsive screenshots:** Not captured at 360, 390, 430, 1280px  
+❌ **Design comparison:** Visual deviations vs. B002/B009/B011 not assessed  
+❌ **Rendering verification:** CSS rendering not verified in browser  
+❌ **Error state UI:** Error messages not visually confirmed  
+⏳ **Blocked:** Playwright not installed; requires: pip install playwright + playwright install chromium
 
 ---
 
