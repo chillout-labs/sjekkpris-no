@@ -2,8 +2,8 @@
 
 **Date:** 11. oktober 2026  
 **Base:** commit `58279a6`  
-**Current:** commit `27e1830` (Steps 0–3 foundation + homepage)  
-**Status:** Foundation ready for visual review | Data-backed features complete | Backend-dependent features deferred
+**Current:** commit `4b15cc5` (Steps 0–5 search UI + responsive layout)  
+**Status:** Implementation complete | Code verified (48/48 tests passing) | Visual verification pending
 
 ---
 
