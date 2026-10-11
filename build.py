@@ -850,6 +850,49 @@ tbody tr:hover {
   background-color: var(--color-surface);
 }
 
+/* Responsive table for mobile */
+@media (max-width: 767px) {
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+
+  thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+
+  tbody tr {
+    margin-bottom: var(--space-xl);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    display: block;
+    padding: var(--space-lg);
+  }
+
+  td {
+    border: none;
+    padding: var(--space-md) 0;
+    text-align: right;
+    display: block;
+    padding-left: 50%;
+    position: relative;
+  }
+
+  td:before {
+    content: attr(data-label);
+    position: absolute;
+    left: var(--space-lg);
+    font-weight: 600;
+    text-align: left;
+    color: var(--color-text-secondary);
+  }
+
+  tbody tr:hover {
+    background-color: inherit;
+  }
+}
+
 /* Badges */
 .badge {
   display: inline-block;
