@@ -284,15 +284,36 @@ These are NOT deviations; they are explicitly excluded from v1 scope in Brief §
 ## Status
 
 **Implementation:** ✓ Step 5 Complete  
-**Test Coverage:** 48/48 passing  
-**Code Quality:** All tests pass; security verified  
-**Branch:** `frontend-v1-design` (ready to push)  
+**Test Coverage:** 48/48 passing (17 build + 31 presentation)  
+**Code Quality:** All tests pass; security verified; Bash/PowerShell check passed  
+**Branch:** `frontend-v1-design`  
+**Commit:** `9a4ef1d` pushed to origin  
 
-**Next Steps:**
-1. Stage implementation files to git
-2. Commit with results
-3. Push to PR branch
-4. Manual visual comparison (optional): open current screenshots vs. B009/B011 references
+**Implementation Details:**
+- 3-column hero (1024px+ desktop, single column mobile)
+- Price fallback logic: total price → item price → no winner
+- Per Brief §6.1 validation: offer must be ranking eligible, no test data
+- "Bilde mangler" placeholder when image.url is null
+- 2 clickout links: hero CTA + table row (same offer, per design)
+- Updated test expectations for new layout
+
+**Test Results (Commit 9a4ef1d):**
+- `test_build.py`: 17/17 passing
+- `test_presentation.py`: 31/31 passing
+- Security check: 0 forbidden strings found
+- Keyboard navigation: verified
+- Responsive layout: verified (360–1280px)
+
+**Ready For:**
+- Visual review against B009 (desktop) and B011 (mobile) references
+- PR merge approval (after review)
+
+**NOT INCLUDED (Deferred per Brief §4):**
+- Product images (awaiting API coverage)
+- Price history graph
+- Trending/bestseller signals
+- Category browsing
+- Intent-based search
 
 ---
 
