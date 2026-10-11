@@ -166,17 +166,29 @@ def page(title: str, body: str, *, base: str, noindex: bool) -> str:
 <html lang="nb">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
 {robots}
 <title>{e(title)}</title>
 <link rel="stylesheet" href="{e(base)}style.css">
 </head>
 <body>
-<header><a class="brand" href="{e(base)}">SjekkPris.no</a> <span class="beta">Beta</span></header>
+<header>
+<div class="container">
+<a class="brand" href="{e(base)}">SjekkPris.no</a>
+<span class="beta">Beta</span>
+</div>
+</header>
 <main>
+<div class="main-container">
 {body}
+</div>
 </main>
-<footer>Prisene hentes fra annonsørenes produktfeeder. Beta – innholdet er under utvikling.</footer>
+<footer>
+<div class="container">
+<p>Prisene hentes fra annonsørenes produktfeeder. Beta – innholdet er under utvikling.</p>
+</div>
+</footer>
 </body>
 </html>
 """
@@ -192,16 +204,17 @@ def index_body(products: list[dict], *, base: str) -> str:
         price = money(product.get("lowest_item_price"))
         confirmed = day(product.get("lowest_item_price_confirmed_at"))
         count = int(product.get("offer_count") or 0)
+        offer_text = "1 tilbud" if count == 1 else f"{count} tilbud"
         rows.append(
             "<tr>"
             f'<td><a href="{e(href)}">{e(product.get("local_name") or slug)}</a></td>'
-            f"<td>{e(price) if price else '<span class=muted>Ingen pris</span>'}</td>"
+            f"<td>{e(price) if price else '<span class=\"muted\">Ingen pris</span>'}</td>"
             f"<td>{e(confirmed) if confirmed else ''}</td>"
-            f"<td>{count} tilbud</td>"
+            f"<td><span class=\"text-sm\">{e(offer_text)}</span></td>"
             "</tr>"
         )
     return (
-        "<h1>Produkter</h1>\n<table>\n"
+        "<h1>Produkter</h1>\n<p class=\"text-sm\">Midlertidig oversikt. Søk og kategoribrowsing kommer snart.</p>\n<table>\n"
         "<thead><tr><th>Produkt</th><th>Laveste pris</th><th>Pris bekreftet</th>"
         "<th>Tilbud</th></tr></thead>\n<tbody>\n" + "\n".join(rows) + "\n</tbody>\n</table>"
     )
@@ -262,18 +275,22 @@ def offer_row(offer: dict, *, lowest: str | None, excluded: bool) -> str:
     if excluded:
         marks.insert(0, EXCLUSION.get(offer.get("comparison_status"), "Ikke sammenlignbar"))
     badge = (
-        ' <span class="badge">Laveste pris</span>'
+        ' <span class="badge badge-price">Laveste pris</span>'
         if not excluded and lowest and offer.get("offer_id") == lowest
         else ""
+    )
+    marks_html = (
+        '<div class="text-xs">' + '<br>'.join(e(m) for m in marks) + '</div>'
+        if marks else ''
     )
     return (
         "<tr>"
         f"<td>{e(offer.get('advertiser') or 'Ukjent annonsør')}</td>"
-        f"<td>{e(price) if price else '<span class=muted>Ingen pris</span>'}{badge}</td>"
-        f"<td>{e(shipping_text(offer))}</td>"
-        f"<td>{e(total_text(offer))}</td>"
-        f"<td>{e(availability)}</td>"
-        f"<td>{'<br>'.join(e(m) for m in marks)}</td>"
+        f"<td>{e(price) if price else '<span class=\"muted\">Ingen pris</span>'}{badge}</td>"
+        f"<td><span class=\"text-sm\">{e(shipping_text(offer))}</span></td>"
+        f"<td><span class=\"text-sm\">{e(total_text(offer))}</span></td>"
+        f"<td><span class=\"text-sm\">{e(availability)}</span></td>"
+        f"<td>{marks_html}</td>"
         f"<td>{shop_cell(offer, excluded=excluded)}</td>"
         "</tr>"
     )
@@ -282,13 +299,15 @@ def offer_row(offer: dict, *, lowest: str | None, excluded: bool) -> str:
 def shop_cell(offer: dict, *, excluded: bool) -> str:
     href = shop_href(offer, excluded=excluded)
     if href is None:
-        return '<span class="muted">Ingen lenke</span>'
-    return f'<a class="shop" href="{e(href)}" rel="sponsored nofollow">Til butikken</a>'
+        return '<span class="text-sm muted">Ingen lenke</span>'
+    advertiser = e(offer.get('advertiser') or 'butikken')
+    return f'<a class="shop" href="{e(href)}" rel="sponsored nofollow">Til {advertiser}</a>'
 
 
 
 def product_body(product: dict, body: dict, *, base: str) -> str:
     name = (body.get("identity") or {}).get("local_name") or product.get("local_name")
+    identity = body.get("identity") or {}
     lowest = body.get("lowest_item_price")
     offers = body.get("offers") or []
     excluded = body.get("excluded") or []
@@ -296,31 +315,389 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
         "<tr><th>Butikk</th><th>Pris</th><th>Frakt</th><th>Totalpris</th>"
         "<th>Lager</th><th>Merknad</th><th></th></tr>"
     )
-    parts = [f'<p><a href="{e(base)}">← Alle produkter</a></p>', f"<h1>{e(name)}</h1>"]
+
+    parts = []
+    parts.append(f'<p><a href="{e(base)}">← Tilbake til produkter</a></p>')
+    parts.append(f"<h1>{e(name)}</h1>")
+
+    # Identity metadata
+    meta_parts = []
+    if identity.get("local_brand"):
+        meta_parts.append(f"<span class=\"text-sm\"><strong>Merke:</strong> {e(identity['local_brand'])}</span>")
+    if identity.get("local_category"):
+        meta_parts.append(f"<span class=\"text-sm\"><strong>Kategori:</strong> {e(identity['local_category'])}</span>")
+    if identity.get("local_pack_size"):
+        meta_parts.append(f"<span class=\"text-sm\"><strong>Pakning:</strong> {e(identity['local_pack_size'])}</span>")
+    if meta_parts:
+        parts.append(f"<div style=\"display: flex; flex-direction: column; gap: 4px; margin-bottom: 24px;\">{' '.join(meta_parts)}</div>")
+
     if not offers and not excluded:
         parts.append("<p>Ingen tilbud akkurat nå.</p>")
-    if offers:
-        rows = "\n".join(offer_row(o, lowest=lowest, excluded=False) for o in offers)
-        parts.append(f"<table>\n<thead>{head}</thead>\n<tbody>\n{rows}\n</tbody>\n</table>")
-    if excluded:
-        rows = "\n".join(offer_row(o, lowest=None, excluded=True) for o in excluded)
-        parts.append("<h2>Ikke sammenlignbare tilbud</h2>")
-        parts.append(f"<table>\n<thead>{head}</thead>\n<tbody>\n{rows}\n</tbody>\n</table>")
+    else:
+        if offers:
+            rows = "\n".join(offer_row(o, lowest=lowest, excluded=False) for o in offers)
+            parts.append(f"<h2>Tilbud</h2>\n<table>\n<thead>{head}</thead>\n<tbody>\n{rows}\n</tbody>\n</table>")
+        if excluded:
+            rows = "\n".join(offer_row(o, lowest=None, excluded=True) for o in excluded)
+            parts.append("<h2>Ikke sammenlignbare tilbud</h2>")
+            parts.append(f"<table>\n<thead>{head}</thead>\n<tbody>\n{rows}\n</tbody>\n</table>")
+
     return "\n".join(parts)
 
 
 STYLE = """
-body{font:16px/1.5 system-ui,sans-serif;margin:0;color:#1d1d1f;background:#fff}
-header,main,footer{max-width:960px;margin:0 auto;padding:16px}
-header{border-bottom:1px solid #ddd}
-.brand{font-weight:700;color:inherit;text-decoration:none}
-.beta,.badge{font-size:12px;padding:2px 6px;border-radius:4px;background:#eef;color:#224}
-.badge{background:#e6f4ea;color:#14532d;margin-left:6px}
-table{border-collapse:collapse;width:100%}
-th,td{text-align:left;padding:8px;border-bottom:1px solid #eee;vertical-align:top}
-.muted{color:#777}
-.shop{display:inline-block;padding:4px 10px;border-radius:4px;background:#1d4ed8;color:#fff;text-decoration:none}
-footer{color:#777;font-size:14px;border-top:1px solid #ddd}
+/* CSS Design Tokens & Layout Foundation
+ * SjekkPris Frontend v1 – D05 Design Bible
+ */
+
+/* Root tokens: colors, spacing, typography */
+:root {
+  /* Colors: calm Scandinavian palette */
+  --color-text-primary: #1d1f22;
+  --color-text-secondary: #5f6368;
+  --color-text-muted: #80868b;
+  --color-background: #ffffff;
+  --color-surface: #f8f9fa;
+  --color-border: #dadce0;
+  --color-accent-teal: #0d9488;
+  --color-accent-teal-light: #d1fae5;
+  --color-status-success: #059669;
+  --color-status-warning: #d97706;
+  --color-status-error: #dc2626;
+
+  /* Spacing scale: 4/8 base */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+
+  /* Border radius */
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+
+  /* Typography */
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", sans-serif;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 15px;
+  --font-size-lg: 18px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
+  --font-size-3xl: 48px;
+
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+
+  /* Shadows: very subtle */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  /* Responsive: mobile-first */
+  --content-max-width: 1280px;
+  --container-padding: var(--space-md);
+}
+
+/* Mobile medium breakpoint: 390px */
+@media (min-width: 390px) {
+  :root {
+    --container-padding: var(--space-lg);
+  }
+}
+
+/* Desktop breakpoint: 1024px */
+@media (min-width: 1024px) {
+  :root {
+    --container-padding: var(--space-xl);
+  }
+}
+
+/* Dark mode support (basic; extends light token values) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-text-primary: #e8eaed;
+    --color-text-secondary: #aab0b6;
+    --color-text-muted: #808a90;
+    --color-background: #202124;
+    --color-surface: #292a2d;
+    --color-border: #3f4144;
+  }
+}
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-background);
+  margin: 0;
+  padding: 0;
+}
+
+/* Typography */
+h1 {
+  font-size: var(--font-size-2xl);
+  line-height: var(--line-height-tight);
+  margin: var(--space-lg) 0 var(--space-md);
+  font-weight: 600;
+}
+
+@media (min-width: 1024px) {
+  h1 {
+    font-size: var(--font-size-3xl);
+    margin: var(--space-xl) 0 var(--space-lg);
+  }
+}
+
+h2 {
+  font-size: 22px;
+  line-height: var(--line-height-tight);
+  margin: var(--space-lg) 0 var(--space-md);
+  font-weight: 600;
+}
+
+@media (min-width: 1024px) {
+  h2 {
+    font-size: 26px;
+  }
+}
+
+h3 {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-tight);
+  margin: var(--space-md) 0 var(--space-sm);
+  font-weight: 600;
+}
+
+p {
+  margin: var(--space-md) 0;
+}
+
+a {
+  color: var(--color-accent-teal);
+  text-decoration: none;
+}
+
+a:visited {
+  color: var(--color-accent-teal);
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a:focus {
+  outline: 2px solid var(--color-accent-teal);
+  outline-offset: 2px;
+}
+
+/* Layout containers */
+.container {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 0 var(--container-padding);
+}
+
+/* Header */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: var(--color-background);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-md) 0;
+}
+
+header .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+}
+
+.brand {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.brand:focus {
+  outline: 2px solid var(--color-accent-teal);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.beta {
+  font-size: var(--font-size-xs);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-accent-teal-light);
+  color: var(--color-status-success);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Main content */
+main {
+  min-height: calc(100vh - 200px);
+}
+
+.main-container {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--space-lg) var(--container-padding);
+}
+
+@media (min-width: 390px) {
+  .main-container {
+    padding: var(--space-xl) var(--container-padding);
+  }
+}
+
+/* Footer */
+footer {
+  background-color: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-xl) 0;
+  margin-top: var(--space-3xl);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+footer .container {
+  text-align: center;
+}
+
+footer p {
+  margin: 0;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+th {
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  text-align: left;
+  padding: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+td {
+  padding: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+tbody tr:hover {
+  background-color: var(--color-surface);
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-sm);
+  margin-left: var(--space-md);
+}
+
+.badge-price {
+  background-color: var(--color-status-success);
+  color: #ffffff;
+}
+
+/* Utility classes */
+.muted {
+  color: var(--color-text-muted);
+}
+
+.text-sm {
+  font-size: var(--font-size-sm);
+}
+
+.text-xs {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* Links */
+.shop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-accent-teal);
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  transition: opacity 0.2s ease;
+}
+
+.shop:hover {
+  opacity: 0.9;
+  text-decoration: none;
+}
+
+.shop:focus {
+  outline: 2px solid var(--color-accent-teal);
+  outline-offset: 2px;
+}
+
+.shop:active {
+  opacity: 0.8;
+}
+
+/* Focus visible for keyboard nav */
+:focus-visible {
+  outline: 2px solid var(--color-accent-teal);
+  outline-offset: 2px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  header, footer {
+    display: none;
+  }
+}
 """
 
 
