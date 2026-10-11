@@ -197,6 +197,28 @@ def page(title: str, body: str, *, base: str, noindex: bool) -> str:
 def index_body(products: list[dict], *, base: str) -> str:
     if not products:
         return "<h1>Hva vil du sammenligne?</h1>\n<p>Søk etter et produkt, eller beskriv hva du trenger.</p>\n<p>Ingen produkter er publisert ennå.</p>"
+
+    # Build example chips from diverse products in the catalog
+    # Select products for example chips (e.g., first, middle, last)
+    example_indices = [0]
+    if len(products) > 2:
+        example_indices.append(len(products) // 2)
+    if len(products) > 1:
+        example_indices.append(len(products) - 1)
+    example_indices = list(dict.fromkeys(example_indices))  # Remove duplicates while preserving order
+
+    example_chips = []
+    for idx in example_indices[:3]:  # Limit to 3 example chips
+        if idx < len(products):
+            product = products[idx]
+            name = product.get("local_name") or product.get("local_slug")
+            ns, slug = segment(product["namespace"]), segment(product["local_slug"])
+            href = f"{base}p/{ns}/{slug}/"
+            example_chips.append(f'<a href="{e(href)}" class="chip">{e(name)}</a>')
+
+    examples_html = "\n".join(example_chips)
+
+    # Build product table
     rows = []
     for product in products:
         ns, slug = segment(product["namespace"]), segment(product["local_slug"])
@@ -213,10 +235,143 @@ def index_body(products: list[dict], *, base: str) -> str:
             f"<td><span class=\"text-sm\">{e(offer_text)}</span></td>"
             "</tr>"
         )
-    return (
+
+    table_html = (
         "<h2>Produkter</h2>\n<p class=\"text-sm\">Søket finner foreløpig produkter etter navn. Kategoribrowsing og behovssøk kommer når datagrunnlaget er klart.</p>\n<table>\n"
         "<thead><tr><th>Produkt</th><th>Laveste pris</th><th>Pris bekreftet</th>"
         "<th>Tilbud</th></tr></thead>\n<tbody>\n" + "\n".join(rows) + "\n</tbody>\n</table>"
+    )
+
+    # Build the complete homepage HTML
+    return (
+        "<section class=\"search-section\">"
+        "<h1>Hva vil du sammenligne?</h1>"
+        "<p>Søk etter et produkt, eller beskriv hva du trenger.</p>"
+        "<div class=\"search-form-container\">"
+        '<form id="search-form" class="search-form">'
+        '<input type="text" id="search-input" class="search-input" placeholder="Søk eller beskriv hva du ser etter …" autocomplete="off">'
+        '<button type="submit" class="search-button" aria-label="Søk">🔍</button>'
+        "</form>"
+        '<div id="autocomplete-results" class="autocomplete-results" role="listbox" aria-label="Søkeforslag"></div>'
+        "</div>"
+        "<div class=\"examples\">"
+        f"<p><strong>Prøv for eksempel:</strong></p>"
+        f"<div class=\"chips\">{examples_html}</div>"
+        "</div>"
+        "</section>"
+        + table_html +
+        "<script>" +
+        """
+        (function() {
+            const searchInput = document.getElementById('search-input');
+            const searchForm = document.getElementById('search-form');
+            const autocompleteResults = document.getElementById('autocomplete-results');
+            const chips = document.querySelectorAll('.chip');
+            let searchIndex = null;
+            let selectedIndex = -1;
+
+            // Load search index
+            fetch('""" + e(base) + """search-index.json')
+                .then(r => r.json())
+                .then(data => { searchIndex = data; })
+                .catch(err => console.error('Failed to load search index:', err));
+
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            function performSearch(query) {
+                if (!searchIndex) return [];
+                const lower = query.toLowerCase();
+                return searchIndex.filter(item =>
+                    item.name.toLowerCase().includes(lower)
+                ).slice(0, 8);
+            }
+
+            function renderAutocomplete(results) {
+                autocompleteResults.innerHTML = '';
+                selectedIndex = -1;
+                if (!results.length) return;
+
+                results.forEach((item, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'autocomplete-item';
+                    div.textContent = item.name;
+                    div.setAttribute('data-url', item.url);
+                    div.setAttribute('data-index', idx);
+                    div.addEventListener('click', () => window.location.href = item.url);
+                    autocompleteResults.appendChild(div);
+                });
+                autocompleteResults.classList.add('visible');
+            }
+
+            function setSelectedIndex(idx) {
+                const items = autocompleteResults.querySelectorAll('.autocomplete-item');
+                items.forEach(item => item.classList.remove('selected'));
+                if (idx >= 0 && idx < items.length) {
+                    items[idx].classList.add('selected');
+                    items[idx].scrollIntoView({ block: 'nearest' });
+                }
+                selectedIndex = idx;
+            }
+
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                if (query.length < 1) {
+                    autocompleteResults.classList.remove('visible');
+                    return;
+                }
+                const results = performSearch(query);
+                renderAutocomplete(results);
+            });
+
+            searchInput.addEventListener('keydown', (e) => {
+                const items = autocompleteResults.querySelectorAll('.autocomplete-item');
+                if (!items.length) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setSelectedIndex(Math.min(selectedIndex + 1, items.length - 1));
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    setSelectedIndex(Math.max(selectedIndex - 1, -1));
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (selectedIndex >= 0 && selectedIndex < items.length) {
+                        window.location.href = items[selectedIndex].getAttribute('data-url');
+                    } else {
+                        // Show results page with all matches
+                        const query = searchInput.value.trim();
+                        if (query.length > 0) {
+                            window.location.href = '""" + e(base) + """search?q=' + encodeURIComponent(query);
+                        }
+                    }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    autocompleteResults.classList.remove('visible');
+                    selectedIndex = -1;
+                }
+            });
+
+            searchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const query = searchInput.value.trim();
+                if (query.length > 0) {
+                    window.location.href = '""" + e(base) + """search?q=' + encodeURIComponent(query);
+                }
+            });
+
+            chips.forEach(chip => {
+                chip.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.location.href = chip.getAttribute('href');
+                });
+            });
+        })();
+        """ +
+        "</script>"
     )
 
 
@@ -303,6 +458,85 @@ def shop_cell(offer: dict, *, excluded: bool) -> str:
     advertiser = e(offer.get('advertiser') or 'butikken')
     return f'<a class="shop" href="{e(href)}" rel="sponsored nofollow">Til {advertiser}</a>'
 
+
+
+def search_results_body(*, base: str) -> str:
+    """Generate the search results page that uses client-side filtering."""
+    return (
+        "<section id=\"search-results-section\">"
+        "<h1>Søkeresultater</h1>"
+        '<form id="search-form-results" class="search-form" style="margin-bottom: var(--space-xl);">'
+        '<input type="text" id="search-input-results" class="search-input" placeholder="Søk etter et produkt …" autocomplete="off">'
+        '<button type="submit" class="search-button" aria-label="Søk">🔍</button>'
+        "</form>"
+        '<div id="results-container" style="margin-top: var(--space-xl);"></div>'
+        "</section>"
+        "<script>" +
+        """
+        (function() {
+            const searchInput = document.getElementById('search-input-results');
+            const resultsContainer = document.getElementById('results-container');
+            const searchForm = document.getElementById('search-form-results');
+            let searchIndex = null;
+
+            // Get query from URL parameters
+            const params = new URLSearchParams(window.location.search);
+            const initialQuery = params.get('q') || '';
+
+            // Load search index
+            fetch('""" + e(base) + """search-index.json')
+                .then(r => r.json())
+                .then(data => {
+                    searchIndex = data;
+                    searchInput.value = initialQuery;
+                    if (initialQuery) {
+                        performSearch(initialQuery);
+                    } else {
+                        resultsContainer.innerHTML = '<p>Skriv inn et søk for å komme i gang.</p>';
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to load search index:', err);
+                    resultsContainer.innerHTML = '<p>Kunne ikke laste søkdata. Vennligst prøv igjen.</p>';
+                });
+
+            function performSearch(query) {
+                if (!searchIndex) return;
+                const lower = query.toLowerCase();
+                const results = searchIndex.filter(item =>
+                    item.name.toLowerCase().includes(lower)
+                );
+
+                if (results.length === 0) {
+                    resultsContainer.innerHTML = '<p>Ingen produkter funnet for "' +
+                        query.replace(/</g, '&lt;').replace(/>/g, '&gt;') +
+                        '". Prøv en annen søketerm.</p>' +
+                        '<p><a href="""" + e(base) + """">← Tilbake til oversikt</a></p>';
+                } else {
+                    const rows = results.map(item => {
+                        return '<tr>' +
+                            '<td><a href="' + item.url.replace(/"/g, '&quot;') + '">' +
+                            item.name.replace(/</g, '&lt;').replace(/>/g, '&gt;') +
+                            '</a></td>' +
+                            '</tr>';
+                    }).join('');
+                    resultsContainer.innerHTML = '<p>' + results.length + ' produkt(er) funnet:</p>' +
+                        '<table><thead><tr><th>Produkt</th></tr></thead><tbody>' + rows + '</tbody></table>';
+                }
+            }
+
+            searchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const query = searchInput.value.trim();
+                if (query.length > 0) {
+                    window.history.pushState({}, '', '""" + e(base) + """search?q=' + encodeURIComponent(query));
+                    performSearch(query);
+                }
+            });
+        })();
+        """ +
+        "</script>"
+    )
 
 
 def product_body(product: dict, body: dict, *, base: str) -> str:
@@ -698,6 +932,181 @@ tbody tr:hover {
     display: none;
   }
 }
+
+/* Search section */
+.search-section {
+  padding: var(--space-xl) 0;
+  text-align: center;
+  background: linear-gradient(135deg, var(--color-accent-teal-light) 0%, #e0f2fe) 0% 0% / 100% 100%;
+}
+
+.search-section h1 {
+  font-size: var(--font-size-2xl);
+  margin: 0 0 var(--space-md) 0;
+  color: var(--color-text-primary);
+}
+
+@media (min-width: 768px) {
+  .search-section h1 {
+    font-size: var(--font-size-3xl);
+  }
+}
+
+.search-section > p {
+  margin: 0 0 var(--space-xl) 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.search-form-container {
+  max-width: 500px;
+  margin: 0 auto var(--space-2xl);
+  position: relative;
+}
+
+.search-form {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.search-input {
+  flex: 1;
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
+  font-family: var(--font-family);
+  color: var(--color-text-primary);
+  background-color: var(--color-background);
+  min-height: 44px;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-accent-teal);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+.search-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.search-button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--space-md) var(--space-lg);
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-accent-teal);
+  color: #ffffff;
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.search-button:hover {
+  opacity: 0.9;
+}
+
+.search-button:focus {
+  outline: 2px solid var(--color-accent-teal);
+  outline-offset: 2px;
+}
+
+.search-button:active {
+  opacity: 0.8;
+}
+
+/* Autocomplete results */
+.autocomplete-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  max-height: 400px;
+  overflow-y: auto;
+  display: none;
+  z-index: 10;
+  box-shadow: var(--shadow-lg);
+}
+
+.autocomplete-results.visible {
+  display: block;
+}
+
+.autocomplete-item {
+  padding: var(--space-md) var(--space-lg);
+  cursor: pointer;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 0.15s ease;
+}
+
+.autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-item:hover {
+  background-color: var(--color-surface);
+}
+
+.autocomplete-item.selected {
+  background-color: var(--color-accent-teal-light);
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+/* Example chips */
+.examples {
+  margin-bottom: var(--space-2xl);
+}
+
+.examples p {
+  margin: 0 0 var(--space-md) 0;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  justify-content: center;
+}
+
+.chip {
+  display: inline-block;
+  padding: var(--space-sm) var(--space-lg);
+  border: 1px solid var(--color-accent-teal);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  color: var(--color-accent-teal);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chip:hover {
+  background-color: var(--color-accent-teal);
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.chip:focus {
+  outline: 2px solid var(--color-accent-teal);
+  outline-offset: 2px;
+}
 """
 
 
@@ -734,6 +1143,15 @@ def build(client: Chillout, out: Path, *, base: str, noindex: bool) -> int:
         page("SjekkPris.no", index_body(products, base=base), base=base, noindex=noindex),
         encoding="utf-8",
     )
+
+    # Generate search results page
+    search_dir = out / "search"
+    search_dir.mkdir(parents=True, exist_ok=True)
+    (search_dir / "index.html").write_text(
+        page("Søkeresultater – SjekkPris.no", search_results_body(base=base), base=base, noindex=noindex),
+        encoding="utf-8",
+    )
+
     for product in products:
         ns, slug = segment(product["namespace"]), segment(product["local_slug"])
         body = comparison(client, ns, slug)
