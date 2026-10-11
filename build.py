@@ -716,6 +716,20 @@ def build(client: Chillout, out: Path, *, base: str, noindex: bool) -> int:
     (out / "style.css").write_text(STYLE.lstrip(), encoding="utf-8")
 
     products = catalogue(client)
+
+    # Generate search index: simple name-based catalogue search
+    search_index = []
+    for product in products:
+        ns, slug = segment(product["namespace"]), segment(product["local_slug"])
+        name = product.get("local_name") or slug
+        search_index.append({
+            "name": name,
+            "slug": slug,
+            "namespace": ns,
+            "url": f"{base}p/{ns}/{slug}/"
+        })
+    (out / "search-index.json").write_text(json.dumps(search_index), encoding="utf-8")
+
     (out / "index.html").write_text(
         page("SjekkPris.no", index_body(products, base=base), base=base, noindex=noindex),
         encoding="utf-8",
