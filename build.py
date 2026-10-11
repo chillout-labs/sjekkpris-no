@@ -421,6 +421,184 @@ def shop_href(offer: dict, *, excluded: bool) -> str | None:
     return SITE_ORIGIN + path
 
 
+def find_offer_by_id(offers: list[dict], excluded: list[dict], offer_id: str | None) -> dict | None:
+    """Find an offer by offer_id from both active and excluded lists."""
+    if not offer_id:
+        return None
+    for o in offers:
+        if o.get("offer_id") == offer_id:
+            return o
+    for o in excluded:
+        if o.get("offer_id") == offer_id:
+            return o
+    return None
+
+
+def find_lowest_total_price_offer(offers: list[dict], lowest_total_id: str | None) -> dict | None:
+    """Find the lowest total price offer, validating it has a known total price.
+
+    Per brief section 6.1: reference must exist, total must be known, ranking for
+    total_price must allow claim, and shipping.terms.is_test_data must not be true.
+    """
+    if not lowest_total_id:
+        return None
+
+    offer = find_offer_by_id(offers, [], lowest_total_id)
+    if not offer:
+        return None
+
+    # Check if total price is known
+    if offer.get("known_total_price") is None:
+        return None
+
+    # Check shipping terms (test data not allowed)
+    shipping = offer.get("shipping") or {}
+    if (shipping.get("terms") or {}).get("is_test_data"):
+        return None
+
+    # Check ranking eligibility for total price
+    ranking = offer.get("ranking") or {}
+    total_ranking = (ranking.get("total_price") or {}).get("ranking_eligible")
+    if total_ranking is not True:
+        return None
+
+    return offer
+
+
+def find_hero_offer(offers: list[dict], lowest_total_id: str | None, lowest_item_id: str | None) -> tuple[dict | None, str]:
+    """Find the best offer for the price hero, with fallback logic per Brief §6.
+
+    Returns (offer, price_type) where price_type is "total", "item", or "none".
+
+    Priority:
+    1. Valid lowest_known_total_price (label: "Laveste totalpris på")
+    2. Valid lowest_item_price with item_price ranking (label: "Laveste varepris", with shipping status)
+    3. None (label: no winner)
+    """
+    # Try total price first
+    total_offer = find_lowest_total_price_offer(offers, lowest_total_id)
+    if total_offer:
+        return (total_offer, "total")
+
+    # Fallback to item price
+    if lowest_item_id:
+        item_offer = find_offer_by_id(offers, [], lowest_item_id)
+        if item_offer:
+            # Check if item price is ranking eligible
+            ranking = item_offer.get("ranking") or {}
+            item_ranking = (ranking.get("item_price") or {}).get("ranking_eligible")
+            if item_ranking is True:
+                # Check shipping terms aren't test data
+                shipping = item_offer.get("shipping") or {}
+                if not (shipping.get("terms") or {}).get("is_test_data"):
+                    return (item_offer, "item")
+
+    return (None, "none")
+
+
+def render_product_image(identity: dict) -> str:
+    """Render the product image or fallback 'Bilde mangler' placeholder.
+
+    Left column of 3-column hero (desktop) or top (mobile).
+    """
+    image = identity.get("image") or {}
+    url = image.get("url")
+
+    if url:
+        return (
+            '<div class="product-image">'
+            f'<img src="{e(url)}" alt="Produktbilde" style="object-fit: contain; width: 100%; height: auto;">'
+            '</div>'
+        )
+    else:
+        return (
+            '<div class="product-image" style="display: flex; align-items: center; justify-content: center; '
+            'background-color: var(--color-surface); border-radius: var(--radius-md); min-height: 300px;">'
+            '<div style="text-align: center; color: var(--color-text-muted);">'
+            '<p style="margin: 0; font-size: var(--font-size-lg);">Bilde mangler</p>'
+            '</div>'
+            '</div>'
+        )
+
+
+def render_price_hero(offer: dict, price_type: str) -> str:
+    """Render the price hero card (right column of 3-column hero).
+
+    price_type: "total" (total price winner), "item" (item price fallback), or "none" (no winner)
+
+    Per Brief §6:
+    - Total: show "Laveste totalpris på" with total price and "Inkl. frakt"
+    - Item: show "Laveste varepris" with item price and shipping status
+    - None: show empty/no-winner state
+    """
+    advertiser = e(offer.get("advertiser") or "butikken")
+    item_price = money(offer.get("item_price"))
+    total_price = money(offer.get("known_total_price"))
+    availability = AVAILABILITY.get(
+        (offer.get("availability") or {}).get("status"), "Lagerstatus ukjent"
+    )
+    href = shop_href(offer, excluded=False)
+
+    # Build the hero card HTML
+    html_parts = [
+        '<div class="price-hero">',
+        '<div class="price-header">',
+    ]
+
+    # Determine label and price display based on type
+    if price_type == "total":
+        html_parts.append('<span class="badge badge-lowest-total">Laveste totalpris på</span>')
+        price_html = f'<div class="price-amount">{e(total_price)}</div>'
+        label_html = f'<div class="price-label">Inkl. frakt + {e(advertiser)}</div>'
+    elif price_type == "item":
+        html_parts.append('<span class="badge badge-lowest-item">Laveste varepris</span>')
+        price_html = f'<div class="price-amount">{e(item_price)}</div>'
+        label_html = f'<div class="price-label">{e(advertiser)}</div>'
+    else:
+        html_parts.append('<span class="badge" style="background-color: var(--color-surface);">Pris ukjent</span>')
+        price_html = '<div class="price-amount" style="color: var(--color-text-muted);">Ingen vinner</div>'
+        label_html = '<div class="price-label">Se tilbud nedenfor</div>'
+
+    html_parts.append('</div>')
+    html_parts.append('<div class="price-display">')
+    html_parts.append(price_html)
+    html_parts.append(label_html)
+    html_parts.append('</div>')
+
+    if price_type != "none":
+        # Add key info badges
+        html_parts.append('<div class="hero-info">')
+
+        # Shipping
+        shipping_label = shipping_text(offer)
+        html_parts.append(f'<div class="info-badge">{e(shipping_label)}</div>')
+
+        # Availability
+        html_parts.append(f'<div class="info-badge">{e(availability)}</div>')
+
+        # Last confirmed
+        confirmed = day(offer.get("last_confirmed_at"))
+        if confirmed:
+            html_parts.append(f'<div class="info-badge">Bekreftet {e(confirmed)}</div>')
+
+        html_parts.append('</div>')
+
+        # Add CTA button
+        html_parts.append('<div class="hero-cta">')
+        if href:
+            html_parts.append(
+                f'<a href="{e(href)}" class="shop shop-hero" rel="sponsored nofollow">'
+                f'Gå til {e(advertiser)}</a>'
+            )
+        else:
+            html_parts.append('<div class="text-sm muted">Lenke ikke tilgjengelig</div>')
+        html_parts.append('</div>')
+
+    html_parts.append('</div>')
+
+    return "\n".join(html_parts)
+
+
 def offer_row(offer: dict, *, lowest: str | None, excluded: bool) -> str:
     price = money(offer.get("item_price"))
     availability = AVAILABILITY.get(
@@ -543,6 +721,7 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
     name = (body.get("identity") or {}).get("local_name") or product.get("local_name")
     identity = body.get("identity") or {}
     lowest = body.get("lowest_item_price")
+    lowest_total = body.get("lowest_known_total_price")
     offers = body.get("offers") or []
     excluded = body.get("excluded") or []
     head = (
@@ -552,7 +731,19 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
 
     parts = []
     parts.append(f'<p><a href="{e(base)}">← Tilbake til produkter</a></p>')
-    parts.append(f"<h1>{e(name)}</h1>")
+
+    # Hero section: 3-column layout on desktop, single column on mobile
+    hero_parts = []
+    hero_parts.append('<section class="product-hero">')
+
+    # Left column: product image
+    hero_parts.append('<div class="hero-column hero-image">')
+    hero_parts.append(render_product_image(identity))
+    hero_parts.append('</div>')
+
+    # Middle column: product info
+    hero_parts.append('<div class="hero-column hero-info-column">')
+    hero_parts.append(f"<h1>{e(name)}</h1>")
 
     # Identity metadata
     meta_parts = []
@@ -563,7 +754,26 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
     if identity.get("local_pack_size"):
         meta_parts.append(f"<span class=\"text-sm\"><strong>Pakning:</strong> {e(identity['local_pack_size'])}</span>")
     if meta_parts:
-        parts.append(f"<div style=\"display: flex; flex-direction: column; gap: 4px; margin-bottom: 24px;\">{' '.join(meta_parts)}</div>")
+        hero_parts.append(f"<div class=\"product-meta\">{' '.join(meta_parts)}</div>")
+
+    hero_parts.append('</div>')
+
+    # Right column: price hero
+    # Use fallback logic per Brief §6: total price → item price → no winner
+    if offers:
+        hero_offer, price_type = find_hero_offer(offers, lowest_total, lowest)
+        if hero_offer or price_type == "none":
+            hero_parts.append('<div class="hero-column hero-price">')
+            if hero_offer:
+                hero_parts.append(render_price_hero(hero_offer, price_type))
+            else:
+                # No offers qualify, show empty state
+                hero_parts.append(render_price_hero({}, "none"))
+            hero_parts.append('</div>')
+
+    hero_parts.append('</section>')
+
+    parts.append("\n".join(hero_parts))
 
     if not offers and not excluded:
         parts.append("<p>Ingen tilbud akkurat nå.</p>")
@@ -1149,6 +1359,146 @@ tbody tr:hover {
 .chip:focus {
   outline: 2px solid var(--color-accent-teal);
   outline-offset: 2px;
+}
+
+/* Product hero section: 3-column desktop, single column mobile */
+.product-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  margin-bottom: var(--space-3xl);
+}
+
+.hero-column {
+  flex: 1;
+}
+
+.hero-image {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+}
+
+.product-image {
+  width: 100%;
+}
+
+.product-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+  font-size: var(--font-size-sm);
+}
+
+.product-meta span {
+  display: block;
+}
+
+/* Desktop 3-column layout (1024px: wider to avoid cramping on tablet) */
+@media (min-width: 1024px) {
+  .product-hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--space-xl);
+    align-items: start;
+  }
+
+  .hero-column {
+    flex: none;
+  }
+}
+
+/* Price hero card */
+.price-hero {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  height: fit-content;
+}
+
+.price-header {
+  margin-bottom: var(--space-md);
+}
+
+.badge-lowest-total {
+  display: inline-block;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-accent-teal-light);
+  color: var(--color-accent-teal);
+}
+
+.badge-lowest-item {
+  display: inline-block;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-sm);
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.price-display {
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.price-amount {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+  margin-bottom: var(--space-md);
+}
+
+@media (min-width: 1024px) {
+  .price-amount {
+    font-size: 32px;
+  }
+}
+
+.price-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.info-badge {
+  font-size: var(--font-size-sm);
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-background);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.hero-cta {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.shop-hero {
+  width: 100%;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.shop-hero:hover {
+  opacity: 0.9;
 }
 """
 
