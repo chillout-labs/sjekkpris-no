@@ -196,7 +196,7 @@ def page(title: str, body: str, *, base: str, noindex: bool) -> str:
 
 def index_body(products: list[dict], *, base: str) -> str:
     if not products:
-        return "<h1>Produkter</h1>\n<p>Ingen produkter er publisert ennå.</p>"
+        return "<h1>Hva vil du sammenligne?</h1>\n<p>Søk etter et produkt, eller beskriv hva du trenger.</p>\n<p>Ingen produkter er publisert ennå.</p>"
     rows = []
     for product in products:
         ns, slug = segment(product["namespace"]), segment(product["local_slug"])
@@ -214,7 +214,7 @@ def index_body(products: list[dict], *, base: str) -> str:
             "</tr>"
         )
     return (
-        "<h1>Produkter</h1>\n<p class=\"text-sm\">Midlertidig oversikt. Søk og kategoribrowsing kommer snart.</p>\n<table>\n"
+        "<h2>Produkter</h2>\n<p class=\"text-sm\">Søket finner foreløpig produkter etter navn. Kategoribrowsing og behovssøk kommer når datagrunnlaget er klart.</p>\n<table>\n"
         "<thead><tr><th>Produkt</th><th>Laveste pris</th><th>Pris bekreftet</th>"
         "<th>Tilbud</th></tr></thead>\n<tbody>\n" + "\n".join(rows) + "\n</tbody>\n</table>"
     )
