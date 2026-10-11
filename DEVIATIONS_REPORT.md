@@ -491,13 +491,19 @@ The implementation follows D05's approved design direction within the constraint
 
 ## Design Reference Images Status
 
-**Original Archives Missing Locally:**
-- SjekkPris-originalarkiv-2026-10-11.zip — Not found in working directory
-- B002 (Homepage) — SHA: ff928ae2403a505a7a4f1de56577b9327daedc56d88a90643482b44d160ad2e7 (needed for comparison)
-- B009 (Product desktop) — SHA: 63361445f59608d3367fba5759d7e83cfa4a1c11a34615b1a51a19388441c7b3 (needed for comparison)
-- B011 (Product mobile) — SHA: 3211d42cfc307798f3b52d8ce5ad23477f8ca4f6f6e1f62574d8b7980689b5bc (needed for comparison)
+**✓ Original Archives Available Locally:**
+- Location: `design-references/Originalfiler/` (untracked, local-only)
+- B002 (Homepage) — SHA: ff928ae2403a505a7a4f1de56577b9327daedc56d88a90643482b44d160ad2e7 ✓ **Verified**
+  - File: "SjekkPris – Låst hjemmesidedesign v1.0.png"
+  - Status: Provisional reference (per brief Section 7)
+- B009 (Product desktop) — SHA: 63361445f59608d3367fba5759d7e83cfa4a1c11a34615b1a51a19388441c7b3 ✓ **Verified**
+  - File: "LG OLED C4 prissammenligning hos SjekkPris.png"
+  - Status: Provisional reference (per brief Section 7)
+- B011 (Product mobile) — SHA: 3211d42cfc307798f3b52d8ce5ad23477f8ca4f6f6e1f62574d8b7980689b5bc ✓ **Verified**
+  - File: "SjekkPris mobilprodukt-side for LG OLED TV.png"
+  - Status: Provisional reference (per brief Section 7)
 
-**Approach:** Implementing based on brief's textual descriptions (Section 5). Screenshots will document actual rendering.
+**Approach:** References available for visual comparison during implementation. Implementation follows brief's textual descriptions (Section 5) with visual verification against references.
 
 ---
 
