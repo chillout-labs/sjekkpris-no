@@ -547,7 +547,7 @@ def render_price_hero(offer: dict, price_type: str) -> str:
 
     # Determine label and price display based on type
     if price_type == "total":
-        html_parts.append('<span class="badge badge-lowest-total">Laveste totalpris på</span>')
+        html_parts.append('<span class="badge badge-lowest-total">Laveste kjente totalpris</span>')
         price_html = f'<div class="price-amount">{e(total_price)}</div>'
         label_html = f'<div class="price-label">Inkl. frakt + {e(advertiser)}</div>'
     elif price_type == "item":
