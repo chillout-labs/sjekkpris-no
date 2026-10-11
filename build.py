@@ -20,8 +20,12 @@ Truthfulness rules this file follows, because the platform's data carries them:
   unless the source positively stated it.
 - "Laveste pris" is shown only on the offer the API names as holding the
   claim. This file never computes a minimum of its own.
-- No clickout links yet: `/go/` is not live, and a provider URL is never
-  rendered in its place.
+- A shop link is rendered only where Chillout says the offer can be reached
+  (`link.clickout_available` and a well-formed `clickout_url`) **and** the
+  offer is eligible to hold the lowest-price claim. Stale, out-of-stock,
+  withdrawn and excluded offers stay visible and are not clickable. The link
+  is `https://sjekkpris.no` + Chillout's relative `clickout_url`, used exactly;
+  a provider URL is never rendered.
 """
 
 from __future__ import annotations
@@ -41,6 +45,12 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 PROPERTY = "sjekkpris-no"
+#: Where `/go/` is served. Clickout links are absolute on this origin even on
+#: the github.io preview, because the edge exists only here.
+SITE_ORIGIN = "https://sjekkpris.no"
+#: Chillout's `clickout_url`, exactly: `/go/` and a target token (`tgt_` and a
+#: 26-character ULID). Anything else renders no link.
+CLICKOUT_PATH = re.compile(r"^/go/tgt_[0-9A-HJKMNP-TV-Z]{26}$")
 TIMEOUT_SECONDS = 30
 OSLO = ZoneInfo("Europe/Oslo")
 
@@ -229,6 +239,20 @@ def notes(offer: dict) -> list[str]:
     return found
 
 
+def shop_href(offer: dict, *, excluded: bool) -> str | None:
+    """The offer's clickout link, or `None` where it must not be clickable."""
+    link = offer.get("link") or {}
+    path = link.get("clickout_url")
+    if not link.get("clickout_available") or not isinstance(path, str):
+        return None
+    if not CLICKOUT_PATH.match(path):
+        return None
+    eligible = ((offer.get("ranking") or {}).get("item_price") or {}).get("ranking_eligible")
+    if excluded or eligible is not True:
+        return None
+    return SITE_ORIGIN + path
+
+
 def offer_row(offer: dict, *, lowest: str | None, excluded: bool) -> str:
     price = money(offer.get("item_price"))
     availability = AVAILABILITY.get(
@@ -250,10 +274,17 @@ def offer_row(offer: dict, *, lowest: str | None, excluded: bool) -> str:
         f"<td>{e(total_text(offer))}</td>"
         f"<td>{e(availability)}</td>"
         f"<td>{'<br>'.join(e(m) for m in marks)}</td>"
-        # Clickout is not live yet. A provider URL is never rendered instead.
-        '<td><span class="muted">Butikklenke kommer</span></td>'
+        f"<td>{shop_cell(offer, excluded=excluded)}</td>"
         "</tr>"
     )
+
+
+def shop_cell(offer: dict, *, excluded: bool) -> str:
+    href = shop_href(offer, excluded=excluded)
+    if href is None:
+        return '<span class="muted">Ingen lenke</span>'
+    return f'<a class="shop" href="{e(href)}" rel="sponsored nofollow">Til butikken</a>'
+
 
 
 def product_body(product: dict, body: dict, *, base: str) -> str:
@@ -288,6 +319,7 @@ header{border-bottom:1px solid #ddd}
 table{border-collapse:collapse;width:100%}
 th,td{text-align:left;padding:8px;border-bottom:1px solid #eee;vertical-align:top}
 .muted{color:#777}
+.shop{display:inline-block;padding:4px 10px;border-radius:4px;background:#1d4ed8;color:#fff;text-decoration:none}
 footer{color:#777;font-size:14px;border-top:1px solid #ddd}
 """
 

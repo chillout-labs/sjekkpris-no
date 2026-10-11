@@ -9,7 +9,8 @@ directory for:
   naming it means something leaked from the build into the output;
 - `prd_`, the platform's product id, which a property never addresses
   products by;
-- `/go/`, because clickout is not live yet and no page may link to it.
+- `/go/` anywhere except in a well-formed clickout link,
+  `https://sjekkpris.no/go/tgt_…`, which is the only form `build.py` renders.
 
 Reports the file and which rule matched. Never prints the matched value.
 """
@@ -17,9 +18,13 @@ Reports the file and which rule matched. Never prints the matched value.
 from __future__ import annotations
 
 import os
+import re
 import sys
 import urllib.parse
 from pathlib import Path
+
+#: The one shape `/go/` may take in the output.
+CLICKOUT_LINK = re.compile(r"https://sjekkpris\.no/go/tgt_[0-9A-HJKMNP-TV-Z]{26}(?![0-9A-Za-z])")
 
 
 def forbidden() -> dict[str, str]:
@@ -38,7 +43,8 @@ def check(out: Path) -> list[str]:
     rules = forbidden()
     problems = []
     for path in sorted(p for p in out.rglob("*") if p.is_file()):
-        text = path.read_bytes().decode("utf-8", errors="replace").lower()
+        raw = path.read_bytes().decode("utf-8", errors="replace")
+        text = CLICKOUT_LINK.sub("", raw).lower()
         for name, needle in rules.items():
             if needle.lower() in text:
                 problems.append(f"{path.relative_to(out)}: contains the {name}")

@@ -10,7 +10,8 @@ proof, not the design.
   product list, and `…/catalogue/{namespace}/{slug}/offers` for each product
   page. It runs **only in GitHub Actions**; the browser never calls Chillout.
 - `check_output.py` fails the build if the output contains `apk_`, the key
-  itself, the Chillout origin's hostname, a `prd_` platform id, or `/go/`.
+  itself, the Chillout origin's hostname, a `prd_` platform id, or `/go/` in
+  any form other than a well-formed `https://sjekkpris.no/go/tgt_…` link.
 - A failed read fails the build, and a failed build never replaces the site
   that is already published.
 
@@ -24,13 +25,19 @@ proof, not the design.
 
 Pages source: **GitHub Actions**.
 
-## Not yet
+## Clickout links
 
-- **No clickout links.** `/go/` is not live on sjekkpris.no; offers show
-  "Butikklenke kommer", and a provider URL is never rendered in its place.
-- **No custom domain.** No `CNAME` until DNS cutover, so the github.io
-  preview keeps working.
-- **noindex** on every page while in beta.
+An offer gets a "Til butikken" link only when Chillout states a servable
+target (`link.clickout_available` and a `clickout_url` of exactly
+`/go/tgt_…`) **and** the offer is eligible to hold the lowest-price claim
+(`ranking.item_price.ranking_eligible`). The link is `https://sjekkpris.no` +
+that `clickout_url`, unchanged, with `rel="sponsored nofollow"`. Stale,
+out-of-stock, withdrawn and excluded offers stay listed with "Ingen lenke".
+A provider URL is never rendered.
+
+## Still in beta
+
+- **noindex** on every page.
 
 ## Truthfulness
 

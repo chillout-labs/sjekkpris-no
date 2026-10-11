@@ -27,7 +27,8 @@ KEY = "apk_FIXTURE-synthetic-not-a-real-key"
 
 def offer(offer_id, advertiser, minor, *, availability="in_stock", stale=False,
           shipping_state="not_provided", total=None, status="sorted_last_unknown_total",
-          last_confirmed="2026-10-11T04:15:00+00:00"):
+          last_confirmed="2026-10-11T04:15:00+00:00", token=None, eligible=True,
+          clickout_available=None):
     return {
         "offer_id": offer_id,
         "advertiser": advertiser,
@@ -42,9 +43,24 @@ def offer(offer_id, advertiser, minor, *, availability="in_stock", stale=False,
         "stale": stale,
         "withdrawn": False,
         "deselected": False,
-        # The contract carries a link block; the site must render nothing of it.
-        "link": {"clickout_available": True, "clickout_url": "/go/FIXTURE-token"},
+        "ranking": {
+            "item_price": {"availability_status": availability, "ranking_eligible": eligible,
+                           "ineligibility_reasons": [] if eligible else ["stale"]},
+            "total_price": {"availability_status": availability, "ranking_eligible": False,
+                            "ineligibility_reasons": ["unknown_total"]},
+        },
+        "link": {
+            "clickout_available": (token is not None) if clickout_available is None
+            else clickout_available,
+            "clickout_url": None if token is None else f"/go/{token}",
+        },
     }
+
+
+# FIXTURE target tokens: well-formed (tgt_ + 26 Crockford characters), invented.
+TOKEN_WINNER = "tgt_01FXTVRE" + "0" * 16 + "WA"
+TOKEN_STALE = "tgt_01FXTVRE" + "0" * 16 + "57"
+TOKEN_OOS = "tgt_01FXTVRE" + "0" * 16 + "0S"
 
 
 INDEX = {
@@ -64,9 +80,15 @@ COMPARISONS = {
         "property_id": "sjekkpris-no", "product_id": "prd_FIXTURE",
         "offers": [
             offer("o-cheap-stale", "FIXTURE Stale Shop", 99900, stale=True,
-                  last_confirmed="2026-10-01T04:15:00+00:00"),
-            offer("o-winner", "FIXTURE Winner Shop", 129900),
-            offer("o-oos", "FIXTURE Empty Shelf", 89900, availability="out_of_stock"),
+                  last_confirmed="2026-10-01T04:15:00+00:00", token=TOKEN_STALE,
+                  eligible=False),
+            offer("o-winner", "FIXTURE Winner Shop", 129900, token=TOKEN_WINNER),
+            offer("o-oos", "FIXTURE Empty Shelf", 89900, availability="out_of_stock",
+                  token=TOKEN_OOS, eligible=False),
+            # Eligible, but Chillout states no servable target.
+            offer("o-no-target", "FIXTURE Unrouted Shop", 139900),
+            # Eligible, but the path is not a target token: never rendered.
+            offer("o-bad-path", "FIXTURE Odd Path Shop", 149900, token="FIXTURE-not-a-token"),
         ],
         "excluded": [],
         "lowest_item_price": "o-winner",
@@ -210,6 +232,39 @@ class BuildTest(unittest.TestCase):
         self.assertIn("401", str(raised.exception))
         self.assertNotIn("apk_", str(raised.exception))
         self.assertNotIn("127.0.0.1", str(raised.exception))
+
+    def row(self, name):
+        return next(r for r in self.lamp.split("<tr>") if name in r)
+
+    def test_the_eligible_servable_offer_links_to_its_clickout_url_on_sjekkpris(self):
+        self.assertIn(
+            f'href="https://sjekkpris.no/go/{TOKEN_WINNER}" rel="sponsored nofollow"',
+            self.row("FIXTURE Winner Shop"),
+        )
+
+    def test_no_link_for_stale_out_of_stock_unrouted_or_malformed(self):
+        for name in ("FIXTURE Stale Shop", "FIXTURE Empty Shelf", "FIXTURE Unrouted Shop",
+                     "FIXTURE Odd Path Shop"):
+            row = self.row(name)
+            self.assertNotIn("href", row, name)
+            self.assertNotIn("/go/", row, name)
+            self.assertIn("Ingen lenke", row, name)
+        # Still visible and truthful, just not clickable.
+        self.assertIn("Ikke bekreftet nylig", self.row("FIXTURE Stale Shop"))
+        self.assertIn("Ikke på lager", self.row("FIXTURE Empty Shelf"))
+
+    def test_exactly_one_clickout_link_on_the_page(self):
+        self.assertEqual(self.lamp.count("https://sjekkpris.no/go/"), 1)
+
+    def test_the_guard_allows_only_well_formed_clickout_links(self):
+        env = {"CHILLOUT_READ_KEY": KEY, "CHILLOUT_ORIGIN": self.origin}
+        with mock.patch.dict(os.environ, env):
+            for bad in ('href="/go/' + TOKEN_WINNER + '"',
+                        'href="https://sjekkpris.no/go/FIXTURE-not-a-token"',
+                        'href="https://example.test/go/' + TOKEN_WINNER + '"'):
+                (self.out / "leak.html").write_text(bad, encoding="utf-8")
+                self.assertTrue(any("clickout path" in p for p in check_output.check(self.out)),
+                                bad)
 
     def test_a_missing_key_fails_before_any_request(self):
         with self.assertRaises(build.BuildError):
