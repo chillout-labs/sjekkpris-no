@@ -339,10 +339,10 @@ def build(client: Chillout, out: Path, *, base: str, noindex: bool) -> int:
     (out / "style.css").write_text(STYLE.lstrip(), encoding="utf-8")
 
     products = catalogue(client)
-    (out / "index.html").write_text(
-        page("SjekkPris.no", index_body(products, base=base), base=base, noindex=noindex),
-        encoding="utf-8",
-    )
+    from home_release import write_home
+    (out / 'assets').mkdir(exist_ok=True)
+    shutil.copyfile(Path(__file__).resolve().parent / 'assets' / 'sjekkpris-startside.webp', out / 'assets' / 'sjekkpris-startside.webp')
+    write_home(products, out, base=base, noindex=noindex, day=day, segment=segment)
     for product in products:
         ns, slug = segment(product["namespace"]), segment(product["local_slug"])
         body = comparison(client, ns, slug)
@@ -381,3 +381,4 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+

@@ -159,7 +159,7 @@ class BuildTest(unittest.TestCase):
         self.tmp.cleanup()
 
     def test_nok_renders_with_comma_dash_and_a_non_breaking_separator(self):
-        self.assertIn("NOK 1 299,-", self.index)
+        self.assertIn("1 299 kr", self.index)
         self.assertEqual(build.money({"minor": 31050, "currency": "NOK"}), "NOK 310,50")
 
     def test_a_null_price_is_no_price_never_zero(self):
@@ -273,3 +273,4 @@ class BuildTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
