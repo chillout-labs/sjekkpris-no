@@ -3,6 +3,7 @@ from html import escape as e
 import json
 from home_ui import render_home, HOME_STYLE
 from product_ui import ui_icon, PRODUCT_STYLE
+from catalogue_ui import render_listing, LISTING_STYLE
 
 def page(title: str, body: str, *, base: str, noindex: bool, home: bool = False) -> str:
     robots = '<meta name="robots" content="noindex">' if noindex else ""
@@ -38,23 +39,12 @@ def home_money(amount):
 
 def write_home(client_products, out, *, base, noindex, day, segment):
     products = client_products
-    css = '* { box-sizing:border-box }\n' + PRODUCT_STYLE + HOME_STYLE
+    css = '* { box-sizing:border-box }\n' + PRODUCT_STYLE + HOME_STYLE + LISTING_STYLE
     (out / 'home.css').write_text(css, encoding='utf-8')
     body = render_home(products, base=base, money=home_money, day=day, segment=segment)
     (out / 'index.html').write_text(page('SjekkPris – sammenlign priser', body, base=base, noindex=noindex, home=True), encoding='utf-8')
     index = [{'name':p.get('local_name') or p['local_slug'], 'url':f"{base}p/{segment(p['namespace'])}/{segment(p['local_slug'])}/"} for p in products]
     (out / 'search-index.json').write_text(json.dumps(index), encoding='utf-8')
-    links = ''.join(f'<li data-result><a href="{e(p["url"], quote=True)}">{e(p["name"])}</a></li>' for p in index)
-    body = '<section class="sp-home" style="padding:32px 0"><h1>Søk etter produkter</h1><p id="result-status" role="status"></p><ul id="search-results">'+links+'</ul><noscript>Her vises alle tilgjengelige produkter.</noscript></section>'
-    body += """<script>(()=>{
-      const form=document.querySelector('.sp-search'), input=form.querySelector('input');
-      const rows=Array.from(document.querySelectorAll('[data-result]'));
-      input.value=new URLSearchParams(location.search).get('q')||'';
-      function filter(){let n=0;const q=input.value.trim().toLocaleLowerCase('nb');
-        rows.forEach(row=>{row.hidden=!row.textContent.toLocaleLowerCase('nb').includes(q);if(!row.hidden)n++;});
-        document.getElementById('result-status').textContent=n ? n+' produkter funnet' : 'Ingen produkter funnet. Prøv et annet produktnavn.';
-      }
-      form.addEventListener('submit',e=>{e.preventDefault();filter();});input.addEventListener('input',filter);filter();
-    })();</script>"""
+    body = render_listing(products, base=base, money=home_money, day=day, segment=segment)
     (out / 'search').mkdir(exist_ok=True)
     (out / 'search' / 'index.html').write_text(page('Søk – SjekkPris',body,base=base,noindex=True),encoding='utf-8')
