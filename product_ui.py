@@ -25,6 +25,37 @@ def ui_icon(name: str) -> str:
             + _ICONS[name] + '</svg>')
 
 
+PRICE_MODE_SCRIPT = r"""
+(() => {
+  const root = document.querySelector('.sp-product');
+  const toggle = document.getElementById('include-shipping');
+  const control = document.getElementById('shipping-switch-control');
+  const rows = document.getElementById('price-rows');
+  const status = document.getElementById('price-sort-status');
+  if (!root || !toggle || !rows || !control || !status) return;
+  function renderMode() {
+    const mode = toggle.checked ? 'total' : 'item';
+    root.dataset.priceBasis = mode;
+    root.querySelectorAll('[data-price-mode]').forEach(el => {
+      el.hidden = el.dataset.priceMode !== mode;
+    });
+    const key = mode + 'Order';
+    Array.from(rows.children).sort((a,b) =>
+      Number(a.querySelector('[data-item-order]').dataset[key]) -
+      Number(b.querySelector('[data-item-order]').dataset[key])
+    ).forEach(row => rows.appendChild(row));
+    status.textContent = toggle.checked
+      ? 'Sortert etter kjent totalpris · ukjent totalpris vises sist. Vinnerboksen viser laveste kjente totalpris når en vinner finnes.'
+      : 'Sortert etter varepris · uten frakt. Vinnerboksen viser laveste varepris når en vinner finnes.';
+  }
+  toggle.checked = false;
+  toggle.addEventListener('change', renderMode);
+  renderMode();
+  control.hidden = false;
+})();
+"""
+
+
 PRODUCT_STYLE = r"""
 /* Scoped product presentation: older homepage/table rules cannot alter it. */
 :root { --sp-ink:#10203b; --sp-muted:#586780; --sp-green:#006454; --sp-mint:#edf8f4; --sp-line:#e2e8ef; --sp-surface:#f5f8fb }
@@ -53,6 +84,15 @@ p.sp-tagline { font-size:12px; margin:0; padding-left:20px; border-left:1px soli
 .sp-menu nav a { display:block; padding:12px; color:var(--sp-ink); font-size:14px; border-radius:7px }
 .sp-menu nav a:hover { background:var(--sp-mint) }
 .sp-product { font:15px/1.55 Arial,Helvetica,sans-serif; color:var(--sp-ink) }
+.sp-product [hidden] { display:none!important }
+.sp-price-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px }
+.sp-shipping-switch { position:relative; display:inline-flex; align-items:center; gap:9px; min-height:44px; cursor:pointer; font-size:13px; color:var(--sp-ink) }
+.sp-shipping-switch input { position:absolute; width:1px; height:1px; opacity:0 }
+.sp-switch-track { display:block; width:40px; height:24px; border-radius:14px; background:#64748b; padding:3px; box-sizing:border-box }
+.sp-switch-track:after { content:''; display:block; width:18px; height:18px; border-radius:50%; background:#fff }
+.sp-shipping-switch input:checked+.sp-switch-track { background:var(--sp-green) }
+.sp-shipping-switch input:checked+.sp-switch-track:after { transform:translateX(16px) }
+.sp-shipping-switch input:focus-visible+.sp-switch-track { outline:3px solid #177fc5; outline-offset:4px }
 .sp-product *, .sp-header * { box-sizing:border-box }
 .sp-product h1,.sp-product h2,.sp-product h3,.sp-product p,.sp-product dl { margin:0 }
 .sp-product h1 { font-size:34px; line-height:1.17; letter-spacing:-1px; font-weight:700; overflow-wrap:anywhere }
@@ -149,4 +189,12 @@ footer.sp-footer { margin-top:32px; padding:24px 0; background:var(--sp-surface)
  .sp-offers .sp-cta { padding:8px; gap:5px; white-space:nowrap }
 }
 @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto } }
+@media(min-width:768px) {
+ .sp-product[data-price-basis="item"] .sp-switchable-offers tr { grid-template-columns:1.3fr .6fr 1fr 1.2fr }
+ .sp-product[data-price-basis="item"] .sp-switchable-offers th:nth-child(2),
+ .sp-product[data-price-basis="item"] .sp-switchable-offers .sp-item { display:none }
+ .sp-product[data-price-basis="item"] .sp-switchable-offers .sp-shipping { grid-column:2 }
+ .sp-product[data-price-basis="item"] .sp-switchable-offers .sp-total { grid-column:3 }
+ .sp-product[data-price-basis="item"] .sp-switchable-offers .sp-action { grid-column:4 }
+}
 """

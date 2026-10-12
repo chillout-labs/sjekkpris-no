@@ -44,7 +44,7 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from product_ui import PRODUCT_STYLE, ui_icon
+from product_ui import PRODUCT_STYLE, PRICE_MODE_SCRIPT, ui_icon
 from home_ui import HOME_STYLE, render_home
 
 PROPERTY = "sjekkpris-no"
@@ -312,6 +312,42 @@ def find_hero_offer(offers: list[dict], lowest_total_id: str | None, lowest_item
     return (None, "none")
 
 
+def price_mode_hero(offers: list[dict], body: dict, *, include_shipping: bool) -> str:
+    """Only API-designated winners; total mode never silently falls back to item."""
+    if not offers:
+        return '<aside class="sp-price"><h2>Ingen tilbud akkurat nå</h2><p>Vi viser priser her når tilbud er tilgjengelige.</p></aside>'
+    if include_shipping:
+        winner = find_lowest_total_price_offer(offers, body.get('lowest_known_total_price'))
+        if winner:
+            return render_price_hero(winner, 'total')
+        return ('<aside class="sp-price"><h2>Ingen kjent totalpris</h2>'
+                '<p>Ingen tilbud har en bekreftet totalpris som kan fremheves. '
+                'Slå av «Inkluder frakt» for å se laveste varepris.</p></aside>')
+    winner, kind = find_hero_offer(offers, None, body.get('lowest_item_price'))
+    return render_price_hero(winner or {}, kind)
+
+
+def price_display_order(offers: list[dict], *, include_shipping: bool) -> list[int]:
+    """User-selected numeric display sort; does not calculate claims or eligibility.
+
+    Comparable offers are already separated from excluded offers by Chillout.
+    Stable ties retain API order. Unknown/test-data totals come after known totals.
+    Only ordinal positions reach the browser, not internal offer identifiers.
+    """
+    field = 'known_total_price' if include_shipping else 'item_price'
+    def amount(o):
+        if include_shipping and ((o.get('shipping') or {}).get('terms') or {}).get('is_test_data'):
+            return None
+        return o.get(field)
+    currencies = {a['currency'] for o in offers if (a := amount(o)) is not None}
+    if len(currencies) > 1:
+        raise BuildError('cannot sort comparable offers with different currencies')
+    return sorted(range(len(offers)), key=lambda i: (
+        amount(offers[i]) is None,
+        int(amount(offers[i])['minor']) if amount(offers[i]) is not None else 0,
+    ))
+
+
 def render_product_image(identity: dict) -> str:
     image = identity.get("image") or {}
     url = image.get("url")
@@ -334,7 +370,7 @@ def render_price_hero(offer: dict, price_type: str) -> str:
         freight = "0 kr"
     breakdown = f'Varepris {item} + frakt {freight}' if item and freight else f'Varepris {item or "ukjent"} · {shipping_text(offer)}'
     if price_type == "item":
-        breakdown += " · Ingen bekreftet totalprisvinner"
+        breakdown = f'Pris uten frakt · {shipping_text(offer)}'
     availability = AVAILABILITY.get((offer.get("availability") or {}).get("status"), "Lagerstatus ukjent")
     confirmed = day(offer.get("last_confirmed_at"))
     facts = ''.join(f'<div>{ui_icon(icon)}<span>{e(text)}</span></div>' for icon, text in [
@@ -349,20 +385,26 @@ def render_price_hero(offer: dict, price_type: str) -> str:
             + '</aside>')
 
 
-def offer_row(offer: dict, *, lowest: str | None, excluded: bool) -> str:
+def offer_row(offer: dict, *, lowest: str | None, excluded: bool,
+              lowest_total: str | None = None, item_order: int = 0, total_order: int = 0,
+              switchable: bool = False) -> str:
     price = money(offer.get("item_price")) or "Ingen pris"
     total = total_text(offer)
     availability = AVAILABILITY.get((offer.get("availability") or {}).get("status"), "Lagerstatus ukjent")
     marks = notes(offer)
     if excluded:
         marks.insert(0, EXCLUSION.get(offer.get("comparison_status"), "Ikke sammenlignbar"))
-    badge = '<span class="sp-price-note">Laveste pris · varepris</span>' if not excluded and lowest and offer.get("offer_id") == lowest else ''
+    badge = '<span class="sp-price-note" data-price-mode="item">Laveste pris · varepris</span>' if not excluded and lowest and offer.get("offer_id") == lowest else ''
+    total_badge = '<span class="sp-price-note" data-price-mode="total" hidden>Laveste kjente totalpris</span>' if not excluded and lowest_total and offer.get("offer_id") == lowest_total else ''
     marks_html = ''.join(f'<span class="sp-note">{e(m)}</span>' for m in marks)
+    primary = (f'<span data-price-mode="item"><span class="sp-mobile-label">Varepris </span><strong>{e(price)}</strong>{badge}</span>'
+               f'<span data-price-mode="total" hidden><span class="sp-mobile-label">Totalpris </span><strong>{e(total)}</strong>{total_badge}</span>') if switchable else f'<strong>{e(price)}</strong>{badge}'
+    sort_attrs = f' data-item-order="{item_order}" data-total-order="{total_order}"' if switchable else ''
     return ('<tr><td>' + f'<strong>{e(offer.get("advertiser") or "Ukjent butikk")}</strong>{marks_html}'
             + '</td>'
-            + f'<td class="sp-item"><span class="sp-mobile-label">Varepris </span>{e(price)}{badge}</td>'
+            + f'<td class="sp-item"><span class="sp-mobile-label">Varepris </span>{e(price)}</td>'
             + f'<td class="sp-shipping">{e(shipping_text(offer))}</td>'
-            + f'<td class="sp-total"><span class="sp-mobile-label">Totalpris </span><strong>{e(total)}</strong></td>'
+            + f'<td class="sp-total"{sort_attrs}>{primary}' + ('' if switchable else f'<span class="sp-note">{e(total)}</span>') + '</td>'
             + f'<td class="sp-stock">{e(availability)}</td>'
             + f'<td class="sp-action">{shop_cell(offer, excluded=excluded)}</td></tr>')
 
@@ -460,35 +502,45 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
     name = identity.get("local_name") or product.get("local_name") or "Produkt"
     offers, excluded = body.get("offers") or [], body.get("excluded") or []
     lowest = body.get("lowest_item_price")
-    hero, price_type = find_hero_offer(offers, body.get("lowest_known_total_price"), lowest)
+    item_winner, _ = find_hero_offer(offers, None, lowest)
+    total_winner = find_lowest_total_price_offer(offers, body.get('lowest_known_total_price'))
+    lowest = item_winner.get('offer_id') if item_winner else None
+    lowest_total = total_winner.get('offer_id') if total_winner else None
     metadata = [("Merke", identity.get("local_brand")), ("Kategori", identity.get("local_category")), ("Pakning", identity.get("local_pack_size"))]
     metadata = [(label, value) for label, value in metadata if value]
     meta = ''.join(f'<div><dt>{e(label)}</dt><dd>{e(value)}</dd></div>' for label, value in metadata)
-    price_html = render_price_hero(hero or {}, price_type)
-    if not offers:
-        price_html = '<aside class="sp-price"><h2>Ingen tilbud akkurat nå</h2><p>Vi viser priser her når tilbud er tilgjengelige.</p></aside>'
+    price_html = (f'<div data-price-mode="item">{price_mode_hero(offers, body, include_shipping=False)}</div>'
+                  f'<div data-price-mode="total" hidden>{price_mode_hero(offers, body, include_shipping=True)}</div>')
     unknown = any(total_text(o) == "Totalpris ukjent" for o in offers)
     if unknown:
-        price_html += '<p class="sp-price-caveat">Totalpris er ukjent for ett eller flere tilbud. Ukjent frakt er ikke regnet som gratis.</p>'
-    head = '<tr><th scope="col">Butikk</th><th scope="col">Varepris</th><th scope="col">Frakt</th><th scope="col">Totalpris</th><th scope="col">Lager</th><th scope="col"><span class="sp-sr">Butikklenke</span></th></tr>'
-    rows = ''.join(offer_row(o, lowest=lowest, excluded=False) for o in offers)
-    table = f'<table class="sp-offers"><caption class="sp-sr">Sammenlign butikkenes priser og frakt</caption><thead>{head}</thead><tbody>{rows}</tbody></table>' if offers else '<p class="sp-empty">Ingen tilbud akkurat nå.</p>'
+        price_html += '<p class="sp-price-caveat" data-price-mode="total" hidden>Totalpris er ukjent for ett eller flere tilbud. Ukjent frakt er ikke regnet som gratis.</p>'
+    head = '<tr><th scope="col">Butikk</th><th scope="col">Varepris</th><th scope="col">Frakt</th><th scope="col"><span data-price-mode="item">Varepris</span><span data-price-mode="total" hidden>Totalpris</span></th><th scope="col">Lager</th><th scope="col"><span class="sp-sr">Butikklenke</span></th></tr>'
+    item_order = price_display_order(offers, include_shipping=False)
+    total_order = {i: rank for rank, i in enumerate(price_display_order(offers, include_shipping=True))}
+    rows = ''.join(offer_row(offers[i], lowest=lowest, lowest_total=lowest_total,
+                            excluded=False, item_order=rank, total_order=total_order[i],
+                            switchable=True) for rank, i in enumerate(item_order))
+    table = f'<table class="sp-offers sp-switchable-offers"><caption class="sp-sr">Sammenlign butikkenes priser og frakt</caption><thead>{head}</thead><tbody id="price-rows">{rows}</tbody></table>' if offers else '<p class="sp-empty">Ingen tilbud akkurat nå.</p>'
     if excluded:
         other_rows = ''.join(offer_row(o, lowest=None, excluded=True) for o in excluded)
-        table += f'<h3 class="sp-excluded-title">Ikke sammenlignbare tilbud</h3><table class="sp-offers"><thead>{head}</thead><tbody>{other_rows}</tbody></table>'
+        excluded_head = head.replace('<span data-price-mode="item">Varepris</span><span data-price-mode="total" hidden>Totalpris</span>', 'Varepris')
+        table += f'<h3 class="sp-excluded-title">Ikke sammenlignbare tilbud</h3><table class="sp-offers"><thead>{excluded_head}</thead><tbody>{other_rows}</tbody></table>'
     specs = f'<dl class="sp-specs">{meta}</dl>' if meta else '<p class="sp-empty">Ingen produktspesifikasjoner tilgjengelig.</p>'
-    return f"""<div class="sp-product">
+    switch = ('<label class="sp-shipping-switch" id="shipping-switch-control" hidden>'
+              '<input id="include-shipping" type="checkbox" role="switch" aria-controls="price-winner price-rows" aria-describedby="price-sort-status">'
+              '<span class="sp-switch-track" aria-hidden="true"></span><span>Inkluder frakt</span></label>') if offers else ''
+    return f"""<div class="sp-product" data-price-basis="item">
 <nav class="sp-breadcrumb" aria-label="Brødsmulesti"><a href="{e(base)}">Hjem</a><span aria-hidden="true">›</span><span>{e(name)}</span></nav>
 <section class="sp-hero" aria-labelledby="product-title">
 <div class="sp-identity"><h1 id="product-title">{e(name)}</h1><dl class="sp-meta">{meta}</dl></div>
 <div class="sp-gallery">{render_product_image(identity)}</div>
-<div class="sp-winner">{price_html}</div></section>
+<div class="sp-winner" id="price-winner">{price_html}</div></section>
 <nav class="sp-tabs" aria-label="Produktseksjoner"><a href="#prices">Priser ({len(offers)})</a><a href="#history">Prishistorikk</a><a href="#about">Om produktet</a><a href="#specifications">Spesifikasjoner</a></nav>
-<div class="sp-comparison"><section class="sp-panel sp-offer-panel" id="prices"><h2>Butikker og priser</h2><p class="sp-subtitle">Totalpris inkluderer frakt når den er kjent.</p>{table}<p class="sp-footnote">Tilbudene vises i rekkefølgen fra prisgrunnlaget. Kontroller endelig pris og levering hos butikken.</p></section>
+<div class="sp-comparison"><section class="sp-panel sp-offer-panel" id="prices"><div class="sp-price-toolbar"><h2>Butikker og priser</h2>{switch}</div><p class="sp-subtitle" id="price-sort-status" role="status" aria-live="polite">Sortert etter varepris · uten frakt.</p><noscript><p class="sp-subtitle">Visning med frakt krever JavaScript. Frakt vises separat ved hvert tilbud.</p></noscript>{table}<p class="sp-footnote">Kontroller endelig pris og levering hos butikken.</p></section>
 <section class="sp-panel" id="history"><h2>Prishistorikk</h2><div class="sp-history-empty">{ui_icon('chart')}<h3>Ingen prishistorikk ennå</h3><p>Vi har ikke prisutvikling å vise for dette produktet.</p></div></section></div>
 <div class="sp-details"><section class="sp-panel" id="about"><h2>Om produktet</h2><p class="sp-empty">Utfyllende produktinformasjon er ikke tilgjengelig.</p></section><section class="sp-panel" id="specifications"><h2>Spesifikasjoner</h2>{specs}</section></div>
 <div class="sp-trust"><div>{ui_icon('shield')}<p><strong>Uavhengig sammenligning</strong><span>Du handler direkte hos butikken.</span></p></div><div>{ui_icon('truck')}<p><strong>Frakt når den er kjent</strong><span>Ukjent frakt vises tydelig.</span></p></div><div>{ui_icon('info')}<p><strong>Åpent om provisjon</strong><span>Vi kan få provisjon via butikklenker.</span></p></div></div>
-</div>"""
+</div><script>{PRICE_MODE_SCRIPT}</script>"""
 
 
 STYLE = """

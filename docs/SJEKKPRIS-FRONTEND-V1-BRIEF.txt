@@ -3,6 +3,14 @@ Repo: chillout-labs/sjekkpris-no
 Dato: 11. oktober 2026
 Status: Implementeringsbrief basert på vedtatt design. Foreslått teknisk oppdeling er ikke en ny designgodkjenning.
 
+NYERE BRUKERBESLUTNING – 12. oktober 2026:
+Varepris uten frakt er nå standard, også i vinnerboksen. «Inkluder frakt» over
+prislisten styrer både hovedpriser, visningssortering og vinnerboks. Dette
+overstyrer briefens tidligere totalpris-først-regel og kravet om uendret
+visningsrekkefølge ved skifte av prisgrunnlag. Chillout eier fortsatt begge
+vinnerreferanser og eligibility. Se PRICE-DISPLAY-DECISION-2026-10-12.md for
+avgrensning, ukjent frakt og tester. Ingen merge-/publiseringsgodkjenning.
+
 OPPDRAG
 
 Gjør den eksisterende integrasjonstesten til første reelle SjekkPris-frontend. Reproduser vedtatt design og UX; ikke lag en ny visuell retning. Behold den fungerende Chillout-integrasjonen, GitHub Pages, offentlig produktidentitet og clickout.
@@ -285,3 +293,4 @@ Chillout tilbudskontrakt:
 https://github.com/chillout-labs/chillout-platform/blob/31f1a741881938d799482abe7758afe86f1b55d9/src/chillout/read/contract.py
 
 Vedlegg som følger overleveringen: denne briefen, SjekkPris-originalarkiv-2026-10-11.zip og SjekkPris-prosjektgrunnlag-2026-10-11.txt. Bildekatalog-PDF er nyttig som oversikt, men erstatter ikke originalene.
+

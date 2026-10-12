@@ -169,7 +169,7 @@ class BuildTest(unittest.TestCase):
 
     def test_lowest_price_badge_only_on_the_offer_the_api_names(self):
         # Find table rows (after "<tbody>") to avoid hero section
-        tbody_idx = self.lamp.find("<tbody>")
+        tbody_idx = self.lamp.find("<tbody")
         self.assertTrue(tbody_idx > 0, "Table body not found")
         tbody = self.lamp[tbody_idx:]
 
@@ -290,3 +290,4 @@ class BuildTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

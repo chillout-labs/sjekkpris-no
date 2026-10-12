@@ -2,6 +2,11 @@
 
 Status: implementation draft, NOT visually approved. Do not merge or deploy.
 
+Update: user approved item-price default and a synchronized shipping switch on
+12 October. See PRICE-DISPLAY-DECISION-2026-10-12.md. After this update 74 Python
+tests and 3 Node interaction tests pass. Screenshots of dfb1e79 were reviewed;
+they precede the switch and do not verify its rendering.
+
 Based on frontend-v1-design at c1a39b94b33bcefe38bdf9ac096303daafb682c0.
 
 ## Changes
