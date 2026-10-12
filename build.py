@@ -44,6 +44,9 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from product_ui import PRODUCT_STYLE, ui_icon
+from home_ui import HOME_STYLE, render_home
+
 PROPERTY = "sjekkpris-no"
 #: Where `/go/` is served. Clickout links are absolute on this origin even on
 #: the github.io preview, because the edge exists only here.
@@ -160,249 +163,32 @@ def segment(value: str) -> str:
 # -- rendering -------------------------------------------------------------
 
 
-def page(title: str, body: str, *, base: str, noindex: bool) -> str:
+def page(title: str, body: str, *, base: str, noindex: bool, home: bool = False) -> str:
     robots = '<meta name="robots" content="noindex">' if noindex else ""
+    header_search = '' if home else (
+        f'<form class="sp-search" role="search" action="{e(base)}search/" method="get">'
+        f'{ui_icon("search")}<input name="q" aria-label="Søk etter produktnavn" placeholder="Søk etter produkter …" required>'
+        f'<button type="submit" aria-label="Søk">{ui_icon("arrow")}</button></form>')
+    # Keep homepage's existing search IDs separate from the shared header.
     return f"""<!doctype html>
-<html lang="nb">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="light dark">
-{robots}
-<title>{e(title)}</title>
-<link rel="stylesheet" href="{e(base)}style.css">
-</head>
-<body>
-<header>
-<div class="container topbar">
-<a class="brand" href="{e(base)}" aria-label="SjekkPris"><span>S</span>jekkPris</a>
-<p class="tagline">Smartere valg. Mer for pengene.</p>
-<button id="menu-toggle" class="menu-button" aria-expanded="false" aria-controls="menu-panel">
-<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
-<span>Meny</span>
-</button>
-<nav id="menu-panel" class="menu-panel" aria-label="Hovedmeny" hidden>
-<a href="#prices">Butikker og priser</a>
-<a href="#history">Prishistorikk</a>
-<a href="#about">Om produktet</a>
-<a href="#specifications">Spesifikasjoner</a>
-</nav>
-</div>
-<div class="search-bar">
-<div class="container">
-<form id="search-form" role="search" class="search-form-horizontal">
-<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-<circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-</svg>
-<input id="query" aria-label="Søk etter produkter" placeholder="Søk etter produkter, merker, kategorier …" autocomplete="off">
-<button aria-label="Søk"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-<path d="m5 12 7-7 7 7"/></svg></button>
-</form>
-<div id="search-result" class="search-result" role="status" hidden></div>
-</div>
-</div>
-<div class="categories">
-<div class="container">
-<span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3zm10 0h8v8h-8zm0 10h8v8h-8zM3 13h8v8H3z"/></svg>Alle kategorier</span>
-<span>Elektronikk</span><span>Hjem og husholdning</span><span>Sport og fritid</span>
-<span>Skjønnhet og helse</span><span>Barn og familie</span><span>Hage og utemiljø</span>
-</div>
-</div>
-</header>
-<main class="container" id="product">
-<div class="main-container">
-{body}
-</div>
-</main>
-<footer>
-<div class="container">
-<p>Prisene hentes fra annonsørenes produktfeeder. Beta – innholdet er under utvikling.</p>
-</div>
-</footer>
-</body>
-</html>
-"""
+<html lang="nb"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">{robots}<title>{e(title)}</title>
+<link rel="stylesheet" href="{e(base)}style.css"></head><body>
+<a class="sp-skip" href="#main">Hopp til innhold</a>
+<header class="sp-header"><div class="sp-shell sp-topbar">
+<a class="sp-brand" href="{e(base)}" aria-label="SjekkPris – forsiden"><span>S</span>jekkPris</a>
+<p class="sp-tagline">Smartere valg. Mer for pengene.</p>
+{header_search}
+<details class="sp-menu"><summary>{ui_icon('menu')}<span>Meny</span></summary>
+<nav aria-label="Hovedmeny"><a href="{e(base)}">Alle produkter</a><a href="{e(base)}search/">Søk etter produkter</a></nav></details>
+</div></header><main id="main" class="sp-shell">{body}</main>
+<footer class="sp-footer"><div class="sp-shell"><strong>SjekkPris</strong><p>Uavhengig prissammenligning. Du handler hos butikken.</p><p>Vi kan motta provisjon når du handler via lenkene våre. Beta – innholdet er under utvikling.</p></div></footer>
+</body></html>"""
 
 
 def index_body(products: list[dict], *, base: str) -> str:
-    if not products:
-        return "<h1>Hva vil du sammenligne?</h1>\n<p>Søk etter et produkt, eller beskriv hva du trenger.</p>\n<p>Ingen produkter er publisert ennå.</p>"
-
-    # Build example chips from diverse products in the catalog
-    # Select products for example chips (e.g., first, middle, last)
-    example_indices = [0]
-    if len(products) > 2:
-        example_indices.append(len(products) // 2)
-    if len(products) > 1:
-        example_indices.append(len(products) - 1)
-    example_indices = list(dict.fromkeys(example_indices))  # Remove duplicates while preserving order
-
-    example_chips = []
-    for idx in example_indices[:3]:  # Limit to 3 example chips
-        if idx < len(products):
-            product = products[idx]
-            name = product.get("local_name") or product.get("local_slug")
-            ns, slug = segment(product["namespace"]), segment(product["local_slug"])
-            href = f"{base}p/{ns}/{slug}/"
-            example_chips.append(f'<a href="{e(href)}" class="chip">{e(name)}</a>')
-
-    examples_html = "\n".join(example_chips)
-
-    # Build product table
-    rows = []
-    for product in products:
-        ns, slug = segment(product["namespace"]), segment(product["local_slug"])
-        href = f"{base}p/{ns}/{slug}/"
-        price = money(product.get("lowest_item_price"))
-        confirmed = day(product.get("lowest_item_price_confirmed_at"))
-        count = int(product.get("offer_count") or 0)
-        offer_text = "1 tilbud" if count == 1 else f"{count} tilbud"
-        rows.append(
-            "<tr>"
-            f'<td><a href="{e(href)}">{e(product.get("local_name") or slug)}</a></td>'
-            f"<td>{e(price) if price else '<span class=\"muted\">Ingen pris</span>'}</td>"
-            f"<td>{e(confirmed) if confirmed else ''}</td>"
-            f"<td><span class=\"text-sm\">{e(offer_text)}</span></td>"
-            "</tr>"
-        )
-
-    table_html = (
-        "<h2>Produkter</h2>\n<p class=\"text-sm\">Søket finner foreløpig produkter etter navn. Kategoribrowsing og behovssøk kommer når datagrunnlaget er klart.</p>\n<table>\n"
-        "<thead><tr><th>Produkt</th><th>Laveste pris</th><th>Pris bekreftet</th>"
-        "<th>Tilbud</th></tr></thead>\n<tbody>\n" + "\n".join(rows) + "\n</tbody>\n</table>"
-    )
-
-    # Build the complete homepage HTML
-    return (
-        "<section class=\"search-section\">"
-        "<h1>Hva vil du sammenligne?</h1>"
-        "<p>Søk etter et produkt, eller beskriv hva du trenger.</p>"
-        "<div class=\"search-form-container\">"
-        '<form id="search-form" class="search-form">'
-        '<input type="text" id="search-input" class="search-input" placeholder="Søk eller beskriv hva du ser etter …" autocomplete="off">'
-        '<button type="submit" class="search-button" aria-label="Søk">🔍</button>'
-        "</form>"
-        '<div id="autocomplete-results" class="autocomplete-results" role="listbox" aria-label="Søkeforslag"></div>'
-        "</div>"
-        "<div class=\"examples\">"
-        f"<p><strong>Prøv for eksempel:</strong></p>"
-        f"<div class=\"chips\">{examples_html}</div>"
-        "</div>"
-        "</section>"
-        + table_html +
-        "<script>" +
-        """
-        (function() {
-            const searchInput = document.getElementById('search-input');
-            const searchForm = document.getElementById('search-form');
-            const autocompleteResults = document.getElementById('autocomplete-results');
-            const chips = document.querySelectorAll('.chip');
-            let searchIndex = null;
-            let selectedIndex = -1;
-
-            // Load search index
-            fetch('""" + e(base) + """search-index.json')
-                .then(r => r.json())
-                .then(data => { searchIndex = data; })
-                .catch(err => console.error('Failed to load search index:', err));
-
-            function escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
-            }
-
-            function performSearch(query) {
-                if (!searchIndex) return [];
-                const lower = query.toLowerCase();
-                return searchIndex.filter(item =>
-                    item.name.toLowerCase().includes(lower)
-                ).slice(0, 8);
-            }
-
-            function renderAutocomplete(results) {
-                autocompleteResults.innerHTML = '';
-                selectedIndex = -1;
-                if (!results.length) return;
-
-                results.forEach((item, idx) => {
-                    const div = document.createElement('div');
-                    div.className = 'autocomplete-item';
-                    div.textContent = item.name;
-                    div.setAttribute('data-url', item.url);
-                    div.setAttribute('data-index', idx);
-                    div.addEventListener('click', () => window.location.href = item.url);
-                    autocompleteResults.appendChild(div);
-                });
-                autocompleteResults.classList.add('visible');
-            }
-
-            function setSelectedIndex(idx) {
-                const items = autocompleteResults.querySelectorAll('.autocomplete-item');
-                items.forEach(item => item.classList.remove('selected'));
-                if (idx >= 0 && idx < items.length) {
-                    items[idx].classList.add('selected');
-                    items[idx].scrollIntoView({ block: 'nearest' });
-                }
-                selectedIndex = idx;
-            }
-
-            searchInput.addEventListener('input', (e) => {
-                const query = e.target.value.trim();
-                if (query.length < 1) {
-                    autocompleteResults.classList.remove('visible');
-                    return;
-                }
-                const results = performSearch(query);
-                renderAutocomplete(results);
-            });
-
-            searchInput.addEventListener('keydown', (e) => {
-                const items = autocompleteResults.querySelectorAll('.autocomplete-item');
-                if (!items.length) return;
-
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    setSelectedIndex(Math.min(selectedIndex + 1, items.length - 1));
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    setSelectedIndex(Math.max(selectedIndex - 1, -1));
-                } else if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (selectedIndex >= 0 && selectedIndex < items.length) {
-                        window.location.href = items[selectedIndex].getAttribute('data-url');
-                    } else {
-                        // Show results page with all matches
-                        const query = searchInput.value.trim();
-                        if (query.length > 0) {
-                            window.location.href = '""" + e(base) + """search?q=' + encodeURIComponent(query);
-                        }
-                    }
-                } else if (e.key === 'Escape') {
-                    e.preventDefault();
-                    autocompleteResults.classList.remove('visible');
-                    selectedIndex = -1;
-                }
-            });
-
-            searchForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const query = searchInput.value.trim();
-                if (query.length > 0) {
-                    window.location.href = '""" + e(base) + """search?q=' + encodeURIComponent(query);
-                }
-            });
-
-            chips.forEach(chip => {
-                chip.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    window.location.href = chip.getAttribute('href');
-                });
-            });
-        })();
-        """ +
-        "</script>"
-    )
+    return render_home(products, base=base, money=money, day=day, segment=segment)
 
 
 def shipping_text(offer: dict) -> str:
@@ -527,153 +313,67 @@ def find_hero_offer(offers: list[dict], lowest_total_id: str | None, lowest_item
 
 
 def render_product_image(identity: dict) -> str:
-    """Render the product image or fallback 'Bilde mangler' placeholder.
-
-    Left column of 3-column hero (desktop) or top (mobile).
-    """
     image = identity.get("image") or {}
     url = image.get("url")
-
-    if url:
-        return (
-            '<div class="product-image">'
-            f'<img src="{e(url)}" alt="Produktbilde" style="object-fit: contain; width: 100%; height: auto;">'
-            '</div>'
-        )
-    else:
-        return (
-            '<div class="product-image" style="display: flex; align-items: center; justify-content: center; '
-            'background-color: var(--color-surface); border-radius: var(--radius-md); min-height: 300px;">'
-            '<div style="text-align: center; color: var(--color-text-muted);">'
-            '<p style="margin: 0; font-size: var(--font-size-lg);">Bilde mangler</p>'
-            '</div>'
-            '</div>'
-        )
+    if isinstance(url, str) and urllib.parse.urlsplit(url).scheme == "https":
+        return (f'<div class="sp-image"><img src="{e(url)}" '
+                f'alt="{e(identity.get("local_name") or "Produktbilde")}" '
+                'width="640" height="480" fetchpriority="high"></div>')
+    return '<div class="sp-image sp-image-empty">' + ui_icon('image') + '<span>Bilde mangler</span></div>'
 
 
 def render_price_hero(offer: dict, price_type: str) -> str:
-    """Render the price hero card (right column of 3-column hero).
-
-    price_type: "total" (total price winner), "item" (item price fallback), or "none" (no winner)
-
-    Per Brief §6:
-    - Total: show "Laveste totalpris på" with total price and "Inkl. frakt"
-    - Item: show "Laveste varepris" with item price and shipping status
-    - None: show empty/no-winner state
-    """
-    advertiser = e(offer.get("advertiser") or "butikken")
-    item_price = money(offer.get("item_price"))
-    total_price = money(offer.get("known_total_price"))
-    availability = AVAILABILITY.get(
-        (offer.get("availability") or {}).get("status"), "Lagerstatus ukjent"
-    )
-    href = shop_href(offer, excluded=False)
-
-    # Build the hero card HTML
-    html_parts = [
-        '<div class="price-hero">',
-        '<div class="price-header">',
-    ]
-
-    # Determine label and price display based on type
-    if price_type == "total":
-        html_parts.append('<span class="badge badge-lowest-total">Laveste kjente totalpris</span>')
-        price_html = f'<div class="price-amount">{e(total_price)}</div>'
-        item_info = f'Varepris + frakt · {e(advertiser)}'
-    elif price_type == "item":
-        html_parts.append('<span class="badge badge-lowest-item">Laveste varepris</span>')
-        price_html = f'<div class="price-amount">{e(item_price)}</div>'
-        item_info = e(advertiser)
-    else:
-        html_parts.append('<span class="badge" style="background-color: var(--color-surface);">Pris ukjent</span>')
-        price_html = '<div class="price-amount" style="color: var(--color-text-muted);">Ingen vinner</div>'
-        item_info = ''
-
-    html_parts.append('</div>')
-
-    # Price display (large, centered)
-    html_parts.append('<div class="price-display">')
-    html_parts.append(price_html)
-    html_parts.append('</div>')
-
-    # Item info on single line
-    if item_info:
-        html_parts.append(f'<div class="price-info">{e(item_info)}</div>')
-
-    if price_type != "none":
-        # Info row: shipping, availability, confirmed date (all on one line)
-        info_parts = []
-
-        # Shipping
-        shipping_label = shipping_text(offer)
-        if shipping_label:
-            info_parts.append(e(shipping_label))
-
-        # Availability
-        if availability:
-            info_parts.append(e(availability))
-
-        # Last confirmed
-        confirmed = day(offer.get("last_confirmed_at"))
-        if confirmed:
-            info_parts.append(f"Bekreftet {e(confirmed)}")
-
-        if info_parts:
-            html_parts.append(f'<div class="price-info-row">{" · ".join(info_parts)}</div>')
-
-        # Add CTA button
-        html_parts.append('<div class="hero-cta">')
-        if href:
-            html_parts.append(
-                f'<a href="{e(href)}" class="shop shop-hero" rel="sponsored nofollow">'
-                f'Gå til butikken</a>'
-            )
-        else:
-            html_parts.append('<div class="text-sm muted">Lenke ikke tilgjengelig</div>')
-        html_parts.append('</div>')
-
-    html_parts.append('</div>')
-
-    return "\n".join(html_parts)
+    if price_type == "none":
+        return '<aside class="sp-price"><h2>Ingen sammenlignbar pris</h2><p>Ingen pris kan fremheves akkurat nå. Se eventuelle tilbud nedenfor.</p></aside>'
+    shipping = offer.get("shipping") or {}
+    item = money(offer.get("item_price"))
+    amount = money(offer.get("known_total_price") if price_type == "total" else offer.get("item_price"))
+    label = "Laveste kjente totalpris" if price_type == "total" else "Laveste varepris"
+    freight = money(shipping.get("amount")) if shipping.get("state") == "known_amount" else None
+    if shipping.get("state") == "confirmed_free":
+        freight = "0 kr"
+    breakdown = f'Varepris {item} + frakt {freight}' if item and freight else f'Varepris {item or "ukjent"} · {shipping_text(offer)}'
+    if price_type == "item":
+        breakdown += " · Ingen bekreftet totalprisvinner"
+    availability = AVAILABILITY.get((offer.get("availability") or {}).get("status"), "Lagerstatus ukjent")
+    confirmed = day(offer.get("last_confirmed_at"))
+    facts = ''.join(f'<div>{ui_icon(icon)}<span>{e(text)}</span></div>' for icon, text in [
+        ('truck', shipping_text(offer)), ('box', availability), ('clock', 'Levering ikke oppgitt')])
+    return (f'<aside class="sp-price"><p class="sp-price-label">{e(label)}</p>'
+            f'<p class="sp-amount">{e(amount or "Ingen pris")}</p>'
+            f'<p class="sp-breakdown">{e(breakdown)}</p>'
+            f'<p class="sp-merchant">hos {e(offer.get("advertiser") or "Ukjent butikk")}</p>'
+            f'<div class="sp-hero-cta">{shop_cell(offer, excluded=False)}</div>'
+            f'<div class="sp-facts">{facts}</div>'
+            + (f'<p class="sp-confirmed">Pris bekreftet {e(confirmed)}</p>' if confirmed else '')
+            + '</aside>')
 
 
 def offer_row(offer: dict, *, lowest: str | None, excluded: bool) -> str:
-    price = money(offer.get("item_price"))
-    availability = AVAILABILITY.get(
-        (offer.get("availability") or {}).get("status"), "Lagerstatus ukjent"
-    )
+    price = money(offer.get("item_price")) or "Ingen pris"
+    total = total_text(offer)
+    availability = AVAILABILITY.get((offer.get("availability") or {}).get("status"), "Lagerstatus ukjent")
     marks = notes(offer)
     if excluded:
         marks.insert(0, EXCLUSION.get(offer.get("comparison_status"), "Ikke sammenlignbar"))
-    badge = (
-        ' <span class="badge badge-price">Laveste pris</span>'
-        if not excluded and lowest and offer.get("offer_id") == lowest
-        else ""
-    )
-    marks_html = (
-        '<div class="text-xs">' + '<br>'.join(e(m) for m in marks) + '</div>'
-        if marks else ''
-    )
-    return (
-        "<tr>"
-        f"<td>{e(offer.get('advertiser') or 'Ukjent annonsør')}</td>"
-        f"<td>{e(price) if price else '<span class=\"muted\">Ingen pris</span>'}{badge}</td>"
-        f"<td><span class=\"text-sm\">{e(shipping_text(offer))}</span></td>"
-        f"<td><span class=\"text-sm\">{e(total_text(offer))}</span></td>"
-        f"<td><span class=\"text-sm\">{e(availability)}</span></td>"
-        f"<td>{marks_html}</td>"
-        f"<td>{shop_cell(offer, excluded=excluded)}</td>"
-        "</tr>"
-    )
+    badge = '<span class="sp-price-note">Laveste pris · varepris</span>' if not excluded and lowest and offer.get("offer_id") == lowest else ''
+    marks_html = ''.join(f'<span class="sp-note">{e(m)}</span>' for m in marks)
+    return ('<tr><td>' + f'<strong>{e(offer.get("advertiser") or "Ukjent butikk")}</strong>{marks_html}'
+            + '</td>'
+            + f'<td class="sp-item"><span class="sp-mobile-label">Varepris </span>{e(price)}{badge}</td>'
+            + f'<td class="sp-shipping">{e(shipping_text(offer))}</td>'
+            + f'<td class="sp-total"><span class="sp-mobile-label">Totalpris </span><strong>{e(total)}</strong></td>'
+            + f'<td class="sp-stock">{e(availability)}</td>'
+            + f'<td class="sp-action">{shop_cell(offer, excluded=excluded)}</td></tr>')
 
 
 def shop_cell(offer: dict, *, excluded: bool) -> str:
     href = shop_href(offer, excluded=excluded)
     if href is None:
-        return '<span class="text-sm muted">Ingen lenke</span>'
-    advertiser = e(offer.get('advertiser') or 'butikken')
-    return f'<a class="shop" href="{e(href)}" rel="sponsored nofollow">Gå til {advertiser}</a>'
-
+        return '<span class="sp-no-link">Ingen lenke</span>'
+    return (f'<a class="sp-cta" href="{e(href)}" rel="sponsored nofollow" '
+            f'aria-label="Gå til butikken: {e(offer.get("advertiser") or "Ukjent butikk")}">'
+            f'Gå til butikken{ui_icon("external")}</a>')
 
 
 def search_results_body(*, base: str) -> str:
@@ -756,120 +456,39 @@ def search_results_body(*, base: str) -> str:
 
 
 def product_body(product: dict, body: dict, *, base: str) -> str:
-    name = (body.get("identity") or {}).get("local_name") or product.get("local_name")
     identity = body.get("identity") or {}
+    name = identity.get("local_name") or product.get("local_name") or "Produkt"
+    offers, excluded = body.get("offers") or [], body.get("excluded") or []
     lowest = body.get("lowest_item_price")
-    lowest_total = body.get("lowest_known_total_price")
-    offers = body.get("offers") or []
-    excluded = body.get("excluded") or []
-    head = (
-        "<tr><th>Butikk</th><th>Pris</th><th>Frakt</th><th>Totalpris</th>"
-        "<th>Lager</th><th>Merknad</th><th></th></tr>"
-    )
-
-    parts = []
-
-    # Breadcrumb navigation
-    parts.append('<nav class="breadcrumb" aria-label="Brødsmulesti">')
-    parts.append('<span>Hjem</span>')
-    if identity.get("local_category"):
-        parts.append(f'<span>{e(identity["local_category"])}</span>')
-    parts.append(f'<span>{e(name)}</span>')
-    parts.append('</nav>')
-
-    # Hero section: 3-column layout on desktop, single column on mobile
-    hero_parts = []
-    hero_parts.append('<section class="product-hero">')
-
-    # Identity metadata (computed once for both mobile and desktop)
-    meta_parts = []
-    if identity.get("local_brand"):
-        meta_parts.append(f"<span class=\"text-sm\"><strong>Merke:</strong> {e(identity['local_brand'])}</span>")
-    if identity.get("local_category"):
-        meta_parts.append(f"<span class=\"text-sm\"><strong>Kategori:</strong> {e(identity['local_category'])}</span>")
-    if identity.get("local_pack_size"):
-        meta_parts.append(f"<span class=\"text-sm\"><strong>Pakning:</strong> {e(identity['local_pack_size'])}</span>")
-
-    # Mobile: product name before image
-    hero_parts.append('<div class="hero-title-mobile">')
-    hero_parts.append(f"<h1>{e(name)}</h1>")
-    if meta_parts:
-        hero_parts.append(f"<div class=\"product-meta\">{' '.join(meta_parts)}</div>")
-    hero_parts.append('</div>')
-
-    # Left column: product image
-    hero_parts.append('<div class="hero-column hero-image">')
-    hero_parts.append(render_product_image(identity))
-    hero_parts.append('</div>')
-
-    # Middle column: product info (desktop only)
-    hero_parts.append('<div class="hero-column hero-info-column">')
-    hero_parts.append(f"<h1 class=\"hidden-mobile\">{e(name)}</h1>")
-    # No duplicate metadata here - reuse on desktop via CSS display control
-
-    hero_parts.append('</div>')
-
-    # Right column: price hero
-    # Use fallback logic per Brief §6: total price → item price → no winner
-    if offers:
-        hero_offer, price_type = find_hero_offer(offers, lowest_total, lowest)
-        if hero_offer or price_type == "none":
-            hero_parts.append('<div class="hero-column hero-price">')
-            if hero_offer:
-                hero_parts.append(render_price_hero(hero_offer, price_type))
-            else:
-                # No offers qualify, show empty state
-                hero_parts.append(render_price_hero({}, "none"))
-            hero_parts.append('</div>')
-
-    hero_parts.append('</section>')
-
-    parts.append("\n".join(hero_parts))
-
-    # Section navigation
-    parts.append('<nav class="section-nav" aria-label="Produktseksjoner">')
-    parts.append('<a href="#prices">Priser</a>')
-    parts.append('<a href="#history">Prishistorikk</a>')
-    parts.append('<a href="#about">Om produktet</a>')
-    parts.append('<a href="#specifications">Spesifikasjoner</a>')
-    parts.append('</nav>')
-
-    # Offers section with anchor
-    if not offers and not excluded:
-        parts.append("<h2 id=\"prices\">Butikker og priser</h2>")
-        parts.append("<p>Ingen tilbud akkurat nå.</p>")
-    else:
-        parts.append("<h2 id=\"prices\">Butikker og priser</h2>")
-        if offers:
-            rows = "\n".join(offer_row(o, lowest=lowest, excluded=False) for o in offers)
-            parts.append(f"<table>\n<thead>{head}</thead>\n<tbody>\n{rows}\n</tbody>\n</table>")
-        if excluded:
-            rows = "\n".join(offer_row(o, lowest=None, excluded=True) for o in excluded)
-            parts.append("<h3>Ikke sammenlignbare tilbud</h3>")
-            parts.append(f"<table>\n<thead>{head}</thead>\n<tbody>\n{rows}\n</tbody>\n</table>")
-
-    # Price history section (empty state)
-    parts.append("<h2 id=\"history\">Prishistorikk</h2>")
-    parts.append('<div class="empty-history">')
-    parts.append('<svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">')
-    parts.append('<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>')
-    parts.append('</svg>')
-    parts.append('<p>Prishistorikk kommer snart</p>')
-    parts.append('</div>')
-
-    # About section
-    parts.append("<h2 id=\"about\">Om produktet</h2>")
-    parts.append('<div class="empty-about">')
-    parts.append('<p>Mer informasjon om produktet kommer snart</p>')
-    parts.append('</div>')
-
-    # Specifications section
-    parts.append("<h2 id=\"specifications\">Spesifikasjoner</h2>")
-    parts.append('<div class="empty-specs">')
-    parts.append('<p>Spesifikasjoner kommer snart</p>')
-    parts.append('</div>')
-
-    return "\n".join(parts)
+    hero, price_type = find_hero_offer(offers, body.get("lowest_known_total_price"), lowest)
+    metadata = [("Merke", identity.get("local_brand")), ("Kategori", identity.get("local_category")), ("Pakning", identity.get("local_pack_size"))]
+    metadata = [(label, value) for label, value in metadata if value]
+    meta = ''.join(f'<div><dt>{e(label)}</dt><dd>{e(value)}</dd></div>' for label, value in metadata)
+    price_html = render_price_hero(hero or {}, price_type)
+    if not offers:
+        price_html = '<aside class="sp-price"><h2>Ingen tilbud akkurat nå</h2><p>Vi viser priser her når tilbud er tilgjengelige.</p></aside>'
+    unknown = any(total_text(o) == "Totalpris ukjent" for o in offers)
+    if unknown:
+        price_html += '<p class="sp-price-caveat">Totalpris er ukjent for ett eller flere tilbud. Ukjent frakt er ikke regnet som gratis.</p>'
+    head = '<tr><th scope="col">Butikk</th><th scope="col">Varepris</th><th scope="col">Frakt</th><th scope="col">Totalpris</th><th scope="col">Lager</th><th scope="col"><span class="sp-sr">Butikklenke</span></th></tr>'
+    rows = ''.join(offer_row(o, lowest=lowest, excluded=False) for o in offers)
+    table = f'<table class="sp-offers"><caption class="sp-sr">Sammenlign butikkenes priser og frakt</caption><thead>{head}</thead><tbody>{rows}</tbody></table>' if offers else '<p class="sp-empty">Ingen tilbud akkurat nå.</p>'
+    if excluded:
+        other_rows = ''.join(offer_row(o, lowest=None, excluded=True) for o in excluded)
+        table += f'<h3 class="sp-excluded-title">Ikke sammenlignbare tilbud</h3><table class="sp-offers"><thead>{head}</thead><tbody>{other_rows}</tbody></table>'
+    specs = f'<dl class="sp-specs">{meta}</dl>' if meta else '<p class="sp-empty">Ingen produktspesifikasjoner tilgjengelig.</p>'
+    return f"""<div class="sp-product">
+<nav class="sp-breadcrumb" aria-label="Brødsmulesti"><a href="{e(base)}">Hjem</a><span aria-hidden="true">›</span><span>{e(name)}</span></nav>
+<section class="sp-hero" aria-labelledby="product-title">
+<div class="sp-identity"><h1 id="product-title">{e(name)}</h1><dl class="sp-meta">{meta}</dl></div>
+<div class="sp-gallery">{render_product_image(identity)}</div>
+<div class="sp-winner">{price_html}</div></section>
+<nav class="sp-tabs" aria-label="Produktseksjoner"><a href="#prices">Priser ({len(offers)})</a><a href="#history">Prishistorikk</a><a href="#about">Om produktet</a><a href="#specifications">Spesifikasjoner</a></nav>
+<div class="sp-comparison"><section class="sp-panel sp-offer-panel" id="prices"><h2>Butikker og priser</h2><p class="sp-subtitle">Totalpris inkluderer frakt når den er kjent.</p>{table}<p class="sp-footnote">Tilbudene vises i rekkefølgen fra prisgrunnlaget. Kontroller endelig pris og levering hos butikken.</p></section>
+<section class="sp-panel" id="history"><h2>Prishistorikk</h2><div class="sp-history-empty">{ui_icon('chart')}<h3>Ingen prishistorikk ennå</h3><p>Vi har ikke prisutvikling å vise for dette produktet.</p></div></section></div>
+<div class="sp-details"><section class="sp-panel" id="about"><h2>Om produktet</h2><p class="sp-empty">Utfyllende produktinformasjon er ikke tilgjengelig.</p></section><section class="sp-panel" id="specifications"><h2>Spesifikasjoner</h2>{specs}</section></div>
+<div class="sp-trust"><div>{ui_icon('shield')}<p><strong>Uavhengig sammenligning</strong><span>Du handler direkte hos butikken.</span></p></div><div>{ui_icon('truck')}<p><strong>Frakt når den er kjent</strong><span>Ukjent frakt vises tydelig.</span></p></div><div>{ui_icon('info')}<p><strong>Åpent om provisjon</strong><span>Vi kan få provisjon via butikklenker.</span></p></div></div>
+</div>"""
 
 
 STYLE = """
@@ -954,16 +573,8 @@ STYLE = """
 }
 
 /* Dark mode support (basic; extends light token values) */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-text-primary: #e8eaed;
-    --color-text-secondary: #aab0b6;
-    --color-text-muted: #808a90;
-    --color-background: #202124;
-    --color-surface: #292a2d;
-    --color-border: #3f4144;
-  }
-}
+/* The approved v1 is light. Do not mix automatic dark legacy tokens with
+   the shared light header and product presentation. */
 
 /* Base styles */
 * {
@@ -2003,7 +1614,7 @@ def build(client: Chillout, out: Path, *, base: str, noindex: bool) -> int:
     if out.exists():
         shutil.rmtree(out)
     out.mkdir(parents=True)
-    (out / "style.css").write_text(STYLE.lstrip(), encoding="utf-8")
+    (out / "style.css").write_text(STYLE.lstrip() + "\n" + PRODUCT_STYLE + "\n" + HOME_STYLE, encoding="utf-8")
 
     products = catalogue(client)
 
@@ -2021,7 +1632,7 @@ def build(client: Chillout, out: Path, *, base: str, noindex: bool) -> int:
     (out / "search-index.json").write_text(json.dumps(search_index), encoding="utf-8")
 
     (out / "index.html").write_text(
-        page("SjekkPris.no", index_body(products, base=base), base=base, noindex=noindex),
+        page("SjekkPris.no", index_body(products, base=base), base=base, noindex=noindex, home=True),
         encoding="utf-8",
     )
 
@@ -2071,3 +1682,4 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
