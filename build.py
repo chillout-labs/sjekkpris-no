@@ -826,6 +826,14 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
 
     parts.append("\n".join(hero_parts))
 
+    # Section navigation
+    parts.append('<nav class="section-nav" aria-label="Produktseksjoner">')
+    parts.append('<a href="#prices">Priser</a>')
+    parts.append('<a href="#history">Prishistorikk</a>')
+    parts.append('<a href="#about">Om produktet</a>')
+    parts.append('<a href="#specifications">Spesifikasjoner</a>')
+    parts.append('</nav>')
+
     # Offers section with anchor
     if not offers and not excluded:
         parts.append("<h2 id=\"prices\">Butikker og priser</h2>")
@@ -1177,6 +1185,12 @@ header .container.topbar {
   padding: 12px 0;
 }
 
+@media (min-width: 768px) {
+  .categories {
+    display: block;
+  }
+}
+
 .categories .container {
   display: flex;
   gap: 16px;
@@ -1193,6 +1207,7 @@ header .container.topbar {
   display: flex;
   align-items: center;
   gap: 6px;
+  padding: 4px 0;
 }
 
 @media (min-width: 1024px) {
@@ -1341,7 +1356,7 @@ tbody tr:hover {
   background-color: var(--color-surface);
 }
 
-/* Responsive table for mobile */
+/* Responsive table for mobile: card layout */
 @media (max-width: 767px) {
   table, thead, tbody, th, td, tr {
     display: block;
@@ -1354,33 +1369,81 @@ tbody tr:hover {
   }
 
   tbody tr {
-    margin-bottom: var(--space-xl);
-    border: 1px solid var(--color-border);
+    margin-bottom: var(--space-lg);
+    border: 1px solid var(--line);
     border-radius: var(--radius-sm);
-    display: block;
+    display: flex;
+    flex-direction: column;
     padding: var(--space-lg);
+    background-color: #ffffff;
   }
 
-  td {
-    border: none;
+  /* Merchant name and total price at top (side by side) */
+  td:first-child {
+    order: 1;
+    padding: 0 0 var(--space-md) 0;
+    border-bottom: 1px solid var(--line);
+    font-weight: 600;
+    text-align: left;
+  }
+
+  td:nth-child(4) {
+    order: 2;
     padding: var(--space-md) 0;
-    text-align: right;
-    display: block;
-    padding-left: 50%;
-    position: relative;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    font-size: 14px;
+  }
+
+  /* Shipping and price details in middle */
+  td:nth-child(2),
+  td:nth-child(3) {
+    order: 3;
+    padding: var(--space-md) 0;
+    border: none;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Availability */
+  td:nth-child(5) {
+    order: 4;
+    padding: var(--space-md) 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+  }
+
+  /* Notes */
+  td:nth-child(6) {
+    order: 5;
+    padding: var(--space-md) 0;
+    border: none;
+    text-align: left;
+    font-size: 12px;
+  }
+
+  /* Shop button at bottom */
+  td:last-child {
+    order: 6;
+    padding: var(--space-md) 0 0 0;
+    border: none;
+    text-align: center;
   }
 
   td:before {
     content: attr(data-label);
-    position: absolute;
-    left: var(--space-lg);
     font-weight: 600;
     text-align: left;
-    color: var(--color-text-secondary);
+    color: var(--muted);
+    font-size: 12px;
+    display: none;
   }
 
   tbody tr:hover {
     background-color: inherit;
+    border-color: var(--line);
   }
 }
 
@@ -1689,6 +1752,44 @@ tbody tr:hover {
 .breadcrumb span:last-child::after {
   content: "";
   margin: 0;
+}
+
+/* Section navigation */
+.section-nav {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--space-3xl);
+  padding: 0;
+}
+
+.section-nav a {
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 14px;
+  text-decoration: none;
+  color: var(--ink);
+  border-right: 1px solid var(--line);
+  text-align: center;
+  transition: background-color 0.2s;
+}
+
+.section-nav a:last-child {
+  border-right: none;
+}
+
+.section-nav a:hover {
+  background-color: var(--surface);
+}
+
+@media (max-width: 599px) {
+  .section-nav {
+    font-size: 12px;
+  }
+
+  .section-nav a {
+    padding: 10px 12px;
+  }
 }
 
 /* Product hero section: 3-column desktop, single column mobile */
