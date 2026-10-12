@@ -26,7 +26,8 @@ def main():
                     page.goto(origin+path,wait_until='networkidle')
                     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(width,path,'overflow')
                     if name in ['home','search','category']:
-                        assert page.locator('.sp-card-photo img').first.evaluate('(e)=>e.complete&&e.naturalWidth>0')
+                        page.locator('.sp-card-photo img:visible').evaluate_all("async images=>{await Promise.all(images.map(async e=>{e.loading='eager';await e.decode();}));}")
+                        assert page.locator('.sp-card-photo img:visible').first.evaluate('(e)=>e.complete&&e.naturalWidth>0')
                     if name=='product':
                         assert page.locator('.sp-image img').evaluate('(e)=>e.complete&&e.naturalWidth>0')
                     if name=='search':
