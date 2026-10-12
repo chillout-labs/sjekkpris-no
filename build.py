@@ -1673,31 +1673,8 @@ def build(client: Chillout, out: Path, *, base: str, noindex: bool) -> int:
 
     products = catalogue(client)
 
-    # Generate search index: simple name-based catalogue search
-    search_index = []
-    for product in products:
-        ns, slug = segment(product["namespace"]), segment(product["local_slug"])
-        name = product.get("local_name") or slug
-        search_index.append({
-            "name": name,
-            "slug": slug,
-            "namespace": ns,
-            "url": f"{base}p/{ns}/{slug}/"
-        })
-    (out / "search-index.json").write_text(json.dumps(search_index), encoding="utf-8")
-
-    (out / "index.html").write_text(
-        page("SjekkPris.no", index_body(products, base=base), base=base, noindex=noindex, home=True),
-        encoding="utf-8",
-    )
-
-    # Generate search results page
-    search_dir = out / "search"
-    search_dir.mkdir(parents=True, exist_ok=True)
-    (search_dir / "index.html").write_text(
-        page("Søkeresultater – SjekkPris.no", search_results_body(base=base), base=base, noindex=noindex),
-        encoding="utf-8",
-    )
+    from home_release import write_home
+    write_home(products, out, base=base, noindex=noindex, day=day, segment=segment)
 
     for product in products:
         ns, slug = segment(product["namespace"]), segment(product["local_slug"])
