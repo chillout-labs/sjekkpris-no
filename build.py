@@ -135,7 +135,7 @@ def money(amount: dict | None) -> str | None:
     major, cents = divmod(minor, 100)
     if currency == "NOK":
         grouped = f"{major:,}".replace(",", " ")
-        return f"NOK {grouped},-" if cents == 0 else f"NOK {grouped},{cents:02d}"
+        return f"{grouped} kr" if cents == 0 else f"{grouped},{cents:02d} kr"
     # Other currencies keep their own convention; the Scandinavian `,-` is
     # never applied mechanically.
     return f"{currency} {major}.{cents:02d}"
@@ -577,7 +577,7 @@ def render_price_hero(offer: dict, price_type: str) -> str:
     if price_type == "total":
         html_parts.append('<span class="badge badge-lowest-total">Laveste kjente totalpris</span>')
         price_html = f'<div class="price-amount">{e(total_price)}</div>'
-        label_html = f'<div class="price-label">Inkl. frakt + {e(advertiser)}</div>'
+        label_html = f'<div class="price-label">Inkl. frakt · {e(advertiser)}</div>'
     elif price_type == "item":
         html_parts.append('<span class="badge badge-lowest-item">Laveste varepris</span>')
         price_html = f'<div class="price-amount">{e(item_price)}</div>'
@@ -616,7 +616,7 @@ def render_price_hero(offer: dict, price_type: str) -> str:
         if href:
             html_parts.append(
                 f'<a href="{e(href)}" class="shop shop-hero" rel="sponsored nofollow">'
-                f'Gå til {e(advertiser)}</a>'
+                f'Gå til butikken</a>'
             )
         else:
             html_parts.append('<div class="text-sm muted">Lenke ikke tilgjengelig</div>')
@@ -662,7 +662,7 @@ def shop_cell(offer: dict, *, excluded: bool) -> str:
     if href is None:
         return '<span class="text-sm muted">Ingen lenke</span>'
     advertiser = e(offer.get('advertiser') or 'butikken')
-    return f'<a class="shop" href="{e(href)}" rel="sponsored nofollow">Til {advertiser}</a>'
+    return f'<a class="shop" href="{e(href)}" rel="sponsored nofollow">Gå til {advertiser}</a>'
 
 
 
@@ -771,13 +771,8 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
     hero_parts = []
     hero_parts.append('<section class="product-hero">')
 
-    # Left column: product image
-    hero_parts.append('<div class="hero-column hero-image">')
-    hero_parts.append(render_product_image(identity))
-    hero_parts.append('</div>')
-
-    # Middle column: product info
-    hero_parts.append('<div class="hero-column hero-info-column">')
+    # Mobile: product name before image
+    hero_parts.append('<div class="hero-title-mobile">')
     hero_parts.append(f"<h1>{e(name)}</h1>")
 
     # Identity metadata
@@ -790,6 +785,21 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
         meta_parts.append(f"<span class=\"text-sm\"><strong>Pakning:</strong> {e(identity['local_pack_size'])}</span>")
     if meta_parts:
         hero_parts.append(f"<div class=\"product-meta\">{' '.join(meta_parts)}</div>")
+
+    hero_parts.append('</div>')
+
+    # Left column: product image
+    hero_parts.append('<div class="hero-column hero-image">')
+    hero_parts.append(render_product_image(identity))
+    hero_parts.append('</div>')
+
+    # Middle column: product info (desktop only)
+    hero_parts.append('<div class="hero-column hero-info-column">')
+    hero_parts.append(f"<h1 class=\"hidden-mobile\">{e(name)}</h1>")
+
+    # Identity metadata (desktop)
+    if meta_parts:
+        hero_parts.append(f"<div class=\"product-meta hidden-mobile\">{' '.join(meta_parts)}</div>")
 
     hero_parts.append('</div>')
 
@@ -1673,6 +1683,26 @@ tbody tr:hover {
   flex-direction: column;
   gap: var(--space-xl);
   margin-bottom: var(--space-3xl);
+}
+
+.hero-title-mobile {
+  display: block;
+}
+
+@media (min-width: 1000px) {
+  .hero-title-mobile {
+    display: none;
+  }
+}
+
+.hidden-mobile {
+  display: none;
+}
+
+@media (min-width: 1000px) {
+  .hidden-mobile {
+    display: block;
+  }
 }
 
 .hero-column {

@@ -1,0 +1,631 @@
+SjekkPris Website Architecture & Build Plan v1.0
+https://docs.google.com/document/d/1bgo-BiB1TQ6kMNs1SohZsSNBmHkXbZWb7GVO1aDj0pI/edit?usp=drivesdk
+Endret: 2026-09-25T17:14:37.825Z
+
+﻿SjekkPris Website Architecture & Build Plan v1.0
+Property runtime, repository, deployment and Chillout integration plan
+
+
+STATUS: APPROVED DIRECTION / IMPLEMENTATION PLAN
+Date: 2026-09-25
+
+
+Purpose
+
+
+This document complements “SjekkPris Frontend Design Bible v1.0”. The Design Bible remains the normative visual and UX baseline. This plan defines how the SjekkPris website should be built, deployed and connected to Chillout without coupling the consumer website to Chillout’s internal database or to other properties.
+
+
+The central decision is:
+
+
+SjekkPris.no is a separate website and separately deployable property consumer. Chillout is its control plane and data/capability platform.
+
+
+The website must remain independently deployable and resilient even as Chillout evolves toward centralized management of SEO, AI, feeds, products, taxonomy, analytics, content, integrations and operations.
+
+
+1. Repository and ownership boundary
+
+
+Create SjekkPris.no as its own repository, not as a directory inside chillout-platform and not as part of a monorepo containing all consumer domains.
+
+
+Recommended repository identity:
+sjekkpris-no
+
+
+The SjekkPris repository owns:
+• frontend application and routes
+• page templates and rendering
+• SjekkPris design tokens and components
+• responsive behaviour and accessibility
+• property-specific presentation logic
+• SEO rendering and structured-data presentation
+• static generation/build integration
+• deployment configuration
+• public assets and approved SjekkPris content presentation
+
+
+The Chillout platform owns:
+• canonical Products and Product Graph
+• Offers and merchant/provider data
+• Feed Resources and imports
+• matching and identity evidence
+• canonical Product Taxonomy
+• price observations/history as the platform develops them
+• clickout serving and attribution capability
+• commercial and provider configuration
+• property configuration and operational truth
+• AI Operations, data quality, SEO intelligence and portfolio intelligence
+• integrations and secret references
+
+
+A consumer property must not duplicate platform truth merely because it needs to render it.
+
+
+2. Separate repository does not mean separate control plane
+
+
+The long-term goal remains that SjekkPris can be managed from Chillout.
+
+
+Chillout should eventually expose SjekkPris property capabilities such as:
+• Products
+• Offers
+• Feeds
+• Product Taxonomy
+• Search and indexing
+• SEO
+• Content
+• Analytics
+• Search Console
+• AI Operations
+• Clickout
+• Revenue/commercial reporting
+• Integrations
+• deployments/build status
+• issues/data quality
+
+
+The source code can live in a separate repository while Chillout remains the operational control plane.
+
+
+Principle:
+Shared capability does not require shared deployment.
+
+
+3. Runtime and data boundary
+
+
+SjekkPris must not read Chillout’s PostgreSQL database directly.
+
+
+Target flow:
+
+
+Chillout internal data
+→ versioned Property-facing read contracts
+→ SjekkPris build/runtime
+→ rendered/cached website
+
+
+The property consumer should not know the internal shape of offer, feed_resource, property_feed_assignment, observed identifiers or future Product Graph tables.
+
+
+Chillout may change its internal schema while preserving a stable property-facing contract.
+
+
+4. Property Runtime Contract
+
+
+Introduce the architectural concept “Property Runtime Contract”.
+
+
+This is not a requirement to build a large new subsystem immediately. It is the boundary SjekkPris should be designed against from day one.
+
+
+Likely contract families over time:
+
+
+Product
+• canonical product id
+• localized/presentation title
+• brand/model
+• primary and secondary images
+• structured category-specific attributes
+• variant/family information where applicable
+
+
+Offer
+• merchant identity
+• item price
+• shipping amount/basis
+• total price when known
+• availability state
+• delivery information
+• clickout URL
+• freshness
+
+
+Category
+• canonical category id
+• localized Norwegian label
+• parent/children
+• category-specific filter/attribute definitions
+
+
+Price history
+• observations
+• current price
+• historical low and other defined factual signals
+
+
+Search
+• products
+• categories
+• brands
+• interpreted criteria
+• later natural-language search capabilities
+
+
+SEO/content
+• metadata
+• canonical rules
+• structured-data inputs
+• approved content blocks
+• freshness/source information where relevant
+
+
+The exact API shape should emerge from real UI requirements and Product Graph work rather than being frozen prematurely.
+
+
+5. Independent deployment and resilience
+
+
+SjekkPris must have its own build and deployment lifecycle.
+
+
+A SjekkPris deployment failure must not affect Kontaktlinser.no or another property.
+A Kontaktlinser deployment failure must not affect SjekkPris.
+A Chillout Backoffice outage must not take SjekkPris offline.
+
+
+Target resilience principle:
+Chillout may control and refresh the property, but the already-published property should continue serving useful pages if the control plane is temporarily unavailable.
+
+
+Prefer pre-rendering/static generation and caching where appropriate for:
+• product pages
+• category pages
+• brand pages
+• editorial content
+• SEO-critical pages
+
+
+Live capabilities may degrade independently when necessary, but the website itself must not depend on a continuously available Backoffice session or direct database connection.
+
+
+6. Current build strategy: frontend first, fixtures first
+
+
+It is not too early to begin implementing SjekkPris.
+
+
+The approved Design Bible is sufficiently mature to start a website shell while Chillout Product Identity, Product Graph and Taxonomy continue developing.
+
+
+Phase A can build against fixtures/mock contracts.
+
+
+Do not connect the first frontend implementation directly to Babysjarm feed records or internal Chillout tables.
+
+
+Build stable UI contracts around the approved screens:
+• Homepage
+• Search/autocomplete
+• Search results
+• Category
+• Product detail
+• Offer comparison
+• Price history
+• supporting states
+
+
+Later replace fixture providers with Chillout Property Runtime Contract implementations without rewriting the components.
+
+
+7. Consumer-driven platform requirements
+
+
+Frontend design is allowed to reveal data requirements for Chillout.
+
+
+Every such requirement should be explicitly labelled “Chillout data requirement” rather than implemented as property-local business truth.
+
+
+Examples:
+
+
+UI: “Laveste totalpris”
+Chillout data requirement: property-scoped comparable Offers, shipping semantics and total-price calculation.
+
+
+UI: “På lager – levering 2–4 dager”
+Chillout data requirement: normalized availability and delivery semantics.
+
+
+UI: price-history graph
+Chillout data requirement: durable price observations/history and defined factual signals.
+
+
+UI: category-specific key attributes
+Chillout data requirement: canonical structured Product attributes.
+
+
+UI: “8 butikker”
+Chillout data requirement: property-scoped merchant/Offer aggregation.
+
+
+UI: category navigation and filters
+Chillout data requirement: canonical Product Taxonomy plus localized labels and category-specific filter definitions.
+
+
+This keeps the website from inventing data that belongs in the platform.
+
+
+8. Product and Offer separation
+
+
+The Design Bible’s Product/Offer separation is architectural, not merely visual.
+
+
+Product:
+The canonical thing being compared.
+
+
+Offer:
+One merchant’s concrete commercial offer for that Product.
+
+
+SjekkPris category/search cards represent Products, not Offers.
+Product pages aggregate Offers.
+Merchant price, shipping, availability and clickout remain Offer facts.
+
+
+The SjekkPris repository must not collapse these concepts for implementation convenience.
+
+
+9. Canonical Product Taxonomy
+
+
+SjekkPris navigation must not directly inherit an affiliate provider’s category tree.
+
+
+Long-term taxonomy belongs to Chillout:
+• stable canonical identities
+• internal/canonical terminology
+• localized labels such as nb-NO
+• hierarchy of department/category/subcategory/product type
+• category-specific attributes/filter definitions
+
+
+Provider categories, Google Product Category and other source taxonomies are classification evidence/signals.
+
+
+They are not SjekkPris’s canonical taxonomy.
+
+
+Taxonomy should grow bottom-up from real product data rather than attempting to define the world before it is needed.
+
+
+10. Product Identity precedes taxonomy
+
+
+For platform correctness:
+Offer → identity evidence → identity resolution → canonical Product → classification → canonical taxonomy.
+
+
+Do not use category similarity as proof of product identity.
+
+
+SjekkPris frontend development can proceed with fixture Products while Chillout establishes the durable identity model.
+
+
+11. SEO ownership
+
+
+SjekkPris repository initially owns rendering mechanics:
+• semantic page structure
+• title/meta rendering
+• canonical tags
+• structured-data components
+• internal-link presentation
+• sitemap/build integration
+• performance/accessibility implementation
+
+
+Chillout should increasingly own/control the operational truth and intelligence:
+• indexation state
+• Search Console data
+• SEO findings
+• metadata/content proposals
+• freshness
+• cannibalization detection
+• page opportunity analysis
+• approvals/change sets
+• later controlled publishing
+
+
+The long-term goal is that an operator can manage SEO from the SjekkPris property inside Chillout without requiring the consumer repository to become the source of SEO intelligence.
+
+
+12. AI ownership
+
+
+SjekkPris may expose AI-assisted search and product understanding, but AI Operations belongs to Chillout.
+
+
+The website should consume approved capabilities/contracts rather than embedding independent platform intelligence in property code.
+
+
+SjekkPris search remains one search experience. Do not create a separate “AI mode”.
+
+
+The separate global “things you already own” / compatibility-and-ownership product is not SjekkPris. SjekkPris focuses on product discovery, comparison and purchasing decisions. Shared future Product Graph capabilities do not make the two products the same service.
+
+
+13. Shared code across future properties
+
+
+Do not solve future reuse by placing every property in one repository.
+
+
+Future shared packages or versioned runtime libraries may provide:
+• analytics/consent primitives
+• SEO primitives
+• property-runtime client
+• clickout primitives
+• accessibility/common UI utilities
+• shared build tooling
+
+
+A property may consume shared capabilities while retaining:
+• separate repository
+• separate CI
+• separate deployment
+• separate domain
+• separate rollback
+
+
+Avoid premature extraction. Build SjekkPris correctly first; extract only when a second real consumer proves the shared boundary.
+
+
+14. Proposed SjekkPris repository build order
+
+
+Follow the Design Bible’s locked build sequence, with an architectural bootstrap before visual implementation.
+
+
+0. Repository/bootstrap
+• create separate sjekkpris-no repository
+• establish CI and deployment preview
+• document Chillout/property boundary
+• fixture/data-provider interface
+• environment/config conventions
+• no provider credentials
+
+
+1. Tokens/foundation
+2. Header + global shell
+3. SearchField + autocomplete
+4. ProductCard family
+5. Homepage mobile
+6. Homepage desktop
+7. Category mobile
+8. Category desktop
+9. Product mobile
+10. Product desktop
+11. Natural-language results
+12. states/accessibility/responsive QA
+13. fidelity/pixel pass
+
+
+After each locked screen:
+• screenshot
+• compare with normative mockup
+• correct fidelity before advancing
+
+
+15. Initial route/page family
+
+
+Build around these core public page families first:
+
+
+Homepage
+/
+
+
+Search/results
+/search or equivalent final routing decision
+
+
+Canonical Product page
+/product/... or final SEO-approved localized route
+
+
+Category and nested category
+/category/... or final SEO-approved localized route
+
+
+Later:
+• brand
+• deals/price drops
+• guides/editorial
+• merchant/store
+• product family/variant views
+
+
+Final URL structure should be decided with SEO and taxonomy requirements before large-scale publication, not guessed independently inside individual components.
+
+
+16. Data states the frontend must tolerate from the beginning
+
+
+The first real Babysjarm import proved that platform data can be partial.
+
+
+The frontend design/runtime must support:
+• no shipping basis
+• unknown total price
+• in stock
+• out of stock
+• backorder
+• preorder
+• unknown availability
+• unresolved product data during internal preparation
+• missing image
+• one Offer
+• many Offers
+• no price history
+• stale/partial data where the contract allows it
+
+
+Do not turn “not known” into a stronger consumer claim.
+
+
+17. Deployment/control-plane integration path
+
+
+Stage 1
+Separate repo, fixture-driven UI, independent preview deployment.
+
+
+Stage 2
+Read-only Chillout Property Runtime Contract for Product/Offer/category data.
+
+
+Stage 3
+Build hooks or change notifications so relevant Chillout changes can trigger/rebuild affected property pages.
+
+
+Stage 4
+Chillout Property Hub displays repository, deployment, build health and published version.
+
+
+Stage 5
+Approved SEO/content/config changes flow through versioned change sets with deployment and rollback evidence.
+
+
+Stage 6
+AI Operations can propose and later execute approved low-risk changes through the same controlled path.
+
+
+Do not skip directly to autonomous site mutation.
+
+
+18. Failure and rollback principles
+
+
+A property deployment must be independently reversible.
+
+
+A broken Chillout integration should fail toward the last known published state where practical, not toward taking the site offline.
+
+
+Do not make a provider credential available to the public property runtime merely because Chillout uses that provider.
+
+
+The SjekkPris consumer should receive property-scoped data/capabilities, never raw upstream credentials.
+
+
+19. What not to build yet
+
+
+Do not block SjekkPris frontend work on:
+• complete global Product Taxonomy
+• CDON-scale ingestion
+• full AI Operations
+• full account/favorites
+• price alerts
+• complete comparison engine
+• global template marketplace
+• automatic repository provisioning
+• every future property type
+
+
+Do not hardcode temporary fixture facts as permanent platform semantics.
+
+
+20. Near-term parallel workstreams
+
+
+CHILLOUT TRACK
+• observed identity evidence
+• canonical Product Identity/Graph
+• matching lifecycle
+• Product Taxonomy when identity foundation is ready
+• stable property-facing read contracts
+• shipping/price-history capabilities as needed
+
+
+SJEKKPRIS WEBSITE TRACK
+• separate repository
+• design-system implementation
+• fixture contracts
+• approved page templates
+• responsive/accessibility fidelity
+• SEO rendering shell
+• independent deployment
+
+
+JOIN POINT
+The two tracks meet at versioned Property Runtime Contracts.
+
+
+21. Acceptance criteria for SjekkPris website architecture
+
+
+• SjekkPris is independently deployable.
+• SjekkPris does not read Chillout internal tables directly.
+• No provider secret is required by the public website.
+• Chillout remains the authoritative platform/control plane for shared product, offer and operational truth.
+• The website can continue serving its last published useful state during a temporary Chillout control-plane outage.
+• Product and Offer remain separate concepts.
+• Provider taxonomy is not silently promoted to SjekkPris taxonomy.
+• Frontend fixtures can be replaced by Chillout contracts without redesigning the approved components.
+• A change to SjekkPris does not require deploying unrelated properties.
+• A change to another property does not require deploying SjekkPris.
+• Future shared packages can be introduced without forcing a monorepo.
+• SEO, AI, analytics and deployment control can progressively move into Chillout without moving the SjekkPris source code into chillout-platform.
+
+
+22. Immediate next action
+
+
+Create the separate SjekkPris repository only after the website implementation brief is assembled from:
+• SjekkPris Frontend Design Bible v1.0
+• approved visual mockups in the SjekkPris Design folder
+• this architecture/build plan
+
+
+Before implementation begins, prepare a short repository handoff containing:
+• repository purpose and boundaries
+• page/build order
+• normative mockup references
+• fixture contract strategy
+• Chillout data requirements
+• deployment target
+• explicit non-goals
+
+
+Then implement one locked screen at a time.
+
+
+FINAL PRINCIPLE
+
+
+Chillout is the control plane.
+SjekkPris.no is an independently deployable property runtime.
+The two are tightly integrated by explicit, versioned contracts — not by sharing a database, repository or failure domain.

@@ -1,0 +1,593 @@
+SjekkPris Web Profile v1.0 – Draft for Route Lock
+https://docs.google.com/document/d/1zvSFOS-eb-c8e4MTRXmXDwISTMBzEJDNkqcjwSCBzk4/edit?usp=drivesdk
+Endret: 2026-10-05T22:25:08.861Z
+
+﻿SjekkPris Web Profile v1.0 – Draft for Route Lock
+Application of Chillout Web Standard to SjekkPris.no
+
+
+STATUS
+Draft. This profile narrows the global Chillout standard into concrete SjekkPris decisions. Permanent public routes should not be implemented at scale until the remaining OPEN items are resolved and legacy URL migration is audited.
+
+
+1. Core role
+SjekkPris is a Norwegian independent product comparison/information property. It is not merchant of record. Market: Norway. Locale: nb-NO. Currency: NOK.
+Primary consumer model: Product discovery → Product understanding → Offer comparison → merchant clickout.
+Search is the main navigation mechanism; taxonomy is the durable structure underneath it.
+
+
+2. Proposed public route families
+Homepage: /
+Product: /produkt/{frozen-descriptive-slug}/
+Brand: /merke/{brand-slug}/
+Guide: /guide/{guide-slug}/
+Search UX: /sok/ plus query/state, non-indexable by default.
+Categories: semantic category paths, preferably short and user-facing, e.g. /tv/ and selected deeper entities such as /tv/oled-tv/.
+Merchant/store: /butikk/{merchant-slug}/ only if standalone pages meet publication/indexation criteria.
+Deals/price drops: dedicated stable route only when the experience is substantive and maintained.
+Product family/group: route only when the group itself provides durable consumer value; do not create mechanically for every grouping.
+
+
+3. Product URL recommendation
+RECOMMENDED: slug-only public Product URL with an immutable/frozen slug generated at first publication.
+Example: /produkt/lg-oled-c4-65/
+Chillout canonical Product ID remains internal and immutable.
+Do not change the public slug for minor title normalization or taxonomy movement.
+If a meaningful rename is necessary, issue permanent redirect from old URL.
+Collision handling: add a meaningful disambiguator first (model/size/year). Only use a short stable public suffix when a collision cannot be resolved cleanly.
+Rationale: descriptive URL, clean UX, no provider ID leakage, taxonomy-independent identity, while redirects handle genuine rename lifecycle.
+OPEN: final approval after legacy migration inventory and collision simulation on real catalog.
+
+
+4. Trailing slash
+OPEN. Choose exactly one production convention and enforce it with permanent redirects.
+Preference for a modern app: no trailing slash, but consistency matters more than either choice.
+Legacy SjekkPris .aspx paths will require explicit redirect mapping regardless.
+
+
+5. Critical legacy-domain migration requirement
+SjekkPris.no is not a clean-slate domain. Public search currently still surfaces legacy paths such as /Shopping/Blomster/EuroFlorist.aspx even though the URL serves the current placeholder.
+MUST before launch:
+• inventory historical/indexed/backlinked SjekkPris URLs from current Search Console, old sitemap/archive data, server/CDN logs if available, and Wayback where useful;
+• classify each old URL to exact successor, closest genuine entity, or gone;
+• implement server/edge 301/308 for genuine successors;
+• use 404/410 when no relevant successor exists;
+• never redirect all legacy URLs to homepage;
+• preserve redirect mapping as auditable configuration/code;
+• test status, target canonical and redirect chains before cutover.
+This migration is a launch blocker for permanent routing.
+
+
+6. Category URL policy
+Category URL represents a canonical public taxonomy/landing entity, not a provider category.
+Prefer concise Norwegian labels.
+Do not automatically encode every taxonomy ancestor into the path.
+A deeper path may express a stable semantic relationship when useful, but URL nesting is not the source of truth for hierarchy.
+Breadcrumbs and internal links carry the entity graph.
+Category slug changes require redirects.
+Empty or low-value category entities should not be published/indexed merely because taxonomy nodes exist.
+
+
+7. Curated intent landing pages
+SjekkPris may deliberately publish high-value intent pages such as an OLED-TV or 65-inch-TV landing entity when demand, catalog depth and unique utility justify it.
+These are editorial/product entities, not saved filter URLs.
+Each needs stable URL, own H1/title, meaningful intro/help, product set, internal links and canonical.
+Do not create all combinations of brand × size × price × feature.
+
+
+8. Search/AI URLs
+Natural-language search is non-indexable UX state by default.
+Queries like «beste vannkoker under 1000 kroner» must not automatically create permanent SEO pages.
+Search page should use noindex where a crawlable URL exists; exclude from sitemap.
+Avoid exposing infinite query combinations in crawlable href links.
+If a query pattern proves durable, promote it separately into a curated landing entity.
+
+
+9. Pagination
+Category UX may use load-more/infinite scroll visually.
+Underlying crawl architecture uses stable pages, recommended syntax ?page=2, ?page=3.
+Each pagination page self-canonical and exposes real href next/previous/sequential links.
+?page=1 convention must be consistent; preferred canonical first page is clean category URL without ?page=1.
+Sort/filter states are not indexable pagination variants.
+
+
+10. Product variant policy – initial matrix
+TV screen size: normally separate Product URLs when size has distinct Offers/prices and consumer identity.
+Storage capacity: normally separate Product when commercial identity/price differs materially.
+Pack count: normally separate Product when sold as distinct canonical pack and Offers/prices differ.
+Color: default to same group/selector unless color has durable independent identity/demand or materially different offers; decide by vertical.
+Model year/generation: separate Product.
+Region/market-specific model: separate Product when identifiers/specs/availability differ.
+Cosmetic merchant naming: never creates a Product.
+Final rules must be driven by Chillout canonical identity, not frontend convenience.
+
+
+11. ProductGroup/family
+Use ProductGroup when variants share a genuine parent identity.
+Do not create a family merely because products share material or category.
+A family page is indexable only when it adds durable value: variant navigation, comparison, shared knowledge and internal-link hub value.
+Structured data follows actual page architecture. Multi-page variants require self-contained markup; single-page group architecture has one group canonical.
+
+
+12. Product without Offers
+Default: keep 200/indexable if Product remains a real useful entity and page has meaningful specifications/content/history/alternatives.
+UI states clearly «Ingen tilgjengelige tilbud akkurat nå».
+Remove Offer/AggregateOffer structured data when requirements are not met; never emit zero/fake prices.
+Reassess indexation when page becomes permanently thin/useless.
+
+
+13. Removed/merged/split Product
+Merged duplicate → permanent redirect to surviving canonical Product when equivalence is proven.
+Renamed same entity → permanent redirect.
+Direct successor → redirect only when intent is genuinely equivalent; otherwise keep old page with successor recommendation or remove by policy.
+No replacement/value → 404 or 410.
+Split ambiguous entity → do not guess one redirect target; preserve explanatory page temporarily or use appropriate gone/not-found handling based on migration plan.
+No blanket category redirects.
+
+
+14. Structured data profile
+Homepage: WebSite + Organization where appropriate.
+Product page: Product and AggregateOffer for comparison/aggregator context when accurate and eligible; ProductGroup where variant architecture warrants it; BreadcrumbList.
+Category/landing: BreadcrumbList; ItemList only when it accurately represents visible list and provides value.
+Brand: BreadcrumbList plus semantically correct organization/brand/entity markup only where supported and truthful; avoid schema for schema’s sake.
+Guide/editorial: Article where genuinely editorial; BreadcrumbList.
+FAQ content may exist for users/AI, but FAQ rich results are no longer a Google Search feature as of 2026; do not build around FAQPage SERP expansion.
+No merchant-listing semantics for SjekkPris clickout pages merely because merchants sell the product.
+
+
+15. Offer and price semantics
+Visible Product page and Product structured data must use one documented price meaning.
+For consumer UI, SjekkPris prioritizes total price when shipping is known.
+Structured-data price policy must be tested against Google aggregator requirements and the exact visible representation before lock; do not silently mix item price and total price.
+AggregateOffer low/high/count must describe comparable current Offers only.
+Unknown shipping remains unknown.
+Out-of-stock/stale Offers cannot be silently treated as current cheapest Offer.
+
+
+16. Affiliate/clickout
+All commercial outbound links are qualified with rel=sponsored; nofollow may be combined if policy chooses, but sponsored is the primary relationship signal.
+Preferred consumer CTA routes through Chillout clickout capability for first-party click ID and routing.
+OPEN before launch: exact /go/ implementation.
+Requirement: /go/ is not indexable content; no click URL in sitemap; destination response/redirect semantics optimized for users/tracking, not crawlable content.
+Do not expose provider credentials or raw network implementation.
+
+
+17. Internal-link architecture
+Homepage → major categories, selected discovery entities/products.
+Category → child categories/curated intents/products.
+Product → category, brand, family when real, variants, related/alternative products, compatible accessories, relevant guides.
+Brand → meaningful categories/products/families.
+Guide → referenced entities/categories and related guides.
+Every indexable Product must be discoverable through at least one crawlable hierarchy/context path, not sitemap alone.
+Chillout should measure orphan risk and incoming-link distribution by page family.
+
+
+18. Sitemaps
+Root sitemap index.
+Segment at minimum by Product, Category/landing, Brand, Editorial/Guide and other page families when scale warrants.
+Only canonical indexable 200 URLs.
+lastmod = last significant published change to main content, structured data or links; not feed/build timestamp unless it materially changed the page.
+Consider image sitemap extension/CDN verification once image pipeline is final.
+
+
+19. Images
+Product images must use absolute stable first-party/approved asset URLs in HTML, Open Graph and schema.
+Use img/picture, not CSS backgrounds, for meaningful product imagery.
+Responsive srcset/sizes and explicit dimensions/aspect ratio.
+Hero/product LCP image not lazy-loaded; below-fold images lazy-load.
+Alt text describes the product/image without keyword stuffing.
+Create quality tiers so tiny feed thumbnails never become desktop hero images.
+Monitor multimodal Search performance from launch.
+
+
+20. Mobile/performance launch profile
+Mobile 360–430 px is primary QA.
+No horizontal overflow at intermediate widths; explicitly test 768, 860, 1024, 1200 and common desktop widths because Kontaktlinser exposed a real 860–1200 overflow class.
+Field CWV launch target: at least Google good p75 thresholds; internal ambition should be better.
+Set performance budgets for JS, images, fonts and search/autocomplete latency before production.
+
+
+21. AI/AEO profile
+No separate AI mode. Natural-language Search is the consumer feature.
+Critical product/category facts live in server-readable HTML.
+Short factual summaries, Q&A, «Dette bør du vite», «Passer spesielt godt til» and «Hva får jeg for pengene?» are useful because they help people first and are citable.
+No AEO filler or artificial chunking.
+llms.txt is optional and not a Google ranking requirement. If used, generate from source-of-truth data; never repeat the Kontaktlinser drift problem.
+Track Search Console Generative AI and multimodal reports from day one when data is available.
+
+
+22. Robots and crawler profile
+Production robots policy is versioned and verified after every CDN/Cloudflare change.
+Search crawlers and user-triggered AI/search agents may be allowed according to corporate policy; model-training bots can be governed separately.
+Staging/preview must be strongly protected from indexation.
+Cloudflare managed robots features must not override intended policy unnoticed.
+
+
+23. Titles/meta/H1
+One intended H1.
+Unique descriptive title per indexable page.
+Build-time warnings for likely truncation/poor quality, but no false hard 60/160 law.
+Templates tested against long Norwegian product and brand names.
+Meta description summarizes value/current state; no volatile price unless intentionally sourced and freshness-safe.
+No hardcoded claims such as «alle butikker» unless literally true.
+
+
+24. Build gates
+Hard fail: invalid required JSON-LD; missing/invalid canonical; canonical target non-200; sitemap mismatch; broken required entity links; relative og:image/schema image; preview indexability; production robots/sitemap missing; severe data dropout; redirect loop/chain beyond allowed policy.
+Warnings: weak internal linking; poor title/meta; low-resolution primary image; missing optional content; CWV regression.
+Add route snapshot tests before scale publication.
+
+
+25. Measurement from launch
+Search Console property configured before launch.
+Track indexation and performance by sitemap/page family.
+Track canonical selection issues, discovered/crawled-not-indexed, structured data, CWV, image/multimodal, Generative AI report, branded/nonbranded queries and legacy migration.
+Analytics events distinguish search intent, category browse, product view, offer clickout and natural-language interaction.
+Do not infer SEO success from raw indexed page count.
+
+
+26. Remaining route-lock decisions
+LOCK BEFORE BUILDING PERMANENT ROUTES:
+• slug-only Product URL final approval after real-catalog collision test;
+• trailing slash;
+• exact category top-level naming strategy;
+• variant matrix edge cases;
+• /go/ behavior;
+• legacy URL migration inventory.
+Everything else can be implemented behind these contracts while the final lock is reviewed
+27. Deep-dive decision: price semantics and Product snippets
+Google explicitly documents shopping aggregator pages using Product + AggregateOffer. AggregateOffer.lowPrice is defined as the lowest price of all offers available; it does not define a separate aggregator-only «total price including shipping» field.
+SjekkPris decision:
+• Consumer UI continues to prioritize lowest total price when shipping is known.
+• Product structured data must not silently encode a different concept under the same visible label.
+• Until validated against Rich Results Test/Search Console with representative pages, AggregateOffer.lowPrice will use the comparable item/offer price basis that is visibly present on the page, while shipping/total is separately and prominently visible to users.
+• Do not use merchant-level ShippingService as if SjekkPris itself ships products; SjekkPris is not merchant of record.
+• If future Google product-snippet support permits aggregator shipping semantics safely, test before changing global policy.
+• offerCount includes only current comparable Offers that satisfy SjekkPris publication/freshness rules.
+• No AggregateOffer when there are no valid comparable Offers.
+This is STANDARD pending implementation validation, then LOCK.
+
+
+28. Deep-dive decision: /go/ clickout
+Google robots.txt is crawl-control, not an indexing-control mechanism. Affiliate links should be qualified with rel=sponsored (nofollow may be combined but is not required solely because sponsored is present).
+Recommended SjekkPris implementation:
+• Product/Offer CTA href points to a first-party /go/{opaque-click-target-or-route} endpoint.
+• Anchor uses rel="sponsored" and appropriate security/referrer attributes.
+• /go/ responds with a real HTTP redirect to the resolved merchant destination; no HTML content page and no canonical surface.
+• /go/ is excluded from sitemaps and internal navigation except actual clickout anchors.
+• robots.txt Disallow: /go/ to reduce crawler traffic to tracking redirects.
+• Do not rely on robots.txt to make /go/ «noindex»; the endpoint should never be designed as indexable content in the first place.
+• No provider credentials/network secrets in the URL.
+• Prefer opaque/stable internal routing identifiers over raw affiliate destination parameters in public HTML.
+• Preserve first-party click ID before provider routing.
+• Monitor bots/abuse and ensure user redirects remain fast.
+LOCK recommended, subject only to exact Chillout clickout route shape.
+
+
+29. Deep-dive decision: 404 vs 410 and migration
+Google treats both 404 and 410 as signals that unavailable content should not be indexed. Use 301 when a clear replacement exists.
+SjekkPris:
+• old URL with exact/equivalent successor → 301/308;
+• removed with no replacement → 410 when removal is known intentional, otherwise normal 404 is acceptable;
+• typo/never-existed → 404;
+• merged duplicate → 301 to surviving entity after identity evidence;
+• do not redirect unrelated old URLs to homepage/category.
+Migration tests must assert status, one-hop destination, destination 200, destination canonical and absence of loops.
+Keep legacy redirects for a long-lived period; do not prematurely delete because crawlers/backlinks may revisit old URLs.
+
+
+30. Deep-dive decision: legacy SjekkPris migration inventory
+Before route lock/cutover, collect:
+1) Search Console indexed/page/report URL exports;
+2) current and historical sitemaps if recoverable;
+3) CDN/server request logs for legacy paths;
+4) backlink data available through existing tools;
+5) Wayback historical path inventory;
+6) current Google/Bing indexed samples;
+7) known historical SjekkPris database/export if available.
+Create migration table: source_url, source_type, historical_topic, evidence, target_url, action(301/410/404), reason, tested_status, tested_canonical.
+No bulk «old path → /» fallback.
+This is LAUNCH BLOCKER.
+
+
+31. Deep-dive decision: category path strategy
+Recommended:
+• top-level public category entities use the shortest natural Norwegian path when collision-safe: /tv/, /mobiltelefoner/, /vannkokere/.
+• deeper stable taxonomy/intent entities may nest when the parent relationship is useful and durable: /tv/oled-tv/.
+• do not mirror arbitrary department depth such as /elektronikk/tv/tv-er/oled/.
+• taxonomy identity lives in Chillout, not URL depth.
+• if a category moves department but consumer meaning is unchanged, URL should normally remain stable.
+• breadcrumbs can show richer hierarchy than URL path.
+• route registry must prevent collisions with reserved namespaces such as /produkt/, /merke/, /guide/, /sok/, /butikk/, /go/.
+STANDARD recommended; run collision simulation on canonical taxonomy before LOCK.
+
+
+32. Deep-dive decision: merchant/store pages
+Do not create/index one page per merchant merely because merchant entities exist.
+Publish/index only when page has durable consumer value: merchant identity, offer coverage, useful policy/context, current product inventory and internal demand.
+Thin «X produkter fra butikk Y» pages are conditional/noindex or not published.
+Merchant pages never become substitute Product pages.
+PROPERTY decision; default conservative.
+
+
+33. Deep-dive decision: ProductGroup/family indexation
+A family/group page must add unique navigation/comparison value and have crawlable links to variants.
+Index when: stable family identity + multiple meaningful variants + useful shared content + sufficient internal links.
+Do not index mechanically generated family nodes with only a name and list.
+ProductGroup structured data only when real group relationship exists.
+STANDARD.
+
+
+34. Deep-dive decision: canonical slug lifecycle
+Recommended slug-only model requires a slug registry.
+At first public publication, assign public_slug and freeze it.
+Title changes do not automatically mutate public_slug.
+Reserved/duplicate slug resolution is deterministic.
+If editorial/identity correction truly requires a new slug, create redirect mapping atomically with new route publication.
+Product merge transfers old slugs as aliases to surviving entity.
+Never recycle an old public slug for a different canonical entity.
+This makes slug-only URLs operationally safe without exposing internal IDs.
+LOCK recommended after real-catalog collision test.
+
+
+35. Deep-dive decision: indexation quality threshold
+Existence in Product Graph is not sufficient for Search indexation.
+Product page indexability requires a publishable identity and enough user value to avoid thin/ambiguous pages.
+Potential gate inputs: identity confidence, title/brand/model quality, image quality, attribute completeness, Offer state, unique content/history, family/variant clarity and duplicate risk.
+Do not set one universal numeric score yet; property/vertical thresholds need evidence.
+Chillout should expose publish/index eligibility separately from entity existence.
+STANDARD architecture; thresholds PROPERTY.
+
+
+36. Deep-dive decision: stale data and lastmod
+Offer refresh alone should not mechanically update every Product sitemap lastmod if rendered page meaningfully did not change.
+Update lastmod when significant visible main content, structured data or links change.
+Price/availability change that changes rendered Product/AggregateOffer is significant.
+Background feed poll with identical output is not.
+Chillout should compute published-content fingerprint/version so properties can generate truthful lastmod.
+STANDARD.
+
+
+37. Deep-dive decision: preview/staging
+Preview and staging must not be publicly indexable.
+Preferred: authentication/network restriction where practical; additionally noindex for defense in depth.
+Do not rely on robots.txt alone because blocked URLs can still appear without content.
+Preview domains never enter production sitemaps/canonicals/structured-data URLs.
+Build gate scans environment origin/canonical.
+MUST.
+
+
+38. Route-lock checklist before SjekkPris code publishes permanent URLs
+Required:
+[ ] legacy inventory complete enough for migration decision
+[ ] Product slug collision simulation on representative real catalog
+[ ] trailing-slash decision
+[ ] reserved route namespace list
+[ ] category collision simulation
+[ ] variant matrix approved for first launch categories
+[ ] /go/ endpoint contract agreed with Chillout
+[ ] AggregateOffer price-basis implementation validated on representative Product pages
+[ ] sitemap/indexation matrix approved
+[ ] redirect registry format agreed
+[ ] staging/indexation controls verified
+Once these pass, route profile can move DRAFT → LOCKED.
+
+
+39. SjekkPris indexation matrix v1 – proposed
+Homepage / — INDEX. Self-canonical. Sitemap: core/static.
+Canonical Product /produkt/{slug}/ — INDEX when publish-eligible. Product/ProductGroup as applicable. Sitemap: products.
+Product with zero current Offers — INDEX conditionally when durable useful Product content remains; otherwise evaluate noindex/removal rather than fake commerce data.
+ProductGroup/family — INDEX conditionally only when it is a substantive variant hub.
+Category/Subcategory — INDEX when canonical taxonomy/intent entity has meaningful inventory and value.
+Curated intent landing page — INDEX only when explicitly published and maintained.
+Brand — INDEX when sufficient products/context make page useful; thin brand nodes not automatic.
+Merchant/store — CONDITIONAL; conservative default.
+Guide/editorial — INDEX when substantive, unique and maintained.
+Deals/price-drop hub — INDEX when durable page has current useful inventory; avoid ephemeral one-off URLs.
+Search results /sok?... — NOINDEX; excluded from sitemap.
+Natural-language/AI query state — NOINDEX; excluded from sitemap.
+Facet/filter/sort/view state — NOINDEX/non-indexable by default.
+Pagination ?page=N — INDEX/crawlable as part of canonical category sequence when used; self-canonical.
+Favorites/account/history — NOINDEX/private state.
+Clickout /go/... — non-content redirect surface, excluded from sitemap and disallowed for crawl efficiency.
+Preview/staging — inaccessible to indexing; auth/restriction plus noindex defense.
+404/410 — not indexable.
+Legacy redirect source — redirect only, never sitemap.
+
+
+40. Reserved route namespaces v1 – proposed
+Reserve globally before taxonomy slugs:
+produkt
+merke
+guide
+guider (if chosen)
+sok
+butikk
+tilbud
+go
+om
+personvern
+vilkar
+metode / slik-sammenligner-vi (final trust naming)
+api
+assets / static / _next or framework namespaces
+admin
+konto
+favoritter
+robots.txt
+sitemap.xml and sitemap namespace
+Do not allow top-level category slugs to collide with reserved namespaces.
+Create route-registry validation in CI.
+Avoid reserving large numbers of speculative namespaces; add via controlled migration before use.
+
+
+41. URL collision simulation – required implementation test
+Before LOCK, run representative real catalog through slugger:
+• normalize Norwegian characters predictably;
+• preserve meaningful model punctuation as safe hyphenated text;
+• detect same-name products across brand/model/year/size;
+• detect product/category/brand cross-namespace collision;
+• detect stopword/empty/overlong slugs;
+• test private-label/alias collisions;
+• test future title corrections.
+Output collision report and percentage resolved naturally by brand/model/variant.
+Only if unresolved collisions remain materially common should public stable-ID suffix become default.
+Current recommendation remains slug-only + frozen registry.
+
+
+42. Variant edge-case matrix – expanded
+Separate canonical Product/URL normally:
+• materially different model/generation;
+• screen size where sold/compared independently;
+• storage/capacity where SKU/GTIN/Offer identity differs;
+• pack count sold as distinct unit;
+• power/voltage/region when product identity/specs differ;
+• lens prescription/product form when it represents a distinct canonical commercial product according to vertical rules.
+Usually same ProductGroup/selector, not automatically separate indexable entity:
+• color/finish;
+• pattern;
+• cosmetic bundle presentation;
+• merchant naming.
+Case-by-case:
+• size in apparel/footwear (often variant under group);
+• fragrance volume;
+• RAM/storage combinations;
+• multipacks vs single;
+• bundles with included accessories.
+Key rule: SEO does not create identity. Chillout canonical Product/variant evidence decides entity boundaries; web profile decides which of those entities merit public URLs/indexation.
+
+
+43. Internal discovery requirement for search-first SjekkPris
+Because SjekkPris UX is search-first, crawler discovery must not become search-dependent.
+Google explicitly recommends category → subcategory → Product crawlable href paths and notes Googlebot generally does not submit site-search forms.
+Therefore:
+• every Product intended for index must belong to at least one crawlable category/context graph;
+• category pagination exposes all indexable Products over crawlable pages;
+• sitemap supplements discovery but does not replace intentional internal linking;
+• homepage need not link every Product;
+• Search autocomplete/result interactions are not the crawler discovery mechanism.
+This is MUST.
+
+
+44. Canonical signal alignment
+For each indexable URL, these must agree:
+• HTTP final URL
+• rel=canonical
+• internal href preferred form
+• sitemap URL
+• Open Graph URL where used
+• structured-data url/@id where semantically applicable
+• hreflang URL when internationalized later.
+Redirects, canonical and sitemap are cumulative signals; do not intentionally contradict them.
+CI creates a route manifest and validates alignment.
+
+
+45. Legacy migration cutover sequence
+T-30/T-14 days where practical:
+• inventory old URLs;
+• map targets;
+• crawl current domain;
+• snapshot Search Console/backlinks;
+• freeze route registry;
+• prepare redirects.
+Prelaunch:
+• deploy staging protected from indexing;
+• crawl new site fully;
+• validate redirect map offline;
+• validate structured data/canonicals/sitemaps.
+Cutover:
+• publish new routes + redirects together;
+• submit new sitemap;
+• verify robots/noindex;
+• inspect representative legacy and new URLs.
+Postlaunch:
+• daily error/index/crawl review initially;
+• watch 404/soft404/canonical mismatches;
+• retain redirects long-term;
+• do not churn URLs during stabilization.
+
+
+46. Product page structured-data implementation test pack
+Before global schema LOCK, create representative pages:
+A) multiple Offers, shipping known;
+B) multiple Offers, shipping mixed known/unknown;
+C) one Offer;
+D) zero Offers;
+E) ProductGroup with multiple public variants;
+F) Product with long Norwegian name;
+G) discontinued Product retained for knowledge.
+Validate initial HTML, Rich Results Test, schema validator, Search Console after controlled exposure.
+Only claims visible to users may be encoded.
+This test pack decides final AggregateOffer price basis and variant markup details.
+
+
+47. SEO/AEO content contract for Product pages
+Initial HTML should expose, when available:
+• unambiguous Product identity/name/brand/model;
+• key category-specific attributes;
+• current comparison summary;
+• Offer count/current price basis;
+• price-history facts when valid;
+• variant/family relation;
+• concise «Kort fortalt»;
+• useful «Dette bør du vite»;
+• use-case explanation;
+• FAQ/Q&A grounded in verified data;
+• related/compatible entities.
+Do not duplicate the same generic paragraph across large catalog portions.
+AI-generated prose is treated as publishable content with provenance/validation rules, not free filler.
+
+
+48. Category content/index quality contract
+An indexable Category is not merely an H1 + grid.
+It should provide:
+• clear category identity;
+• crawlable subcategory/intent navigation where applicable;
+• category-specific filters for humans;
+• enough product inventory or durable value;
+• concise buying/context help where useful;
+• links to relevant guides/brands/entities;
+• stable pagination.
+Do not add long SEO prose solely to increase word count.
+
+
+49. Search Console and Chillout monitoring dimensions
+Segment from launch by page family/sitemap:
+Product
+Category
+Brand
+Family
+Guide/editorial
+Curated landing
+Track:
+indexed vs submitted
+discovered/crawled currently not indexed
+Google-selected canonical mismatch
+clicks/impressions/CTR/position
+rich-result eligibility/errors
+CWV
+image/multimodal visibility
+generative-AI visibility/reporting where available.
+Chillout should compare anomalies across properties and distinguish global-rule issue from property-specific issue.
+
+
+50. Current recommendation state
+Near-lock:
+• semantic taxonomy-independent Product URLs;
+• slug registry/frozen public slug;
+• curated facets, not combinatorial SEO;
+• non-indexable arbitrary search/AI states;
+• crawlable pagination;
+• server-readable core content;
+• explicit Product/Offer separation;
+• aggregator Product/AggregateOffer schema approach;
+• first-party /go/ + sponsored link qualification;
+• strong lifecycle/redirect discipline;
+• conservative indexation based on usefulness.
+Still OPEN:
+• trailing slash convention;
+• final slug-only approval after collision simulation;
+• final AggregateOffer price basis after test pack;
+• first-launch variant matrix based on actual launch categories;
+• complete legacy SjekkPris URL map.
+.

@@ -1,0 +1,158 @@
+SjekkPris Platform Blueprint v1.0
+https://docs.google.com/document/d/1TY4rAZua8A3H0ygXTQJfnROHDicZQNGAGCkhmImrmA4/edit?usp=drivesdk
+Endret: 2026-09-14T17:13:35.001Z
+
+﻿SjekkPris Platform Blueprint
+Target architecture, core data model and staged roadmap
+Versjon 1.0  |  14. september 2026  |  Strategisk masterdokument
+Formål: definere hvor plattformen skal ende, hvilke prinsipper og dataobjekter som skal være stabile, og hvordan SjekkPris kan bygges stegvis fra dagens pilot til en flerproperty, multivertikal og multiland-plattform. Dokumentet er overordnet pilotbriefen og skal ikke tolkes som ordre om å implementere alle funksjoner samtidig.
+1. North star
+SjekkPris skal være en felles commerce- og comparison-plattform som kan ingestere data fra mange kilder, identifisere canonical produkter og varianter, normalisere og historisere offers, publisere ulike properties/markeder og støtte flere kommersielle modeller. Plattformen skal kunne drive både brede comparison properties og vertikale spesialsider uten dupliserte backender eller separate produktgrafer.
+* Shared infrastructure. Vertical intelligence. Property-specific content and presentation.
+* Platform-owned canonical identity and click identity from day one.
+* External data and AI proposals never write directly to canonical published truth.
+* AI should reduce manual work by prioritizing uncertainty and exceptions, not by hiding evidence or auditability.
+* Local-market flexibility without hard-coding Norway, NOK, one affiliate network or one property into the core model.
+2. Architectural layers
+Source layer: Feeds, APIs, crawled/approved manufacturer sources, manual imports and future connectors.
+Raw & provenance layer: Immutable/sanitized source observations, import runs, source metadata, timestamps and evidence.
+Normalization layer: Normalized listings, units, currencies, identifiers, merchant categories and field-level cleaning.
+Identity layer: Canonical Product, Variant, Identifier Registry, brands/manufacturers, merge/split and match decisions.
+Offer layer: Merchant-specific offer identity, price, shipping, stock, URL/tracking, market, validity and history.
+Quality & governance layer: Validation, anomalies, review queues, confidence, audit log, soft delete and approvals.
+Property & market layer: Market, Property, taxonomy projection, publication rules, content/SEO and merchant availability.
+Search & intelligence layer: Structured search, autocomplete, semantic/AI search, recommendations and future agents.
+Commercial & attribution layer: Agreements, CPC/CPA/CPS/CPL/fixed/hybrid, first-party click_id, network mapping and conversions.
+Experience layer: Backoffice, advertiser/merchant role views, public comparison sites and future APIs.
+3. Core entity model
+Entity
+	Responsibility
+	Brand / Manufacturer
+	Canonical producer identity and aliases.
+	Canonical Product
+	Stable product/model identity independent of merchant, feed, country and property.
+	Variant
+	Concrete comparable configuration; variant dimensions are product-type aware.
+	Identifier
+	GTIN/EAN, MPN and other IDs with source, status, scope and confidence.
+	Product Type
+	Semantic type that determines applicable attributes, variant logic and default filters.
+	Attribute Definition / Value
+	Typed attributes with canonical unit, original observation and provenance.
+	Advertiser
+	Commercial/account entity.
+	Merchant
+	Storefront/seller entity; may belong to or be represented by an advertiser.
+	Feed / Source Configuration
+	One ingestion configuration scoped to merchant, market, property/relationship and provider.
+	Import Run / Raw Record
+	Traceable source snapshot and processing outcome.
+	Normalized Listing
+	Cleaned source listing before canonical match is accepted.
+	Match Decision
+	Proposed/accepted/rejected relation between listing and product/variant with evidence/confidence.
+	Offer
+	Stable merchant/source offer identity for a variant in a market.
+	Offer Observation / History
+	Price, shipping, stock and other time-series observations.
+	Market
+	Country/region, currency, language, VAT/tax context and market-specific rules.
+	Property
+	Public site/app/API surface such as SjekkPris.no or Kontaktlinser.no.
+	Commercial Agreement
+	Terms, provider/direct relationship, compensation model, market/property/source scope and dates.
+	Click / Conversion
+	Platform first-party click_id and downstream attribution/reconciliation.
+	AI Job / Proposal
+	Traceable AI operation with evidence, confidence, review and result.
+	Audit Event
+	Who/what changed which object, from what to what, and when.
+	4. Canonical identity and variant rules
+* A merchant listing is not a canonical product. It is evidence/listing that may map to a canonical product/variant and produce an offer.
+* Canonical IDs remain stable when merchant SKU, feed provider, URL, price or source naming changes.
+* Variant rules belong to Product Type. Example: storage capacity may split phone variants; contact-lens pack size may split offers/variants depending on the comparison rule; irrelevant cosmetic attributes should not automatically fragment identity.
+* Matching combines strong identifiers, manufacturer/brand/model evidence, normalized attributes and source trust. Identifier equality alone is not sufficient when source quality is uncertain.
+* Merge and split are first-class maintenance operations with preserved history, aliases, mappings and redirects/references.
+5. Master Taxonomy and property taxonomies
+The platform keeps a broad Master Taxonomy that can be richer than any one public site. Public navigation is a projection, not the source of truth.
+* Support L1 Department → L2 Category → L3 Product Type → optional L4 Subtype, without forcing every vertical to use every level.
+* Statuses: DRAFT, READY, LIVE, HIDDEN. Taxonomy existence does not imply public publication.
+* Publication can depend on product_count, offer_count, merchant_count, freshness, quality and manual approval. Thresholds are property/category configurable.
+* Merchant/source categories are mapped to canonical category IDs and retained as provenance.
+* Navigation Taxonomy may group/surface categories differently from Master Taxonomy.
+* Property Taxonomy allows Kontaktlinser.no to organize the same canonical data differently from SjekkPris.no.
+6. Ingestion and truth pipeline
+RAW SOURCE  →  NORMALIZED LISTING  →  IDENTITY / MATCHING  →  CANONICAL PRODUCT + VARIANT  →  OFFER  →  QUALITY / VALIDATION  →  PROPERTY + MARKET  →  PUBLISHED
+Each transition should have explicit status and failure semantics. A failed feed import must not silently invalidate the last known good offers. Raw/source observations are retained in sanitized form so improved rules or AI models can reprocess historic imports.
+7. Provenance and confidence
+* For important facts, preserve source, raw value, normalized value, observed_at, processed_at, verification status and confidence/evidence where applicable.
+* Conflicting facts do not overwrite each other silently. Canonical selection is a decision with evidence and audit trail.
+* Source trust can vary by field and source type; a source trusted for price may not be trusted for manufacturer specifications.
+* Confidence is not a substitute for deterministic validation. GTIN checksum, money arithmetic and schema validation remain deterministic controls.
+8. Offer and pricing model
+* Offer has stable identity within its source/feed scope and does not change identity when price changes.
+* Store item_price, shipping amount/status, currency, availability/stock, tracking/outbound URL and total-price derivation separately.
+* Use exact money representation; do not use binary floating point for authoritative price arithmetic.
+* History is observation-based. Do not overwrite the previous price without preserving time-series state.
+* Total-price ranking is a derived view with explicit quantity/market/shipping assumptions, not a destructive stored replacement of source prices.
+9. Properties and markets
+* Property is a first-class object. SjekkPris.no, Kontaktlinser.no and future niche sites share the core graph but keep property-specific content, navigation, SEO, publication rules and commercial eligibility.
+* Market is first-class and includes locale/country context, currency, language and market-specific business rules.
+* One property may support multiple markets, though local domains can be preferred strategically.
+* No core table should assume one country, one currency or one language unless the value is explicitly scoped.
+10. Commercial and attribution architecture
+* Separate Advertiser, Merchant, Feed and Commercial Agreement. Do not place one global commission field on Merchant.
+* Commercial Agreement supports CPC, CPA/CPS, CPL, fixed, hybrid, tiered and future models; it can be provider/direct, property-, market-, source- and time-scoped.
+* Every outbound click receives a platform-owned first-party click_id before redirection. Provider/network IDs are mappings, not the primary identity.
+* Conversions are reconciled back to click_id where possible and preserve source/provider evidence.
+* The platform remains provider-independent; network integrations are adapters, not architecture owners.
+11. AI and automation architecture
+AI is an operational layer on top of explicit data contracts, not a shortcut around them.
+* AI Job → Input snapshot → Model/rule version → Proposal → Evidence → Confidence → Review/Auto-approval decision → Result.
+* Candidate uses: category mapping, product matching, duplicate detection, attribute extraction, title normalization, source conflict analysis, anomaly detection, SEO/content assistance and feed diagnostics.
+* Auto-approval thresholds depend on action type and risk. Identity-changing and commercially material operations require stricter evidence.
+* Human review is exception-based. The system should learn from approved/rejected decisions without erasing the original evidence.
+* Future multimodal capability should be possible: manufacturer images, packaging, manuals and product documents may contribute evidence.
+12. Governance, audit and lifecycle
+* Soft delete for core entities where removal would otherwise destroy history or references.
+* Audit log for material manual and automated changes, including actor/service/AI job.
+* Explicit lifecycle states for sources, categories, products, matches, offers and publication.
+* Idempotent import and replay-friendly processing where practical.
+* Versioned migrations and documented invariants for canonical identity and money/offer semantics.
+13. Search and discovery – planned capability
+* Structured product autocomplete remains the cheapest/fastest path for known product queries.
+* AI/semantic search handles natural-language questions and discovery, but should resolve to canonical products/categories and cite/ground answers in platform data.
+* Search indexes are projections of canonical data and can be rebuilt; they are not the source of truth.
+* Property/market eligibility, live offers, freshness and policy constraints are applied before public results are shown.
+14. Roadmap
+Phase
+	Outcome
+	Phase 1 — Foundation / Pilot
+	One real feed end-to-end, durable schema, product/variant/offer identity, provenance/raw retention, history, quality controls, protected read API and usable backoffice.
+	Phase 2 — Operational Core
+	Multiple feeds/advertisers, taxonomy administration, match/review queues, market/property management, stronger observability and repeatable operations.
+	Phase 3 — Automation
+	AI-assisted taxonomy mapping, matching, dedupe, attributes, anomaly detection and confidence-based review/auto-approval.
+	Phase 4 — Publishing Platform
+	Multi-property and multi-market publication, search/AI-search, SEO templates, price history, filters and automated activation based on coverage/quality.
+	Phase 5 — Commercial & Attribution
+	Agreement engine, direct/network monetization, click/conversion ledger, reporting, advertiser workflows and self-service where justified.
+	Phase 6 — Scale / Autonomous Operations
+	Millions of products, broad source discovery/onboarding, self-healing data quality, high automation, low exception rate and strong operational analytics.
+	15. What is intentionally not locked yet
+* Exact database/hosting vendor and framework until Claude Code inspects the repo and operational constraints.
+* Exact AI model/vendor. AI contracts and auditability are locked; model choice remains replaceable.
+* Exact auto-approval thresholds; these require observed precision and business risk data.
+* Exact taxonomy breadth. The structure and governance are locked; category contents evolve with market/product coverage.
+* Exact merchant self-service surface and billing workflows; role-based platform principle is retained.
+* Exact future search architecture at very large scale; canonical data/search-index separation remains locked.
+16. Non-negotiable invariants
+* Canonical product identity is not owned by a merchant, feed provider, affiliate network or public property.
+* External feed data and AI proposals cannot silently overwrite canonical truth.
+* Raw/provenance evidence required for important decisions is retained according to documented retention/security rules.
+* Money, shipping status, freshness and offer identity keep explicit semantics.
+* The platform owns the internal click_id before provider/network mapping.
+* Properties share infrastructure but retain vertical intelligence and property-specific presentation/content.
+* Future functionality must not expand the current pilot unless separately approved.
+17. Relationship to implementation documents
+This Blueprint answers “where are we going?”. The backoffice pilot brief answers “what must Claude Code build and prove now?”. The UI specification answers “how approved functionality should look and behave visually?”. When these documents appear to conflict, pilot acceptance criteria govern current implementation scope, the Blueprint governs long-term architectural direction, and the UI specification governs visual presentation without inventing backend scope.

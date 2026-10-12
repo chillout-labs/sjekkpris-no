@@ -1,0 +1,655 @@
+Chillout Web Standard v1.0 – Draft for Review
+https://docs.google.com/document/d/1C1S86kk2YvKIiYD0lkRnuEruHKL95ONvLEAbARARq6A/edit?usp=drivesdk
+Endret: 2026-10-06T22:21:11.968Z
+
+﻿Chillout Web Standard v1.0 – Draft for Review
+Global web foundation for Chillout properties
+
+
+STATUS
+Draft for architectural review. SjekkPris is the first reference implementation. Future Chillout properties inherit this baseline and override only where a vertical, market or product genuinely requires it.
+
+
+1. Governing principles
+• Human usefulness first; SEO and AI discovery must reinforce, not distort, the product.
+• Mobile-first, search-first, fast, accessible and server-readable.
+• One canonical entity model across UI, URLs, internal linking, structured data and sitemaps.
+• Product and Offer remain separate concepts.
+• Provider/feed taxonomy never becomes public canonical taxonomy by accident.
+• No indexable URL exists merely because a filter, sort option, session state or AI query exists.
+• Operational claims come from current platform truth, never stale hardcoded copy.
+• Shared standard does not mean identical properties: inherit defaults, override deliberately.
+
+
+2. Rule classes
+MUST – correctness, crawlability, accessibility, security or integrity requirement.
+STANDARD – Chillout default for applicable properties.
+PROPERTY – deliberate property/vertical choice.
+EXPERIMENT – controlled test with measurement.
+MONITOR – tracked externally; no automatic implementation.
+
+
+3. URL architecture
+MUST: lowercase, human-readable, stable, one preferred trailing-slash policy, no file extensions, no session/tracking state in canonical URLs.
+MUST: every public indexable entity URL resolves unambiguously to a stable canonical entity identity and is independent of provider IDs and provider category trees. Exact route shape is PROPERTY unless explicitly standardized for a page family.
+STANDARD: canonical Product URLs should avoid dependence on mutable taxonomy. A vertical property may deliberately include a stable product-type or brand path when its Web Profile defines that lifecycle.
+PROPERTY example – SjekkPris candidate: /produkt/{descriptive-slug}/. This is a SjekkPris Web Profile choice, not a universal Chillout route shape.
+Category/landing entities use semantic paths such as /tv/ and /tv/oled-tv/ where those pages are deliberate entities.
+Brand: /merke/{brand}/
+Guide/editorial: /guide/{slug}/ or one consistently chosen equivalent.
+Search: /sok/ with query/state non-indexable by default.
+MUST: URL changes require explicit lifecycle handling.
+
+
+4. Stable ID in public URLs – OPEN
+Google recommends descriptive words but does not require public database IDs. Chillout canonical IDs remain stable internally regardless of slug.
+Test before lock:
+A) /produkt/lg-oled-c4-65/
+B) /produkt/lg-oled-c4-65-p12345/
+Evaluate collision risk, rename lifecycle, merge/split, debugging, aesthetics, international reuse and redirect complexity. Never expose provider IDs.
+
+
+5. Canonical policy
+MUST: every indexable page has one absolute canonical.
+MUST: internal links, sitemap and canonical use the same preferred URL.
+MUST: canonical target returns 200 and is indexable; no canonical chains.
+STANDARD: self-canonical for unique indexable entities.
+Use permanent redirects for obsolete URLs; canonical is not a substitute for a proper redirect.
+Detect canonical-to-redirect, canonical-to-404 and conflicting canonical/sitemap signals.
+
+
+6. Product, ProductGroup and variants
+Chillout Product identity is authoritative; web schema maps to it, not vice versa.
+Google supports ProductGroup/Product and single-page or multi-page variant patterns.
+STANDARD: variant URL strategy depends on meaningful consumer/commercial identity, not one universal rule.
+A materially different size/capacity/pack with distinct Offers, history and purchase intent may justify a distinct Product URL.
+Cosmetic/low-value selectors may remain within a group page.
+MUST: variant relations explicit and stable; provider naming never decides identity.
+PROPERTY: define variant dimensions per product type.
+Before scale publication, SjekkPris locks a matrix for size, capacity, pack count, color, storage, model year and region.
+
+
+7. Faceted navigation and filters
+MUST: filters may exist for UX without becoming indexable URLs.
+STANDARD: default facet state is client/runtime state or non-indexable query state.
+MUST: do not create combinatorial crawl spaces. Sorting, view mode, personalization, session and transient states are non-indexable.
+STANDARD: high-value combinations can be promoted to curated landing entities only by explicit publishing decision.
+Promotion criteria: durable demand, enough products, unique value, stable taxonomy meaning, internal-link support and no cannibalization.
+MUST: nonsensical/no-result crawlable facet URLs return real 404 if such URLs exist.
+MONITOR parameter crawl volume and index coverage.
+
+
+8. Search and natural-language results
+Search is a product experience, not an automatic SEO page generator.
+MUST: arbitrary search queries and natural-language prompts are non-indexable by default and excluded from sitemaps.
+MUST: no permanent page for every AI/search formulation.
+STANDARD: durable demand can become a separate curated landing entity with stable URL, content, taxonomy meaning and internal links.
+MUST: avoid query-string URLs leaking into crawlable internal links unless intentionally supported.
+
+
+9. Pagination and large listings
+For large categories, use crawlable pagination underneath any preferred UX.
+MUST: each crawlable page has unique URL and real href links to sequential pages.
+MUST: filters/alternative sort orders are not indexed as pagination variants.
+Load-more/infinite-scroll may be UX, but discovery cannot depend on clicking or scrolling.
+STANDARD: pagination pages self-canonical when they contain distinct list content.
+
+
+10. Product lifecycle and HTTP status
+No Offer is not equal to no Product.
+STANDARD: canonical Product with no current Offers may remain 200/indexable when useful specs, history, compatibility, alternatives or durable demand remain.
+MUST: never show stale/unknown Offer data as current fact.
+Permanent URL move: 301/308.
+True removed entity with no value/replacement: 404 or 410 by policy.
+Redirect to successor only when user intent is genuinely equivalent; never mass-redirect dead products to a category.
+MUST: custom error UI returns correct status. Redirect rules must be auditable/versioned.
+
+
+11. Internal linking and entity graph
+MUST: every indexable page we care about has at least one crawlable internal href path.
+STANDARD: reflect Product ↔ Category, Product ↔ Brand, Product ↔ ProductGroup, Product ↔ compatible/related entities and Guide ↔ relevant entities in contextual links.
+Breadcrumbs describe hierarchy/context but do not force URL nesting.
+MUST: detect orphan pages and broken internal links.
+PROPERTY: define expected incoming-link patterns per page family.
+
+
+12. Breadcrumbs
+STANDARD: visible breadcrumbs on deep entity/editorial pages where useful.
+MUST: BreadcrumbList matches visible breadcrumb and real relationships; links are crawlable. Do not fabricate hierarchy for schema.
+
+
+13. Structured data
+MUST: structured data matches visible content and platform truth and is validated in CI.
+MUST: absolute image URLs; no fabricated review/rating/test data.
+SjekkPris is an aggregator/comparison publisher, not merchant of record.
+STANDARD: single-product comparison pages use Product/ProductGroup markup appropriate for product snippets when requirements are met.
+Do not use merchant-listing semantics merely because SjekkPris links to merchants; Google says merchant listing eligibility is for pages where shoppers can purchase the product, not pages linking to other sellers.
+Category/list pages are not marked as one Product.
+AggregateOffer can represent accurate aggregator price ranges/offer counts on a single-product page.
+Schema is output of canonical facts, not a separate database.
+
+
+14. AI/AEO and generative discovery
+Google states core SEO foundations remain relevant for AI Overviews/AI Mode; no special AI ranking markup is required.
+MUST: important facts available in indexable, server-readable HTML.
+STANDARD: concise factual summaries and Q&A may improve usefulness/citability, but no AI text exists only to manipulate systems.
+MUST: AI-visible claims follow the same provenance/freshness rules.
+Use nosnippet/data-nosnippet/max-snippet deliberately because they also constrain Google AI Search.
+Do not rely on llms.txt as an SEO/AEO requirement. If used for other consumers, generate operational facts from the same source of truth and validate drift.
+MONITOR Generative AI Search Console, AI referrals/citations where measurable, multimodal Search and emerging agentic protocols
+15. Crawler and AI bot policy
+Robots policy is explicit, versioned and property-aware. Separate search/indexing crawlers from model-training controls where providers distinguish them.
+MUST: CDN/Cloudflare managed robots features cannot silently override policy; every zone/config migration includes verification.
+PROPERTY: training-bot policy may be corporate with explicit exceptions.
+MONITOR provider user-agent changes and controls.
+
+
+16. llms.txt policy
+Not a required Chillout standard.
+If used: generated, not hand-maintained; no volatile claims unless sourced dynamically; absolute URLs; drift test against site rules.
+Never treat llms.txt as replacement for crawlability, indexability, structured data or useful content.
+
+
+17. Images and multimodal discovery
+MUST: standard img/picture for meaningful images; no CSS-only indexable product imagery.
+MUST: descriptive alt for meaningful images, empty alt for decorative images.
+MUST: absolute stable image URLs in metadata/schema.
+STANDARD: responsive image pipeline with explicit dimensions/aspect ratios, multiple useful resolutions and modern formats.
+STANDARD: consider image sitemaps at catalog scale/CDN separation.
+MUST: image rights/provenance known.
+MONITOR multimodal search performance and image crawl errors.
+
+
+18. Mobile-first and accessibility
+MUST: mobile has equivalent core content and crawlable links; no critical entity/content desktop-only.
+MUST: touch targets, keyboard, focus-visible, semantic headings, accessible names, contrast and reduced motion.
+STANDARD: 360–430 px is a primary QA range for consumer properties.
+Search/filter interactions fully usable by keyboard and assistive technology.
+Accessibility tree should be meaningful for users and emerging browser agents.
+
+
+19. Rendering and JavaScript
+STANDARD: SEO-critical Product, Category, Brand and editorial content server-rendered/pre-rendered/cached HTML.
+JavaScript enhances interaction; it is not required to discover core content or links.
+MUST: canonical/title/meta/structured data correct in initial HTML when practical.
+MUST: meaningful HTTP statuses from server/edge.
+Lazy-loaded content must not require user action to become crawlable.
+MUST: crawl-critical navigation uses real href links.
+
+
+20. Performance
+MUST: measure field performance, not only Lighthouse.
+Core Web Vitals good baseline at p75: LCP ≤2.5s, INP ≤200ms, CLS ≤0.1.
+Chillout internal targets may be stricter.
+STANDARD: reserve image/card dimensions, minimize shifts, prioritize LCP asset, lazy-load below fold, minimize client JS/hydration, cache public read-heavy pages.
+STANDARD: search/autocomplete latency has its own SLO.
+MONITOR by page family, device and property.
+
+
+21. Titles, H1, descriptions and snippets
+MUST: one intended primary H1 unless documented exception.
+MUST: unique descriptive title for indexable entities.
+STANDARD: build-time quality/length heuristics, but 60/160 are not hard Google limits.
+Meta descriptions are useful summaries, not ranking copy.
+MUST: templates tolerate long Norwegian names.
+Use data-nosnippet only deliberately.
+
+
+22. Sitemaps
+MUST: only canonical indexable URLs intended for Search; absolute URLs.
+STANDARD: sitemap index segmented by meaningful page family for monitoring.
+Single sitemap limit: 50,000 URLs or 50MB uncompressed; split before limits.
+MUST: lastmod reflects meaningful change, not every build.
+STANDARD: generate from published entity state.
+MUST: no sitemap URL resolves to redirect, 404, noindex or noncanonical state.
+Consider image sitemap extension when justified.
+
+
+23. Indexation by page family
+Index by default when useful/unique: Homepage; deliberate Category/Subcategory; canonical Product; valuable Brand; durable ProductGroup/family; substantive Guide/editorial; curated stable deals/price-drop landing pages.
+Conditional: Merchant/store pages, variant pages, thin brand/category pages.
+Non-indexable by default: arbitrary search results, AI prompts, sort states, filter combinations, session/personalization, favorites/account, admin, preview.
+Every property publishes a page-family indexation matrix before scale launch.
+
+
+24. Content quality and programmatic pages
+MUST: scale is not justification for thin pages.
+Product pages should add useful knowledge beyond raw feed text where possible.
+Category pages need useful navigation/filtering/entity context, not boilerplate SEO paragraphs.
+Programmatic summaries/FAQs are generated only from verified data and omitted when unsupported.
+STANDARD: every content block helps understand, compare, choose or use.
+MONITOR indexed-with-no-traffic, discovered-not-indexed, duplication/cannibalization and low-value page families.
+
+
+25. Commercial links and clickout
+Public property never exposes upstream credentials/secrets.
+Clickout may route through Chillout for first-party click IDs and commercial routing.
+Affiliate outbound links use appropriate sponsored/nofollow qualification.
+MUST: /go/ or equivalent is not an indexable content surface; define crawl/robots/redirect behavior before launch.
+MUST: commercial routing never alters canonical Product identity.
+
+
+26. Trust and transparency
+STANDARD: methodology, ranking principles, affiliate/financing disclosure, privacy and editorial principles are accessible and internally linked.
+MUST: sponsored placement explicit; commercial relationship cannot silently distort organic ranking; freshness language factual.
+STANDARD: report-error path on data-rich entity pages.
+
+
+27. Security, privacy and consent
+MUST: secrets remain server/control-plane side.
+MUST: consent does not block essential content or create layout instability.
+STANDARD: analytics tags load performance-consciously and follow applicable consent policy.
+Personal/account state is separated from public canonical content.
+
+
+28. Build gates
+Block/fail on critical violations:
+• invalid required JSON-LD
+• indexable page missing/invalid canonical
+• canonical target non-200
+• sitemap URL non-200/noindex/noncanonical
+• broken required internal entity link
+• relative metadata/schema image where absolute required
+• accidental indexability of preview/staging
+• missing production robots/sitemap
+• severe mass Offer/data dropout above property threshold.
+Warn on title/meta quality, orphan risk, missing large image, weak internal linking, optional schema and performance regression.
+
+
+29. Monitoring in Chillout
+Chillout should monitor: crawl/indexation by page family; canonical conflicts; sitemap health; redirects/404/410; structured data; internal-link/orphan graph; Search Console; Generative AI performance; multimodal performance; Core Web Vitals; image crawl/quality; content/Offer freshness; robots/CDN drift.
+Recommendations are classified MUST/STANDARD/PROPERTY/EXPERIMENT/MONITOR and go through controlled approval/deployment.
+
+
+30. Change management
+External platform changes do not automatically mutate properties.
+Flow: detect → verify source → map affected rules/properties → propose → risk classify → test → approve → deploy → measure → rollback if needed.
+High-impact URL, canonical, robots, noindex, redirects, hreflang, schema and regulated-content changes require explicit review.
+Maintain versioned standard and property profiles.
+
+
+31. Research findings informing v1
+Official Google guidance reviewed confirms:
+• descriptive stable URLs and consistent canonical/internal-link/sitemap signals;
+• faceted navigation can create effectively infinite crawl spaces;
+• crawlable pagination needs real URLs/links even when UX uses load-more;
+• Product rich results focus on single products/variants, while shopping aggregators can use Product snippet/AggregateOffer patterns;
+• merchant listing eligibility is not intended for pages that merely link to sellers;
+• ProductGroup supports explicit variant modeling;
+• AI Search relies on core Search/indexing foundations;
+• Google advises against unnecessary AEO/GEO hacks such as AI text files created solely for optimization;
+• Search Console exposes generative-AI and multimodal visibility reporting;
+• Core Web Vitals remain LCP, INP and CLS with p75 good thresholds 2.5s, 200ms and 0.1.
+
+
+32. Decisions to lock before SjekkPris route implementation
+A. Public Product URL: slug-only vs slug + stable public ID.
+B. Exact trailing-slash policy.
+C. Variant matrix by product type/dimension.
+D. Category path depth and rules for curated intent landing pages.
+E. Pagination URL syntax.
+F. Product-with-no-Offer indexation thresholds.
+G. Removed Product 404 vs 410 policy and successor redirect evidence.
+H. /go/ crawl/robots behavior.
+I. AI crawler/training policy inherited globally vs property override.
+J. Merchant/store page indexation criteria.
+K. International/hreflang strategy when first multi-market property arrives.
+
+
+33. Reference implementation rule
+SjekkPris Web Profile will apply this standard explicitly. Future properties inherit the standard rather than reverse-engineering SjekkPris.
+
+
+34. Published snapshot and temporal truth
+MUST: volatile public facts are tied to an observed/published state, not treated as timeless truth.
+A property release/render should be traceable to property version, entity/content version, Offer snapshot and Web Standard version where practical.
+Price, availability, delivery, promotion and popularity signals each have freshness semantics.
+Rendered HTML, structured data and visible price/Offer summary must derive from a coherent published snapshot.
+A background poll with unchanged public output does not create artificial freshness.
+STANDARD: last-known-good published state supports resilience during control-plane/provider incidents.
+
+
+35. Evidence-backed consumer claims
+MUST: every derived badge/highlight has an evidence payload and defined method.
+Examples:
+historical_low → comparison period, observations/coverage, current observation;
+popular → metric, window, population;
+campaign → source, validity;
+best_match → interpreted criteria + ranking/model/rule version;
+best_in_test → actual test/source/date/rights.
+UI may show a concise reason; Chillout retains deeper evidence.
+No badge exists merely because a template has a slot.
+
+
+36. Ranking and commercial integrity
+MUST distinguish:
+• organic relevance;
+• explicit user sort (e.g. lowest total price);
+• editorial/algorithmic highlights;
+• sponsored placement.
+Commercial compensation must not silently alter organic ranking.
+Sponsored placement is explicit.
+STANDARD: ranking versions and important inputs are logged for diagnostics and explainability.
+Property methodology explains ranking at a useful consumer level without exposing abuse-sensitive internals.
+
+
+37. Experiment isolation
+A/B tests must not create duplicate indexable URL populations or contradictory canonical/schema states.
+Experiment assignment cannot leak between users through shared caches.
+SEO-impacting experiments have hypothesis, affected page families, guardrails and rollback.
+Do not serve materially different keyword-rich content specifically to crawlers.
+
+
+38. Personalization boundary
+Canonical public content remains broadly stable.
+«Fortsett der du slapp», favorites and personalized discovery are additive/private state and do not change canonical identity/schema.
+Personalized responses are not stored in shared public cache.
+Account/history/favorites are non-indexable.
+
+
+39. Price comparability
+«Lowest price» is only meaningful across comparable Offers.
+MUST normalize Product/variant, quantity/pack, one-time vs subscription, tax basis, shipping basis and other material commercial dimensions before ranking.
+Never compare a 1-pack and 6-pack as if equivalent.
+The same comparability decision feeds UI ranking, highlights and structured-data Offer aggregation.
+Unknown/noncomparable Offers may still be shown with clear context but do not contaminate cheapest-price claims.
+
+
+40. Promotion and historical-price truth
+«Sale», «campaign», «save X%», reference price and historical-low claims require defined legal/data basis.
+Do not trust merchant discount labels blindly.
+Merchant-stated before-price and Chillout-observed historical comparison are distinct concepts.
+Market-specific consumer law can override generic property badge rules.
+Historical-low method defines window, coverage, gaps and variant comparability.
+
+
+41. Availability and delivery truth
+Normalized states include in stock, out of stock, backorder/order item, preorder and unknown.
+Unknown is never silently converted to out of stock.
+Delivery estimate is distinct from stock status.
+Stale availability follows freshness policy and cannot win current-availability claims.
+
+
+42. Search answer grounding
+Natural-language answers and highlights derive from current Product Graph facts, approved content and evidence.
+LLM output cannot invent compatibility, price, stock, test wins or specifications.
+Low confidence triggers qualification, clarification or omission.
+Record model/rule/prompt version where useful for quality, cost and incident analysis.
+
+
+43. Search relevance benchmark
+Each property/vertical maintains a representative evaluation set:
+exact Product; typo/model; brand/category; attributes; budget; compatibility; natural-language need; ambiguous; zero-result.
+Measure relevance/precision and regression before major search releases.
+Human judgments remain part of evaluation; one engagement metric is not ground truth.
+
+
+44. Zero-result standard
+Zero results are an assisted state.
+Explain failed constraint where possible; offer nearest safe relaxation; preserve user control.
+Never hallucinate Products to avoid an empty state.
+Monitor zero-result rate and causes by intent/category.
+
+
+45. AI cost architecture
+Use deterministic parsing, retrieval, rules and caches before expensive generation when quality permits.
+No LLM per keystroke.
+Cache normalized intent/results only where privacy/freshness permit.
+Measure cost per useful search/session/conversion alongside answer quality.
+Model/provider is replaceable platform infrastructure, not property identity.
+
+
+46. Natural-language privacy
+Raw free-text queries may contain personal/sensitive data.
+Property/Chillout policy defines storage, retention, access, redaction, analytics sharing and model-provider data-use configuration.
+Prefer long-term aggregated intents/features over indefinite raw-query retention.
+Account-linked query data follows privacy/deletion obligations.
+
+
+47. Product safety and emergency suppression
+Global standard supports vertical safety overlays.
+Chillout needs auditable emergency capability to suppress Offers, add warnings or change Product state without waiting for normal content cadence when recall/safety/legal event requires it.
+Safety response outranks SEO stability.
+High-risk verticals can restrict AI recommendation behavior and require stronger sourcing/review.
+
+
+48. Merchant identity and clickout integrity
+Merchant identity is canonical platform data, not trusted directly from feed labels.
+Clickout destination must resolve from approved merchant/commercial configuration.
+Prevent open redirects.
+Monitor domain changes/impersonation risk.
+Provider/network credentials never reach public property.
+
+
+49. Data correction loop
+Every data-rich entity page should support report-error.
+Corrections flow to Chillout evidence/review and canonical truth, not permanent property-local patches.
+Track correction/error rates by source and attribute to improve ingestion/matching.
+
+
+50. Resilience tiers
+Define behavior when control plane, search, AI, price history, one provider or content capability fails.
+Core last-known-good Product/Category pages should remain useful.
+AI failure can degrade to conventional search.
+Provider outage must not automatically publish mass zero-Offer states without data-quality gates.
+Unknown is shown as unknown, never invented.
+
+
+51. Disaster recovery and domain governance
+Repositories, route/redirect registry, property configuration, build artifacts and critical platform data have tested restore procedures.
+Domains/DNS/CDN/Search Console/analytics/repositories are company-owned with MFA/emergency access.
+Backups are not considered sufficient until restoration is tested.
+Renewal/registrar security is part of web reliability.
+
+
+52. Supply-chain and dependency security
+Lock/pin dependencies; scan vulnerabilities; minimize CI/build permissions.
+Shared packages use controlled releases.
+Third-party package compromise must not silently propagate unchecked to all properties.
+Maintain dependency ownership/removal path.
+
+
+53. Governance ownership and review cadence
+Rule families have accountable owner functions: Web Platform, SEO/Discovery, Product/UX, Data/Product Graph, Security/Privacy and Property owner.
+Each rule records source/last-reviewed date where relevant.
+Quarterly scheduled review plus event-driven review after material Google/schema/browser/regulatory/platform changes.
+No assumption that current guidance is timeless.
+
+
+54. Property inheritance model
+Each property declares inherited Web Standard version and explicit overrides.
+Override records rule, value, reason, approver and review/expiry date.
+Global standard update produces impact report before property adoption.
+High-impact changes never silently propagate.
+
+
+55. People-first quality
+56. Platform truth vs property web identity
+Chillout owns canonical Product/Offer/Taxonomy/evidence/commercial truth. A property owns its public route structure, slug policy, canonical URL, indexation policy, structured-data presentation, internal linking and UX through its Web Profile.
+MUST: property presentation never redefines canonical Product identity. SEO does not create Product identity.
+MUST: provider title, provider ID, GTIN, MPN, feed taxonomy and raw specifications are evidence signals, not sufficient identity by themselves.
+STANDARD: public slugs/routes are property-facing presentation identifiers mapped to stable Chillout canonical entities through versioned Property Runtime contracts.
+PROPERTY: one property may use /kontaktlinser/{brand}/{product}/ while another uses /produkt/{slug}/ or another deliberate shape, provided lifecycle/canonical/indexation rules remain correct.
+MUST: properties never need direct Chillout database access to reconstruct canonical identity for public rendering.
+
+
+57. Verified identity/slug evidence – 2026-10-06
+A Kontaktlinser.no catalog sample of 201 curated products had 201 unique public slugs across contact lenses, eye drops, lens solutions and accessories. This supports descriptive public slugs for a curated vertical, but does not prove one universal route shape for all properties.
+A broader Chillout discovery sample contained 10,749 provider articles across 11 advertisers. Naive title slugs produced 336 colliding slugs covering 875 articles; many collisions represented distinct variants/products. Brand, title, GTIN or MPN alone could not safely resolve all identity cases.
+MUST: no property mints canonical Product pages directly from raw provider-title slugging.
+MUST: canonicalization/publish eligibility precedes public Product URL creation.
+STANDARD: when variant dimensions materially define separate canonical Products, descriptive public presentation should expose the differentiating dimension where useful; exact URL treatment remains PROPERTY.
+MUST: URL collision handling is explicit and deterministic; old public identifiers are never silently recycled to another canonical entity.
+
+
+58. AI-generated content, scaled-content and trust safeguards
+MUST: AI assistance is a production method, never a justification for publishing pages or text that lack independent user value.
+MUST: no page family is scaled merely because generation is cheap or because many long-tail queries can be manufactured.
+MUST: generated copy is grounded in current canonical facts, approved sources and evidence; unsupported claims are omitted rather than filled with plausible text.
+MUST: no fabricated expertise, tests, first-hand experience, review sentiment, ratings, safety claims, comparisons or recommendations.
+MUST: content must not imitate editorial independence while being commercially steered or generated solely to attract search/AI traffic.
+STANDARD: automation should reduce repetitive production work while preserving differentiated factual value, useful comparison structure, provenance and human-review gates where risk/impact is high.
+STANDARD: page templates avoid near-duplicate boilerplate paragraphs whose only purpose is keyword variation. Structured facts, real inventory, comparisons, history, compatibility, explanations and genuinely useful guidance are preferred.
+MUST: programmatic/AI page families are evaluated at family level for thin-affiliate, doorway, scaled-content, duplication/cannibalization and site-reputation risks before broad indexation.
+MUST: property owners can suppress/noindex/unpublish a page family rapidly if quality, policy or evidence degrades.
+MONITOR: Search Console/manual actions/indexation changes, crawl patterns, user engagement, AI citation/referral visibility and suspicious page-family expansion. Treat sudden scale as a quality-review trigger, not success by itself.
+The people-first test remains: if a user lands directly on the page, it should provide independent, real value for that specific Product, category or need, regardless of expected search volume.
+
+
+59. Image provenance, uniqueness and multimodal quality
+Images are content and discovery infrastructure, not decoration only.
+MUST: rights/provenance and permitted use are known for each material image source. Do not hotlink upstream/provider URLs merely for convenience when the property is expected to own a stable public asset path.
+STANDARD: properties serve stable first-party/CDN image URLs with responsive derivatives, explicit dimensions, useful resolutions, modern formats and durable cache behavior.
+MUST: image metadata/schema uses absolute crawlable URLs and visible imagery must match the Product/entity represented.
+MUST: avoid deceptive compositing, synthetic packaging/product depictions or AI-generated visuals that could be mistaken for an actual manufacturer/product image unless clearly suitable for the page purpose and not misleading.
+STANDARD: AI-generated/editorial illustrations are acceptable for non-product explanatory/hero contexts when rights are controlled and the image does not falsely represent a real product, test result or evidence.
+STANDARD: product imagery should prefer accurate product-specific assets; duplicate generic imagery across many entity pages should not substitute for missing product truth.
+MUST: alt text describes meaningful visual content and does not become keyword stuffing.
+STANDARD: image selection, filenames/paths, captions where useful, surrounding text and Product/schema association should help both human understanding and multimodal discovery.
+MONITOR: image crawl/indexation, broken/stale assets, visual mismatch, rights incidents, CDN/origin drift and multimodal performance by property/page family.
+
+
+60. Property inheritance clarification
+Global Web Standard knowledge covers SEO, AI/generative discovery, crawl/indexation, structured data, image/multimodal quality, performance, accessibility, trust, privacy/security, commercial integrity and change-management guardrails.
+A Property Web Profile decides how those rules are instantiated for that site: route families, URL shape, page families, indexation thresholds, variant presentation, schema application, content modules, image strategy and explicit overrides.
+SjekkPris is the first Gold Standard reference implementation, not a route/template that every future property must copy mechanically.
+Future properties should inherit current Web Standard knowledge first, then deliberately choose only the vertical/market-specific differences they need.
+ clarification
+Low search volume is not a quality failure.
+A rare Product or long-tail category may be highly valuable and indexable.
+The correct question is: if a user landed directly on this page, does it provide independent, real value for that specific Product, category or need?
+Index eligibility is about utility/identity/quality, not popularity.
+.
+61. Product vision – Property Launch System and Continuous Discovery & Improvement Engine
+Chillout product goal: a new property should be able to go from defined vertical/market/purpose + connected data sources to a production-ready launch candidate within the same day, while inheriting the current Chillout Web Standard and property-specific guardrails.
+
+
+Property Launch System
+The launch flow should support: property creation; market/language/vertical definition; property purpose (comparison, information, leads or combination); feed/provider connections; taxonomy/product identity assessment; image coverage; SEO/indexation readiness; schema opportunities; legal/trust/risk requirements; generated Property Web Profile; site generation from approved components/contracts; automated QA; launch blockers/warnings; controlled publication; and post-launch follow-up.
+STANDARD: fast launch never means publish-everything. Only entities/page families that pass publish/index eligibility and quality gates are exposed/indexed.
+STANDARD: properties may differ in route structure, content modules, indexation thresholds, variant presentation and risk controls while inheriting the same global Web Standard knowledge.
+
+
+Continuous Discovery & Improvement Engine
+Chillout should continuously monitor relevant changes and opportunities across Google/Search, other search engines, AI/generative discovery, schema/rich-result guidance, crawler behavior, multimodal/image search, Core Web Vitals, spam/scaled-content/site-reputation policies, accessibility, technical web quality, and property performance.
+The output is property-specific, not generic news. A recommendation should explain: what changed; which page families/properties are affected; evidence/source; expected impact; risk; confidence; recommended action; required human approval; test/measurement plan; and rollback path where relevant.
+Use the existing control model: detect → verify → impact → propose → approve → deploy → measure → rollback.
+High-impact SEO/canonical/robots/noindex/redirect/schema/content-policy changes never auto-deploy silently.
+
+
+Content Opportunity Engine
+Chillout should identify highly relevant content/guide opportunities from real user needs, search/discovery gaps, Product Graph/taxonomy relationships, property content coverage and trustworthy source availability.
+MUST: do not recommend bulk long-tail content merely because it can be generated cheaply.
+MUST: proposed content should have independent user value, clear intent, differentiated purpose, adequate source/evidence basis, natural internal-link role and acceptable overlap/cannibalization risk.
+Each proposal should include: why now; user intent; property value; overlap/cannibalization assessment; YMYL/risk level; source requirements; suggested page family; internal-link plan; index/noindex recommendation; confidence; and human-review requirement.
+Chillout should filter out clearly low-value/high-risk ideas and surface only opportunities with a strong basis for likely positive value. It must not promise guaranteed positive SEO impact.
+
+
+Operating principle
+Launch fast. Improve continuously. Never bypass quality.
+Chillout is not only a data/control platform; it should become the system that helps each property launch correctly, stay current with SEO/AI/search changes, detect problems early, and surface high-quality improvement opportunities over time.
+62. Paid Search & Attribution Intelligence
+Product vision: Chillout should become the attribution and commercial intelligence layer that connects paid traffic, on-site behavior, clickout, affiliate/network transactions, approved revenue and channel cost at the most granular defensible level.
+
+
+Core chain
+Paid ad/search click → property landing/session → Chillout clickout_id → affiliate/network sub-ID/custom reference → transaction/lead/sale → network status/value/commission → Chillout revenue attribution → optional conversion/value feedback to the ad platform.
+
+
+STANDARD: Chillout clickout_id is the internal deterministic join key for outbound commercial actions when the downstream network supports a returnable sub-ID/click reference.
+STANDARD: platform identifiers such as Google gclid/gbraid/wbraid, Microsoft Ads identifiers, Meta click identifiers and future AI-ad-platform identifiers are external attribution evidence, not Chillout identity.
+STANDARD: preserve raw source identifiers and normalized channel metadata separately.
+STANDARD: never claim deterministic attribution where the chain is incomplete. Label attribution as deterministic, inferred/modeled or unmatched.
+
+
+Paid search / search-term intelligence
+Where platform APIs permit, ingest and normalize:
+- search term / query
+- booked keyword / targeting term
+- match type
+- campaign, ad group, ad / creative
+- click identifier
+- device, geo where policy-compliant, landing page and timestamp
+- impressions, clicks, cost and platform conversions
+- search-term insight/topic groupings when exact low-volume terms are withheld for privacy
+Not every platform exposes every field, and privacy thresholds can hide low-volume queries. Chillout must preserve source limitations and confidence.
+
+
+Affiliate/network revenue ingestion
+Build adapters for affiliate/lead networks and direct advertisers. Normalize at minimum:
+- network/provider
+- advertiser/merchant
+- external transaction/conversion id
+- Chillout clickout_id/sub-ID when returned
+- transaction/lead time
+- order/revenue value
+- commission/reward
+- currency
+- status: pending/approved/rejected/cancelled or network equivalent
+- validation/update time
+- property, Product, Offer and merchant relation when deterministically known
+- raw payload/provenance sufficient for audit and reconciliation
+Network APIs, postbacks/webhooks and scheduled reconciliation can coexist. Idempotency and deduplication are mandatory.
+
+
+Channel scope
+Initial priority should support Google Ads and Microsoft Advertising/Bing where relevant. The architecture must also accommodate Meta and other performance channels, retailer/affiliate media, future AI-native advertising and sponsored-answer/search platforms, and additional channels without redesigning the core model.
+Channel adapters must map into a common attribution/revenue schema rather than creating separate commercial truth per platform.
+
+
+Closed-loop commercial intelligence
+Chillout should be able to answer, where data supports it:
+- cost → click → landing page → Product → Offer → clickout → transaction → approved commission → net contribution
+- ROAS / commission ROAS / profit by query, keyword, campaign, ad, Product, Offer, merchant, property and channel
+- EPC, revenue per clickout, conversion rate, approval/rejection rate and lag to validation
+- which search terms and products generate real commercial value, not merely traffic
+- which merchants convert and approve best for the same Product/intent
+- where paid traffic is unprofitable despite strong click metrics
+- where organic rankings can replace or reduce paid spend
+- where profitable paid search terms expose new SEO/Product/content opportunities
+
+
+Paid ↔ organic learning loop
+Paid-search data should inform SEO and property improvement without turning paid terms into automatic page-generation instructions.
+Examples:
+- a profitable long-tail product query with weak organic visibility can become a Product SEO opportunity
+- a query already owned organically may justify reduced paid coverage if incremental value is low
+- repeated paid queries can expose synonyms, aliases, pack-size phrasing and user language worth testing in existing Product/entity content
+- query profitability can help prioritize which existing Product pages deserve optimization first
+All changes still pass property quality, canonical, content and cannibalization guardrails.
+
+
+Conversion feedback
+Where supported and policy-compliant, Chillout may send downstream transaction outcomes back to advertising platforms as offline/deeper conversions with appropriate value, currency, timestamps and deduplication identifiers.
+Prefer actual approved/validated commercial value when the optimization goal is profit/revenue quality, while retaining pending vs approved state so later corrections can be reconciled.
+Never send personal data or restricted fields merely to improve attribution; consent, platform policy and applicable privacy law govern collection and feedback.
+
+
+Commercial data model direction
+A normalized event model should support at least:
+AdClick / TrafficTouch
+Session / Landing
+Clickout
+AffiliateTransaction / Lead / Conversion
+RevenueAdjustment / Validation
+AdCost
+AttributionLink
+ConversionFeedback
+Each event should retain source, timestamp, property, provenance, external ids and the degree of attribution certainty.
+
+
+Reporting and automation vision
+Chillout should ultimately surface:
+- channel/campaign/query/product profitability dashboards
+- anomaly detection for cost, EPC, conversion and approval-rate shifts
+- recommendations to raise/lower budgets or bids only when evidence is sufficient
+- paid-vs-organic opportunity reports
+- high-value long-tail query discovery
+- advertiser/network reconciliation gaps
+- conversion-feedback failures and unmatched transaction rates
+High-impact budget/bid/campaign changes require explicit approval unless a property/account has deliberately configured a separate governed automation policy.
+
+
+Strategic principle
+Optimize for verified commercial value, not vanity conversions.
+The long-term goal is a closed-loop Commercial Intelligence Engine in which Chillout learns which traffic, queries, Products, Offers, merchants and channels create approved economic value, and uses that evidence to improve paid acquisition, SEO and property strategy over time.

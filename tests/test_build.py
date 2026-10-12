@@ -158,14 +158,14 @@ class BuildTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def test_nok_renders_with_comma_dash_and_a_non_breaking_separator(self):
-        self.assertIn("NOK 1 299,-", self.index)
-        self.assertEqual(build.money({"minor": 31050, "currency": "NOK"}), "NOK 310,50")
+    def test_nok_renders_in_norwegian_format(self):
+        self.assertIn("1 299 kr", self.index)
+        self.assertEqual(build.money({"minor": 31050, "currency": "NOK"}), "310,50 kr")
 
     def test_a_null_price_is_no_price_never_zero(self):
         self.assertIn("Ingen pris", self.index)
         self.assertIn("Ingen pris", self.empty)
-        self.assertNotIn("NOK 0", self.index + self.empty)
+        self.assertNotIn("0 kr", self.index + self.empty)
 
     def test_lowest_price_badge_only_on_the_offer_the_api_names(self):
         # Find table rows (after "<tbody>") to avoid hero section

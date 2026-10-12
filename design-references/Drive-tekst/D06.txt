@@ -1,0 +1,68 @@
+SjekkPris Search v1 – Prinsipper og dynamiske produktfremhevinger
+https://docs.google.com/document/d/1s6rkOn3-XxJr54RgigzIZ6KcXwHoyS8ljSkvW68CmKY/edit?usp=drivesdk
+Endret: 2026-09-25T16:40:08.758Z
+
+﻿SjekkPris Search v1 – prinsipper og dynamiske produktfremhevinger
+Godkjent designretning for naturlig språk og intelligente søkeresultater
+
+
+Kjerneprinsipp
+SjekkPris skal bruke samme søkefelt til klassisk produktsøk og naturlige behovssøk. Brukeren skal ikke velge mellom «vanlig søk» og «AI-søk».
+
+
+Search UX
+• Kort og eksakt søk, f.eks. «acuvue oasys»: rask autocomplete med søkeforslag, kategorier, merker og konkrete produkter.
+• Strukturert naturlig søk, f.eks. «vannkoker under 1000 kroner»: forstå kategori og kriterier, vis hva SjekkPris har forstått, og returner relevante produkter.
+• Behovssøk, f.eks. «Jeg har en valp på 3 måneder. Hvilke leker passer?»: kort nyttig svar, relevante produktgrupper og produkter.
+• Ingen blindvei: ved få/ingen treff skal SjekkPris hjelpe med nærmeste relevante alternativer eller et kort oppklarende spørsmål.
+
+
+Prinsipp for naturlige søkeresultater
+Forstå → fremhev det nyttige → vis alle treff.
+
+
+Ved naturlige/behovsbaserte søk kan toppen av resultatsiden vise inntil tre spesielt relevante produkter med en tydelig og dokumenterbar grunn. Alle ordinære treff vises rett under med filtre og sortering. De fremhevede produktene er snarveier og skal ikke erstatte det komplette søkeresultatet.
+
+
+Dynamiske «Hvorfor se på denne?»-signaler
+• Mest populær
+• Nyhet
+• Laveste historiske pris
+• Pris nær historisk bunn
+• Stort eller nytt prisfall
+• Kampanjetilbud
+• Best i test, dersom vi senere har et egnet testgrunnlag
+• Mest for pengene
+• Billigste produkt som matcher hele behovet
+• Best match til det brukeren beskrev
+• Populært valg i aktuell prisklasse
+• Mange butikker / bred tilgjengelighet
+• Rask levering når dette er relevant
+• Alternativet som sparer brukeren mest
+
+
+Regler for fremheving
+• Signalene er dynamiske; de tre plassene er ikke låst til faste typer.
+• Vis bare signaler som er relevante og kan begrunnes.
+• Det er ikke nødvendig å vise tre produkter. Ett eller to er bedre enn konstruerte «vinnere».
+• Samme produkt kan kvalifisere til flere signaler; SjekkPris viser den begrunnelsen som er mest nyttig for det aktuelle søket.
+• Skill mellom faktasignaler («laveste historiske pris») og SjekkPris-vurderinger («best match til søket»).
+• Forklar kort hvorfor et produkt fremheves.
+• Ikke la kommersielle/affiliate-hensyn skjult bestemme hvilke produkter som fremheves.
+
+
+Eksempel
+Søk: «beste vannkoker under 1000 kroner»
+
+
+SjekkPris kan vise:
+1. Laveste historiske pris – produkt A – «Laveste registrerte pris».
+2. Mest populær – produkt B – «Mest sett blant vannkokere siste 30 dager».
+3. Nyhet – produkt C – «Ny modell».
+
+
+Deretter: «Alle vannkokere under 1 000 kr» med vanlige filtre, sortering og komplett produktliste.
+
+
+Designstatus
+Search Results – Natural Language v1.0 er godkjent som retning. Visuelt: rolig SjekkPris-design, kort forklarende intro, dynamiske fremhevingskort øverst og full produktlisting under.
