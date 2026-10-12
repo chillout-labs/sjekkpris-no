@@ -1666,6 +1666,9 @@ def build(client: Chillout, out: Path, *, base: str, noindex: bool) -> int:
     if out.exists():
         shutil.rmtree(out)
     out.mkdir(parents=True)
+    (out / "assets").mkdir(exist_ok=True)
+    shutil.copyfile(Path(__file__).resolve().parent / "assets" / "sjekkpris-startside.webp",
+                    out / "assets" / "sjekkpris-startside.webp")
     (out / "style.css").write_text(STYLE.lstrip() + "\n" + PRODUCT_STYLE + "\n" + HOME_STYLE, encoding="utf-8")
 
     products = catalogue(client)

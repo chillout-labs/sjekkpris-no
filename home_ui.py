@@ -39,17 +39,19 @@ def render_home(products, *, base, money, day, segment):
     catalogue = ('<ul class="sp-product-grid">' + ''.join(cards) + '</ul>') if cards else '<p class="sp-home-empty">Ingen produkter er publisert ennå.</p>'
     return f'''<div class="sp-home">
 <section class="sp-home-hero" aria-labelledby="home-title">
+<img class="sp-home-art" src="{escape(base)}assets/sjekkpris-startside.webp" alt="" width="1774" height="887" fetchpriority="high">
+<div class="sp-home-hero-content">
 <h1 id="home-title">Hva vil du sammenligne?</h1>
-<p class="sp-home-intro">Søk etter et produkt, eller beskriv hva du trenger.</p>
+<p class="sp-home-intro">Finn produktet du ønsker, og sammenlign priser fra butikkene.</p>
 <div class="sp-home-search-wrap">
 <form id="home-search-form" class="sp-home-search" role="search" action="{escape(base)}search/" method="get" data-index="{escape(base)}search-index.json">
-{ui_icon('search')}<input id="home-query" name="q" type="search" required autocomplete="off" placeholder="Søk eller beskriv hva du ser etter …" aria-label="Søk etter produktnavn" aria-describedby="home-search-help" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="home-suggestions">
+{ui_icon('search')}<input id="home-query" name="q" type="search" required autocomplete="off" placeholder="Søk etter produktnavn …" aria-label="Søk etter produktnavn" aria-describedby="home-search-help" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="home-suggestions">
 <button type="submit" aria-label="Søk">{ui_icon('arrow')}</button></form>
 <ul id="home-suggestions" class="sp-suggestions" role="listbox" aria-label="Produktforslag" hidden></ul>
 </div>
 <p id="home-search-help" class="sp-home-help">Søket finner foreløpig produkter etter navn.</p>
 <p id="home-search-status" class="sp-sr" role="status" aria-live="polite"></p>
-{examples_html}</section>
+{examples_html}</div></section>
 <section class="sp-home-trust" aria-label="Om SjekkPris">
 <div>{ui_icon('search')}<p>Sammenlign priser<span>fra butikkene</span></p></div>
 <div>{ui_icon('truck')}<p>Totalpris<span>når frakt er kjent</span></p></div>
@@ -133,7 +135,11 @@ HOME_SEARCH_SCRIPT = r"""
 HOME_STYLE = r"""
 .sp-home { color:var(--sp-ink); font:15px/1.55 Arial,Helvetica,sans-serif }
 .sp-home h1,.sp-home h2,.sp-home h3,.sp-home p { margin:0 }
-.sp-home-hero { text-align:center; background:linear-gradient(110deg,#f2fbff,#edf8f4); padding:64px 32px 32px; margin:0 -28px }
+.sp-home-hero { position:relative; isolation:isolate; text-align:left; background:#f1f5f6; padding:56px 32px; margin:0 -28px; min-height:420px }
+.sp-home-art { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; z-index:-2 }
+.sp-home-hero::before { content:""; position:absolute; inset:0; background:linear-gradient(90deg,#f3f7faed 0%,#f3f7fad9 33%,#f3f7fa00 62%); z-index:-1 }
+.sp-home-hero-content { width:49%; max-width:570px }
+.sp-home-hero .sp-examples>div { justify-content:flex-start }
 .sp-home h1 { font-size:44px; line-height:1.13; letter-spacing:-1.5px; font-weight:750 }
 .sp-home-intro { font-size:17px; margin-top:12px!important }
 .sp-home-search-wrap { position:relative; max-width:800px; margin:26px auto 0; text-align:left }
@@ -163,7 +169,8 @@ a.sp-example { display:flex; align-items:center; gap:7px; min-height:44px; max-w
 .sp-home :focus-visible { outline:3px solid #177fc5; outline-offset:3px }
 @media(min-width:768px) and (max-width:999px) { .sp-product-grid { grid-template-columns:repeat(3,minmax(0,1fr)) }.sp-home h1 { font-size:38px }.sp-home-trust { gap:16px; padding:18px } }
 @media(max-width:767px) {
- .sp-home-hero { margin:0 -16px; padding:28px 16px 24px; text-align:left }.sp-home h1 { font-size:32px; line-height:1.1; letter-spacing:-.9px; max-width:310px }.sp-home .sp-home-intro { font-size:14px; margin-top:10px!important; max-width:330px }
+ .sp-home-hero { display:flex; flex-direction:column; margin:0 -16px; padding:28px 16px 0; text-align:left; min-height:0; background:#f3f7fa }
+ .sp-home-hero::before { display:none }.sp-home-hero-content { width:100%; max-width:none }.sp-home-art { position:static; order:2; z-index:auto; width:calc(100% + 32px); max-width:none; height:150px; margin:20px -16px 0; object-position:right center }.sp-home h1 { font-size:32px; line-height:1.1; letter-spacing:-.9px; max-width:310px }.sp-home .sp-home-intro { font-size:14px; margin-top:10px!important; max-width:330px }
  .sp-home-search-wrap { margin-top:20px }.sp-home-search { gap:8px; min-height:58px; padding:5px 5px 5px 13px }.sp-home-search input { font-size:16px; height:44px }.sp-home-search>svg { width:21px; height:21px }.sp-home-search button { width:44px; height:44px }.sp-home .sp-home-help { font-size:11px }
  .sp-examples { margin-top:16px }.sp-examples>div { justify-content:flex-start; gap:7px }.sp-example { font-size:11px!important; padding:6px 10px!important }
  .sp-home-trust { display:none }.sp-catalogue { margin-top:24px }.sp-catalogue-heading { margin-bottom:14px }.sp-catalogue-heading h2 { font-size:23px }.sp-catalogue-heading>span { font-size:12px }
