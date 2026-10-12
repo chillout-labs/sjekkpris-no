@@ -2,7 +2,7 @@ name: Product preview (no deploy)
 on:
   push:
     branches: [frontend-v1-design]
-    paths: ['.github/workflows/product-preview.yml']
+    paths: ['.github/workflows/product-preview.yml', 'build.py', 'product_ui.py', 'home_ui.py', 'home_release.py', 'assets/**']
   workflow_dispatch: {}
 permissions:
   contents: read
