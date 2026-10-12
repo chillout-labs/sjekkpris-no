@@ -791,21 +791,29 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
 
 STYLE = """
 /* CSS Design Tokens & Layout Foundation
- * SjekkPris Frontend v1 – D05 Design Bible
+ * SjekkPris Frontend v1 – Approved design package
  */
 
-/* Root tokens: colors, spacing, typography */
+/* Root tokens: design-package approved colors */
 :root {
-  /* Colors: calm Scandinavian palette */
-  --color-text-primary: #1d1f22;
-  --color-text-secondary: #5f6368;
-  --color-text-muted: #80868b;
+  /* Primary colors from approved design */
+  --ink: #10203b;
+  --muted: #586780;
+  --green: #006454;
+  --mint: #edf8f4;
+  --line: #e2e8ef;
+  --surface: #f5f8fb;
+
+  /* Deprecated: keeping for compatibility */
+  --color-text-primary: #10203b;
+  --color-text-secondary: #586780;
+  --color-text-muted: #586780;
   --color-background: #ffffff;
-  --color-surface: #f8f9fa;
-  --color-border: #dadce0;
-  --color-accent-teal: #0d9488;
-  --color-accent-teal-light: #d1fae5;
-  --color-status-success: #059669;
+  --color-surface: #f5f8fb;
+  --color-border: #e2e8ef;
+  --color-accent-teal: #006454;
+  --color-accent-teal-light: #edf8f4;
+  --color-status-success: #006454;
   --color-status-warning: #d97706;
   --color-status-error: #dc2626;
 
@@ -1395,12 +1403,12 @@ tbody tr:hover {
   display: block;
 }
 
-/* Desktop 3-column layout (1024px: wider to avoid cramping on tablet) */
-@media (min-width: 1024px) {
+/* Desktop 3-column layout per approved design package (1000px+) */
+@media (min-width: 1000px) {
   .product-hero {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: var(--space-xl);
+    grid-template-columns: 1.05fr 1fr 1fr;
+    gap: 28px;
     align-items: start;
   }
 
@@ -1409,12 +1417,12 @@ tbody tr:hover {
   }
 }
 
-/* Price hero card */
+/* Price hero card - approved mint background */
 .price-hero {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-lg);
+  background-color: var(--mint);
+  border: none;
+  border-radius: 12px;
+  padding: 23px 20px 16px;
   height: fit-content;
 }
 
