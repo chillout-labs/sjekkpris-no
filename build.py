@@ -174,12 +174,40 @@ def page(title: str, body: str, *, base: str, noindex: bool) -> str:
 </head>
 <body>
 <header>
+<div class="container topbar">
+<a class="brand" href="{e(base)}" aria-label="SjekkPris"><span>S</span>jekkPris</a>
+<p class="tagline">Smartere valg. Mer for pengene.</p>
+<div class="search">
+<form id="search-form" role="search">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+<circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+</svg>
+<input id="query" aria-label="Søk etter produkter" placeholder="Søk etter produkter, merker, kategorier …" autocomplete="off">
+<button aria-label="Søk"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+<path d="m5 12 7-7 7 7"/></svg></button>
+</form>
+<div id="search-result" class="search-result" role="status" hidden></div>
+</div>
+<button id="menu-toggle" class="menu-button" aria-expanded="false" aria-controls="menu-panel">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+<span>Meny</span>
+</button>
+<nav id="menu-panel" class="menu-panel" aria-label="Seksjoner" hidden>
+<a href="#prices">Butikker og priser</a>
+<a href="#history">Prishistorikk</a>
+<a href="#about">Om produktet</a>
+<a href="#specifications">Spesifikasjoner</a>
+</nav>
+</div>
+<div class="categories">
 <div class="container">
-<a class="brand" href="{e(base)}">SjekkPris.no</a>
-<span class="beta">Beta</span>
+<span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3zm10 0h8v8h-8zm0 10h8v8h-8zM3 13h8v8H3z"/></svg>Alle kategorier</span>
+<span>Elektronikk</span><span>Hjem og husholdning</span><span>Sport og fritid</span>
+<span>Skjønnhet og helse</span><span>Barn og familie</span><span>Hage og utemiljø</span>
+</div>
 </div>
 </header>
-<main>
+<main class="container" id="product">
 <div class="main-container">
 {body}
 </div>
@@ -730,7 +758,14 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
     )
 
     parts = []
-    parts.append(f'<p><a href="{e(base)}">← Tilbake til produkter</a></p>')
+
+    # Breadcrumb navigation
+    parts.append('<nav class="breadcrumb" aria-label="Brødsmulesti">')
+    parts.append('<span>Hjem</span>')
+    if identity.get("local_category"):
+        parts.append(f'<span>{e(identity["local_category"])}</span>')
+    parts.append(f'<span>{e(name)}</span>')
+    parts.append('</nav>')
 
     # Hero section: 3-column layout on desktop, single column on mobile
     hero_parts = []
@@ -775,16 +810,40 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
 
     parts.append("\n".join(hero_parts))
 
+    # Offers section with anchor
     if not offers and not excluded:
+        parts.append("<h2 id=\"prices\">Butikker og priser</h2>")
         parts.append("<p>Ingen tilbud akkurat nå.</p>")
     else:
+        parts.append("<h2 id=\"prices\">Butikker og priser</h2>")
         if offers:
             rows = "\n".join(offer_row(o, lowest=lowest, excluded=False) for o in offers)
-            parts.append(f"<h2>Tilbud</h2>\n<table>\n<thead>{head}</thead>\n<tbody>\n{rows}\n</tbody>\n</table>")
+            parts.append(f"<table>\n<thead>{head}</thead>\n<tbody>\n{rows}\n</tbody>\n</table>")
         if excluded:
             rows = "\n".join(offer_row(o, lowest=None, excluded=True) for o in excluded)
-            parts.append("<h2>Ikke sammenlignbare tilbud</h2>")
+            parts.append("<h3>Ikke sammenlignbare tilbud</h3>")
             parts.append(f"<table>\n<thead>{head}</thead>\n<tbody>\n{rows}\n</tbody>\n</table>")
+
+    # Price history section (empty state)
+    parts.append("<h2 id=\"history\">Prishistorikk</h2>")
+    parts.append('<div class="empty-history">')
+    parts.append('<svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">')
+    parts.append('<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>')
+    parts.append('</svg>')
+    parts.append('<p>Prishistorikk kommer snart</p>')
+    parts.append('</div>')
+
+    # About section
+    parts.append("<h2 id=\"about\">Om produktet</h2>")
+    parts.append('<div class="empty-about">')
+    parts.append('<p>Mer informasjon om produktet kommer snart</p>')
+    parts.append('</div>')
+
+    # Specifications section
+    parts.append("<h2 id=\"specifications\">Spesifikasjoner</h2>")
+    parts.append('<div class="empty-specs">')
+    parts.append('<p>Spesifikasjoner kommer snart</p>')
+    parts.append('</div>')
 
     return "\n".join(parts)
 
@@ -803,6 +862,7 @@ STYLE = """
   --mint: #edf8f4;
   --line: #e2e8ef;
   --surface: #f5f8fb;
+  --radius: 12px;
 
   /* Deprecated: keeping for compatibility */
   --color-text-primary: #10203b;
@@ -920,6 +980,195 @@ h2 {
   line-height: var(--line-height-tight);
   margin: var(--space-lg) 0 var(--space-md);
   font-weight: 600;
+}
+
+/* Header styles from approved design package */
+header {
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--line);
+}
+
+header .container.topbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 16px var(--container-padding);
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.brand span {
+  font-size: 24px;
+  background: linear-gradient(135deg, var(--green), var(--ink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.tagline {
+  display: none;
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+@media (min-width: 768px) {
+  .tagline {
+    display: block;
+  }
+}
+
+.search {
+  flex: 1;
+  max-width: 580px;
+  position: relative;
+}
+
+#search-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+}
+
+#search-form svg {
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+#query {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+#search-form button {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--muted);
+  display: flex;
+}
+
+.search-result {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid var(--line);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.menu-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+@media (min-width: 768px) {
+  .menu-button {
+    display: none;
+  }
+}
+
+.menu-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  padding: 60px 20px;
+  z-index: 5;
+}
+
+.menu-panel[hidden] {
+  display: none !important;
+}
+
+.menu-panel a {
+  padding: 16px 0;
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px solid var(--line);
+}
+
+@media (min-width: 768px) {
+  .menu-panel {
+    position: static;
+    background: transparent;
+    padding: 0;
+    gap: 24px;
+    flex-direction: row;
+  }
+
+  .menu-panel a {
+    padding: 0;
+    font-weight: 400;
+    font-size: 14px;
+    border: none;
+  }
+}
+
+.categories {
+  display: none;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 12px 0;
+}
+
+.categories .container {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 0 var(--container-padding);
+  font-size: 13px;
+  color: var(--ink);
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.categories span {
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 @media (min-width: 1024px) {
@@ -1138,6 +1387,33 @@ tbody tr:hover {
 .text-xs {
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
+}
+
+/* Empty states for sections */
+.empty-history,
+.empty-about,
+.empty-specs {
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xl);
+  text-align: center;
+  color: var(--muted);
+}
+
+.empty-history svg,
+.empty-about svg,
+.empty-specs svg {
+  display: block;
+  margin: 0 auto var(--space-lg);
+  color: var(--line);
+}
+
+.empty-history p,
+.empty-about p,
+.empty-specs p {
+  margin: 0;
+  font-size: var(--font-size-sm);
 }
 
 /* Links */
@@ -1367,6 +1643,28 @@ tbody tr:hover {
 .chip:focus {
   outline: 2px solid var(--color-accent-teal);
   outline-offset: 2px;
+}
+
+/* Breadcrumb navigation */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 25px 0;
+}
+
+.breadcrumb span::after {
+  content: " / ";
+  margin: 0 6px;
+  color: var(--line);
+}
+
+.breadcrumb span:last-child::after {
+  content: "";
+  margin: 0;
 }
 
 /* Product hero section: 3-column desktop, single column mobile */
