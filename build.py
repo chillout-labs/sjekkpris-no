@@ -177,9 +177,21 @@ def page(title: str, body: str, *, base: str, noindex: bool) -> str:
 <div class="container topbar">
 <a class="brand" href="{e(base)}" aria-label="SjekkPris"><span>S</span>jekkPris</a>
 <p class="tagline">Smartere valg. Mer for pengene.</p>
-<div class="search">
-<form id="search-form" role="search">
-<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+<button id="menu-toggle" class="menu-button" aria-expanded="false" aria-controls="menu-panel">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+<span>Meny</span>
+</button>
+<nav id="menu-panel" class="menu-panel" aria-label="Hovedmeny" hidden>
+<a href="#prices">Butikker og priser</a>
+<a href="#history">Prishistorikk</a>
+<a href="#about">Om produktet</a>
+<a href="#specifications">Spesifikasjoner</a>
+</nav>
+</div>
+<div class="search-bar">
+<div class="container">
+<form id="search-form" role="search" class="search-form-horizontal">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
 </svg>
 <input id="query" aria-label="Søk etter produkter" placeholder="Søk etter produkter, merker, kategorier …" autocomplete="off">
@@ -188,16 +200,6 @@ def page(title: str, body: str, *, base: str, noindex: bool) -> str:
 </form>
 <div id="search-result" class="search-result" role="status" hidden></div>
 </div>
-<button id="menu-toggle" class="menu-button" aria-expanded="false" aria-controls="menu-panel">
-<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
-<span>Meny</span>
-</button>
-<nav id="menu-panel" class="menu-panel" aria-label="Seksjoner" hidden>
-<a href="#prices">Butikker og priser</a>
-<a href="#history">Prishistorikk</a>
-<a href="#about">Om produktet</a>
-<a href="#specifications">Spesifikasjoner</a>
-</nav>
 </div>
 <div class="categories">
 <div class="container">
@@ -577,39 +579,47 @@ def render_price_hero(offer: dict, price_type: str) -> str:
     if price_type == "total":
         html_parts.append('<span class="badge badge-lowest-total">Laveste kjente totalpris</span>')
         price_html = f'<div class="price-amount">{e(total_price)}</div>'
-        label_html = f'<div class="price-label">Inkl. frakt · {e(advertiser)}</div>'
+        item_info = f'Varepris + frakt · {e(advertiser)}'
     elif price_type == "item":
         html_parts.append('<span class="badge badge-lowest-item">Laveste varepris</span>')
         price_html = f'<div class="price-amount">{e(item_price)}</div>'
-        label_html = f'<div class="price-label">{e(advertiser)}</div>'
+        item_info = e(advertiser)
     else:
         html_parts.append('<span class="badge" style="background-color: var(--color-surface);">Pris ukjent</span>')
         price_html = '<div class="price-amount" style="color: var(--color-text-muted);">Ingen vinner</div>'
-        label_html = '<div class="price-label">Se tilbud nedenfor</div>'
+        item_info = ''
 
     html_parts.append('</div>')
+
+    # Price display (large, centered)
     html_parts.append('<div class="price-display">')
     html_parts.append(price_html)
-    html_parts.append(label_html)
     html_parts.append('</div>')
 
+    # Item info on single line
+    if item_info:
+        html_parts.append(f'<div class="price-info">{e(item_info)}</div>')
+
     if price_type != "none":
-        # Add key info badges
-        html_parts.append('<div class="hero-info">')
+        # Info row: shipping, availability, confirmed date (all on one line)
+        info_parts = []
 
         # Shipping
         shipping_label = shipping_text(offer)
-        html_parts.append(f'<div class="info-badge">{e(shipping_label)}</div>')
+        if shipping_label:
+            info_parts.append(e(shipping_label))
 
         # Availability
-        html_parts.append(f'<div class="info-badge">{e(availability)}</div>')
+        if availability:
+            info_parts.append(e(availability))
 
         # Last confirmed
         confirmed = day(offer.get("last_confirmed_at"))
         if confirmed:
-            html_parts.append(f'<div class="info-badge">Bekreftet {e(confirmed)}</div>')
+            info_parts.append(f"Bekreftet {e(confirmed)}")
 
-        html_parts.append('</div>')
+        if info_parts:
+            html_parts.append(f'<div class="price-info-row">{" · ".join(info_parts)}</div>')
 
         # Add CTA button
         html_parts.append('<div class="hero-cta">')
@@ -771,11 +781,7 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
     hero_parts = []
     hero_parts.append('<section class="product-hero">')
 
-    # Mobile: product name before image
-    hero_parts.append('<div class="hero-title-mobile">')
-    hero_parts.append(f"<h1>{e(name)}</h1>")
-
-    # Identity metadata
+    # Identity metadata (computed once for both mobile and desktop)
     meta_parts = []
     if identity.get("local_brand"):
         meta_parts.append(f"<span class=\"text-sm\"><strong>Merke:</strong> {e(identity['local_brand'])}</span>")
@@ -783,9 +789,12 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
         meta_parts.append(f"<span class=\"text-sm\"><strong>Kategori:</strong> {e(identity['local_category'])}</span>")
     if identity.get("local_pack_size"):
         meta_parts.append(f"<span class=\"text-sm\"><strong>Pakning:</strong> {e(identity['local_pack_size'])}</span>")
+
+    # Mobile: product name before image
+    hero_parts.append('<div class="hero-title-mobile">')
+    hero_parts.append(f"<h1>{e(name)}</h1>")
     if meta_parts:
         hero_parts.append(f"<div class=\"product-meta\">{' '.join(meta_parts)}</div>")
-
     hero_parts.append('</div>')
 
     # Left column: product image
@@ -796,10 +805,7 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
     # Middle column: product info (desktop only)
     hero_parts.append('<div class="hero-column hero-info-column">')
     hero_parts.append(f"<h1 class=\"hidden-mobile\">{e(name)}</h1>")
-
-    # Identity metadata (desktop)
-    if meta_parts:
-        hero_parts.append(f"<div class=\"product-meta hidden-mobile\">{' '.join(meta_parts)}</div>")
+    # No duplicate metadata here - reuse on desktop via CSS display control
 
     hero_parts.append('</div>')
 
@@ -1039,13 +1045,19 @@ header .container.topbar {
   }
 }
 
-.search {
-  flex: 1;
-  max-width: 580px;
-  position: relative;
+.search-bar {
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--line);
+  padding: 12px 0;
 }
 
-#search-form {
+.search-bar .container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--container-padding);
+}
+
+.search-form-horizontal {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1055,7 +1067,7 @@ header .container.topbar {
   padding: 8px 12px;
 }
 
-#search-form svg {
+.search-form-horizontal svg {
   width: 18px;
   height: 18px;
   color: var(--muted);
@@ -1069,15 +1081,17 @@ header .container.topbar {
   outline: none;
   font-size: 14px;
   font-family: inherit;
+  min-width: 200px;
 }
 
-#search-form button {
+.search-form-horizontal button {
   background: none;
   border: none;
   padding: 4px;
   cursor: pointer;
   color: var(--muted);
   display: flex;
+  align-items: center;
 }
 
 .search-result {
@@ -1750,8 +1764,45 @@ tbody tr:hover {
   background-color: var(--mint);
   border: none;
   border-radius: 12px;
-  padding: 23px 20px 16px;
+  padding: 16px;
   height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.price-header {
+  display: flex;
+  gap: 8px;
+}
+
+.price-display {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.price-amount {
+  font-size: clamp(28px, 5vw, 36px);
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.price-info {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.price-info-row {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.hero-cta {
+  margin-top: 4px;
 }
 
 .price-header {
