@@ -5,7 +5,7 @@ directory for:
 
 - `apk_`, the read key's prefix — and the key itself, when it is in the
   environment;
-- the Chillout origin's hostname: the browser never calls Chillout, so a page
+- the Chillout origin's hostname outside validated image source attributes: a page
   naming it means something leaked from the build into the output;
 - `prd_`, the platform's product id, which a property never addresses
   products by;
@@ -20,6 +20,7 @@ from __future__ import annotations
 import os
 import re
 import sys
+from catalogue_media import without_public_image_attributes
 import urllib.parse
 from pathlib import Path
 
@@ -46,7 +47,8 @@ def check(out: Path) -> list[str]:
         raw = path.read_bytes().decode("utf-8", errors="replace")
         text = CLICKOUT_LINK.sub("", raw).lower()
         for name, needle in rules.items():
-            if needle.lower() in text:
+            checked = without_public_image_attributes(raw).lower() if name == "Chillout origin hostname" and path.suffix == ".html" else text
+            if needle.lower() in checked:
                 problems.append(f"{path.relative_to(out)}: contains the {name}")
     return problems
 
@@ -67,3 +69,4 @@ def main(argv: list[str]) -> int:
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
+
