@@ -33,6 +33,7 @@ def main():
         image={'url':'https://sjekkpris.no/assets/tv-illustration.webp'} if i<5 else None
         product={'namespace':'catalogue','local_slug':slug,'local_name':name,
                  'local_brand':brand,'local_category':'TV', 'image':image,
+                 'categories':{'primary':{'id':'demo-tv','display_name':'TV','active':True,'path':[{'id':'demo-electronics','display_name':'Elektronikk'},{'id':'demo-tv','display_name':'TV'}]}},
                  'lowest_item_price':{'minor':minor,'currency':'NOK'} if minor else None,
                  'offer_count':3 if minor else 0,'lowest_item_price_confirmed_at':None}
         products.append(product)
@@ -52,9 +53,6 @@ def main():
     out=ROOT/'.design-preview'
     build.build(Fixtures(),out,base='/',noindex=True)
     shutil.copyfile(ROOT/'tools/design_assets/tv-illustration.webp',out/'assets/tv-illustration.webp')
-    category=out/'kategori'/'tv';category.mkdir(parents=True,exist_ok=True)
-    content=render_listing(products,base='/',money=home_money,day=build.day,segment=build.segment,title='TV',category=True)
-    (category/'index.html').write_text(page('TV – designforhåndsvisning',content,base='/',noindex=True),encoding='utf-8')
     shop=out/'butikk';shop.mkdir(exist_ok=True)
     (shop/'index.html').write_text(page('Butikklenke – forhåndsvisning','<section class="sp-home" style="padding:32px 0"><h1>Her går kunden til butikken</h1><p>Dette er slutten på eksempelreisen. Ingen ekte butikk åpnes.</p><p><a href="/">Til startsiden</a></p></section>',base='/',noindex=True),encoding='utf-8')
     banner='<aside style="padding:12px 16px;background:#fff3d6;color:#10203b;text-align:center;font:13px Arial,sans-serif">Designforhåndsvisning · eksempelprodukter, illustrasjonsbilde og eksempelpriser. <a href="/">Startside</a> · <a href="/search/?q=OLED">Søk</a> · <a href="/kategori/tv/">TV-kategori</a></aside>'

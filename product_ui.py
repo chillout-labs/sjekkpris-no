@@ -207,4 +207,10 @@ footer.sp-footer { margin-top:32px; padding:24px 0; background:var(--sp-surface)
 .sp-product #specifications summary::before { content:'›'; margin-right:8px; font-size:20px }
 .sp-product #specifications details[open] summary::before { transform:rotate(90deg) }
 .sp-home .sp-product-category, .sp-home .sp-product-brand { font-size:12px; color:var(--sp-muted); margin:0 0 8px }
+
+.sp-category-nav { border-top:1px solid var(--sp-line); background:#fff }
+.sp-category-nav>.sp-shell { display:flex; gap:26px; align-items:center; overflow-x:auto }
+.sp-category-nav a { display:flex; align-items:center; min-height:46px; white-space:nowrap; font-size:13px; color:var(--sp-ink); text-decoration:none }
+.sp-category-nav a:hover { color:var(--sp-green) }.sp-category-nav .sp-all-categories { font-weight:700; padding-right:24px; border-right:1px solid var(--sp-line) }
+@media(max-width:767px) { .sp-category-nav>.sp-shell { gap:18px }.sp-category-nav a { font-size:12px; min-height:44px }.sp-category-nav .sp-all-categories { padding-right:18px } }
 """

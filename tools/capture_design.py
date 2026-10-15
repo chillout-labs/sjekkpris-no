@@ -34,11 +34,12 @@ def main():
                         assert page.locator('[data-result]:visible').count()==3
                     page.screenshot(path=str(shots/f'{name}_{width}.png'),full_page=True)
                 page.goto(origin+'/search/?q=OLED',wait_until='networkidle')
-                if not page.locator('.sp-listing-filters').evaluate('(e)=>e.open'):page.locator('.sp-listing-filters summary').click()
+                if width<768:page.locator('#filter-open').click()
                 page.locator('#listing-max').fill('10000')
                 assert page.locator('[data-result]:visible').count()==1
                 page.locator('#listing-max').fill('1')
                 assert page.locator('#listing-empty').is_visible()
+                if width<768:page.locator('#filter-apply').click()
                 page.locator('#listing-show-all').click()
                 assert page.locator('[data-result]:visible').count()==6
                 page.locator('#listing-sort').select_option('price')
