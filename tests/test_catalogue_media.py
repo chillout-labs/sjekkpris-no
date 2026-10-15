@@ -58,7 +58,7 @@ class MediaTest(unittest.TestCase):
             path = root / 'page.html'
             path.write_text(image_markup({"url": IMAGE}, 'Synthetic', sizes='100px'))
             self.assertEqual(check_output.check(root), [])
-            for text in [f'<script>const x = \'<img src="{IMAGE}">\'</script>',
+            for text in [f"<img onload='let src=\"{IMAGE}\";'>", f'<script>const x = \'<img src="{IMAGE}">\'</script>',
                          f'<img data-src="{IMAGE}">', f'<!-- <img src="{IMAGE}"> -->', IMAGE, f'<a href="{IMAGE}">link</a>', f'<script>"{IMAGE}"</script>',
                          f'<img src="{IMAGE}?apikey=apk_synthetic">',
                          f'<img src="{IMAGE}" alt="apk_synthetic">',

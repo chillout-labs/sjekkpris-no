@@ -65,18 +65,17 @@ def without_public_image_attributes(text):
     Credential/internal-ID rules must still inspect the original whole text.
     No exception for scripts, links, CSS, JSON or text containing the same URL.
     """
-    def attribute(attr):
-        name, quote, value = attr.group(1), attr.group(2), html.unescape(attr.group(3))
-        if name.lower() == "src":
-            valid = public_image_url(value)
-        else:
-            items = value.split(",")
-            valid = bool(items) and all(
-                len(parts := item.strip().split()) == 2
-                and public_image_url(parts[0]) and re.fullmatch(r"[1-9][0-9]{0,3}w", parts[1])
-                for item in items
-            )
-        return f'{name}={quote}{quote}' if valid else attr.group(0)
+    def allowed(name, value):
+        if name == "src":
+            return public_image_url(value)
+        if name != "srcset" or value is None:
+            return False
+        items = value.split(",")
+        return bool(items) and all(
+            len(parts := item.strip().split()) == 2
+            and public_image_url(parts[0]) and re.fullmatch(r"[1-9][0-9]{0,3}w", parts[1])
+            for item in items
+        )
 
     class ImagesOnly(HTMLParser):
         def __init__(self):
@@ -86,7 +85,12 @@ def without_public_image_attributes(text):
         def handle_starttag(self, tag, attrs):
             raw = self.get_starttag_text()
             if tag == "img":
-                raw = re.sub(r"(?<!\S)(src|srcset)\s*=\s*([\"'])(.*?)\2", attribute, raw, flags=re.I)
+                # Parse attribute boundaries before exempting values: text like
+                # src="..." inside onload/data-src is not an image source.
+                raw = "<img" + "".join(
+                    f' {name}="{html.escape("" if allowed(name, value) else value or "", quote=True)}"'
+                    for name, value in attrs
+                ) + ">"
             self.output.append(raw)
 
         def handle_startendtag(self, tag, attrs):
