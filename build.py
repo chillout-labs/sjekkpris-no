@@ -30,6 +30,7 @@ Truthfulness rules this file follows, because the platform's data carries them:
 
 from __future__ import annotations
 
+import hashlib
 import argparse
 import html
 import json
@@ -165,6 +166,7 @@ def segment(value: str) -> str:
 
 
 def page(title: str, body: str, *, base: str, noindex: bool, home: bool = False) -> str:
+    css_name = "style-" + hashlib.sha256((STYLE + PRODUCT_STYLE + HOME_STYLE).encode()).hexdigest()[:12] + ".css"
     robots = '<meta name="robots" content="noindex">' if noindex else ""
     header_search = '' if home else (
         f'<form class="sp-search" role="search" action="{e(base)}search/" method="get">'
@@ -175,7 +177,7 @@ def page(title: str, body: str, *, base: str, noindex: bool, home: bool = False)
 <html lang="nb"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">{robots}<title>{e(title)}</title>
-<link rel="stylesheet" href="{e(base)}style.css"></head><body>
+<link rel="stylesheet" href="{e(base)}{css_name}"></head><body>
 <a class="sp-skip" href="#main">Hopp til innhold</a>
 <header class="sp-header"><div class="sp-shell sp-topbar">
 <a class="sp-brand" href="{e(base)}" aria-label="SjekkPris – forsiden"><span>S</span>jekkPris</a>
@@ -1671,6 +1673,9 @@ def build(client: Chillout, out: Path, *, base: str, noindex: bool) -> int:
     shutil.copyfile(Path(__file__).resolve().parent / "assets" / "sjekkpris-startside.webp",
                     out / "assets" / "sjekkpris-startside.webp")
     (out / "style.css").write_text(STYLE.lstrip() + "\n" + PRODUCT_STYLE + "\n" + HOME_STYLE, encoding="utf-8")
+
+    css_name = "style-" + hashlib.sha256((STYLE + PRODUCT_STYLE + HOME_STYLE).encode()).hexdigest()[:12] + ".css"
+    shutil.copyfile(out / "style.css", out / css_name)
 
     products = catalogue(client)
 

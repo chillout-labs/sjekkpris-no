@@ -203,7 +203,7 @@ class BuildTest(unittest.TestCase):
 
     def test_base_path_prefixes_links(self):
         self.assertIn('href="/sjekkpris-no/p/catalogue/fixture-lamp/"', self.index)
-        self.assertIn('href="/sjekkpris-no/style.css"', self.lamp)
+        self.assertRegex(self.lamp, r'href="/sjekkpris-no/style-[a-f0-9]{12}\.css"')
         self.assertEqual(build.normalise_base("/"), "/")
         self.assertEqual(build.normalise_base("sjekkpris-no"), "/sjekkpris-no/")
 
