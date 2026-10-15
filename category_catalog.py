@@ -73,7 +73,7 @@ def render_category_index(nodes, base):
     def branch(key):
         n = nodes[key]
         children = ''.join(branch(k) for k in sorted(n['children'],key=lambda k:nodes[k]['name']))
-        return (f'<li><a href="{e(category_href(n,base))}"><span>{e(n["name"])}</span><small>{len(n["products"])} produkter</small></a>'
+        return (f'<li><a href="{e(category_href(n,base))}"><span>{e(n["name"])}</span><small>{len(n["products"])} {"produkt" if len(n["products"]) == 1 else "produkter"}</small></a>'
                 + (f'<ul>{children}</ul>' if children else '') + '</li>')
     roots = sorted((k for k,n in nodes.items() if n['parent'] is None), key=lambda k:nodes[k]['name'])
     return ('<section class="sp-home sp-category-index"><nav class="sp-breadcrumb" aria-label="Brødsmulesti">'

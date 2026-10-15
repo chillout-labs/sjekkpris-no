@@ -17,7 +17,7 @@ def render_listing(products, *, base, money, day, segment, title='Søk etter pro
 {subcategories}<div class="sp-listing-layout">
 <div id="filter-desktop-slot">
 <details class="sp-listing-filters" open><summary>Filtrer produkter</summary><div>
-{brand}<label>Minstepris i kroner<input id="listing-min" type="number" min="0" step="1" inputmode="numeric" placeholder="Ingen grense"></label><label>Makspris i kroner<input id="listing-max" type="number" min="0" step="1" inputmode="numeric" placeholder="Ingen grense"></label>
+<div class="sp-price-range"><label>Min. pris (kr)<input id="listing-min" type="number" min="0" step="1" inputmode="numeric" placeholder="Ingen grense"></label><label>Maks. pris (kr)<input id="listing-max" type="number" min="0" step="1" inputmode="numeric" placeholder="Ingen grense"></label></div>{brand}
 <button id="listing-reset" type="button">Nullstill filtre</button></div></details></div>
 <div class="sp-listing-main"><div class="sp-listing-toolbar"><button id="filter-open" class="sp-filter-open" type="button" hidden>Filter <span id="filter-count"></span></button><p id="result-status" role="status" aria-live="polite">{len(products)} produkter</p>
 <label>Sorter etter<select id="listing-sort"><option value="name">Produktnavn</option><option value="price">Laveste varepris</option><option value="price-desc">Høyeste varepris</option></select></label></div>
@@ -103,6 +103,8 @@ LISTING_STYLE = r"""
 .sp-category-chips a:hover { background:var(--sp-mint) }.sp-category-chips span { color:var(--sp-muted); font-size:11px }
 .sp-listing .sp-active-filters { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px }.sp-listing .sp-active-filters:empty { display:none }
 .sp-listing .sp-active-filters button { background:var(--sp-mint); font-size:12px }
+.sp-price-range { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px }
+@media(min-width:768px) { .sp-listing .sp-card-image { height:210px; aspect-ratio:auto; flex-shrink:0 }.sp-listing .sp-card-image img { max-height:100% } }
 #filter-desktop-slot { position:sticky; top:20px }
 .sp-listing #filter-dialog { max-width:none; max-height:none; width:100%; height:100dvh; margin:0; padding:20px; border:0; color:var(--sp-ink); background:white }
 #filter-dialog[open] { display:flex; flex-direction:column }

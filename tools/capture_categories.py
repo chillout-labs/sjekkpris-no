@@ -28,6 +28,7 @@ try:
             for width in (360,390,430,1280):
                 page.set_viewport_size({'width':width,'height':900})
                 page.goto(origin+path,wait_until='networkidle')
+                page.mouse.move(0,0)
                 page.locator('.sp-card-photo img').evaluate_all("async images=>{await Promise.all(images.map(async img=>{img.loading='eager';await img.decode();}));}")
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(path,width)
                 count=page.locator('[data-result]:visible').count()
@@ -38,7 +39,7 @@ try:
                 assert page.locator('[data-result]:visible').count()==0
                 page.locator('#listing-reset').click()
                 assert page.locator('[data-result]:visible').count()==count
-                if width==390:page.screenshot(path=str(shots/f'{target.parent.name}_filters_390.png'),full_page=True)
+                if width==390:page.screenshot(path=str(shots/f'{target.parent.name}_filters_390.png'),full_page=False)
                 if width<768:
                     page.keyboard.press('Escape')
                     assert not page.locator('#filter-dialog').is_visible()
@@ -51,6 +52,9 @@ try:
                 assert page.locator('.sp-breadcrumb a[href*="/kategori/"]').count()>0
                 results.append({'category':target.parent.name,'width':width,'products':count,'navigation_filters_sort':'pass'})
         page.goto(origin+'/kategori/',wait_until='networkidle')
+        page.set_viewport_size({'width':360,'height':900})
+        assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),'category index overflow'
+        page.screenshot(path=str(shots/'all-categories_360.png'),full_page=True)
         page.set_viewport_size({'width':1280,'height':900})
         page.screenshot(path=str(shots/'all-categories_1280.png'),full_page=True)
         assert not errors,errors
