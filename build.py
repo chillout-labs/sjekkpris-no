@@ -1,7 +1,8 @@
 """Build the SjekkPris.no beta site from Chillout's read API.
 
-Build time only. The browser never calls Chillout: every page is static HTML
+Build time only. The browser never calls the read API: every page is static HTML
 rendered here, and the read key exists only in this process's environment.
+The browser may load public images through Chillout's delivery gate.
 
 Inputs, all from the environment:
 

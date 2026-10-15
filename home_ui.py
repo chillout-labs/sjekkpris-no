@@ -21,7 +21,7 @@ def render_home(products, *, base, money, day, segment):
         offer_text = '1 tilbud' if count == 1 else f'{count} tilbud'
         media = image_markup(product.get('image'), name, sizes='(max-width: 600px) 45vw, (max-width: 1024px) 30vw, 250px')
         if not media:
-            media = ui_icon('image') + '<span>Bilde mangler</span>' 
+            media = ui_icon('image') + '<span>Bilde mangler</span>'
         cards.append(
             f'<li><article class="sp-product-card"><a href="{href}">'
             f'<div class="sp-card-image">{media}</div>'

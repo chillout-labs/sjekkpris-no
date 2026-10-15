@@ -67,6 +67,13 @@ class MediaTest(unittest.TestCase):
                 path.write_text(text)
                 self.assertTrue(check_output.check(root), text)
 
+    def test_image_markup_in_non_html_files_is_not_exempt(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for extension in ['json', 'css', 'js']:
+                (root / ('leak.' + extension)).write_text(f'<img src="{IMAGE}">')
+            self.assertEqual(len(check_output.check(root)), 3)
+
     def test_missing_and_inactive_category_do_not_invent_classification(self):
         self.assertEqual(category_markup(None), '')
         self.assertEqual(category_markup({"primary": {**CATEGORY, "active": False}}), '')

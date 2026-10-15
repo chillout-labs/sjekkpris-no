@@ -8,9 +8,9 @@ proof, not the design.
 
 - `build.py` reads `GET /api/v1/properties/sjekkpris-no/catalogue` for the
   product list, and `…/catalogue/{namespace}/{slug}/offers` for each product
-  page. It runs **only in GitHub Actions**; the browser never calls Chillout.
+  page. It runs **only in GitHub Actions**; the browser never calls the read API; public images use its delivery gate.
 - `check_output.py` fails the build if the output contains `apk_`, the key
-  itself, the Chillout origin's hostname, a `prd_` platform id, or `/go/` in
+  itself, the Chillout origin's hostname outside validated image attributes, a `prd_` platform id, or `/go/` in
   any form other than a well-formed `https://sjekkpris.no/go/tgt_…` link.
 - A failed read fails the build, and a failed build never replaces the site
   that is already published.
