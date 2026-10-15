@@ -44,6 +44,8 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from catalogue_media import image_markup, category_markup
+
 PROPERTY = "sjekkpris-no"
 #: Where `/go/` is served. Clickout links are absolute on this origin even on
 #: the github.io preview, because the edge exists only here.
@@ -111,14 +113,14 @@ class Chillout:
 
 
 def catalogue(client: Chillout) -> list[dict]:
-    body = client.get(f"/api/v1/properties/{PROPERTY}/catalogue")
+    body = client.get(f"/api/v1/properties/{PROPERTY}/catalogue?locale=nb")
     return list(body.get("products") or [])
 
 
 def comparison(client: Chillout, namespace: str, slug: str) -> dict:
     ns = urllib.parse.quote(namespace, safe="")
     local = urllib.parse.quote(slug, safe="")
-    return client.get(f"/api/v1/properties/{PROPERTY}/catalogue/{ns}/{local}/offers")
+    return client.get(f"/api/v1/properties/{PROPERTY}/catalogue/{ns}/{local}/offers?locale=nb")
 
 
 # -- formatting ------------------------------------------------------------
@@ -297,6 +299,13 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
         "<th>Lager</th><th>Merknad</th><th></th></tr>"
     )
     parts = [f'<p><a href="{e(base)}">← Alle produkter</a></p>', f"<h1>{e(name)}</h1>"]
+    identity = body.get("identity") or {}
+    image = image_markup(identity.get("image"), name, sizes="(max-width: 600px) 100vw, 360px", eager=True)
+    if image:
+        parts.append(f'<div class="product-image">{image}</div>')
+    if identity.get("local_brand"):
+        parts.append(f'<p>Merke: {e(identity["local_brand"])}</p>')
+    parts.append(category_markup(identity.get("categories"), full=True))
     if not offers and not excluded:
         parts.append("<p>Ingen tilbud akkurat nå.</p>")
     if offers:
@@ -310,6 +319,9 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
 
 
 STYLE = """
+.product-image { max-width:360px; margin:24px 0 }
+.product-image img { display:block; width:100%; max-height:360px; object-fit:contain }
+
 body{font:16px/1.5 system-ui,sans-serif;margin:0;color:#1d1d1f;background:#fff}
 header,main,footer{max-width:960px;margin:0 auto;padding:16px}
 header{border-bottom:1px solid #ddd}
@@ -381,4 +393,5 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
 

@@ -111,6 +111,7 @@ class Stub(BaseHTTPRequestHandler):
 
     def do_GET(self):
         Stub.seen_paths.append(self.path)
+        self.path = self.path.split("?", 1)[0]
         if self.headers.get("Authorization") != f"Bearer {KEY}":
             return self._send(401, {})
         if self.path == "/api/v1/properties/sjekkpris-no/catalogue":
@@ -273,4 +274,5 @@ class BuildTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
 
