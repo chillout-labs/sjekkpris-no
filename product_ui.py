@@ -197,4 +197,14 @@ footer.sp-footer { margin-top:32px; padding:24px 0; background:var(--sp-surface)
  .sp-product[data-price-basis="item"] .sp-switchable-offers .sp-total { grid-column:3 }
  .sp-product[data-price-basis="item"] .sp-switchable-offers .sp-action { grid-column:4 }
 }
+/* Compact item-price cards: the main price is already displayed at the top. */
+@media(max-width:767px) {
+ .sp-product[data-price-basis="item"] .sp-switchable-offers .sp-item { display:none }
+ .sp-product[data-price-basis="item"] .sp-switchable-offers .sp-shipping { grid-column:1 / -1; text-align:left }
+}
+.sp-product #specifications details { margin-top:12px; font-size:13px; color:var(--sp-muted) }
+.sp-product #specifications summary { min-height:44px; display:flex; align-items:center; cursor:pointer; color:var(--sp-green) }
+.sp-product #specifications summary::before { content:'›'; margin-right:8px; font-size:20px }
+.sp-product #specifications details[open] summary::before { transform:rotate(90deg) }
+.sp-home .sp-product-category, .sp-home .sp-product-brand { font-size:12px; color:var(--sp-muted); margin:0 0 8px }
 """

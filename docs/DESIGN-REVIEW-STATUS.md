@@ -1,42 +1,35 @@
-# Design review checkpoint — 12 October 2026
+# Product design review — 15 October 2026
 
-Status: implementation draft, NOT visually approved. Do not merge or deploy.
+Status: implementation on `frontend-v1-design`, PR #1 remains unmerged. No production deployment.
 
-Update: user approved item-price default and a synchronized shipping switch on
-12 October. See PRICE-DISPLAY-DECISION-2026-10-12.md. After this update 74 Python
-tests and 3 Node interaction tests pass. Screenshots of dfb1e79 were reviewed;
-they precede the switch and do not verify its rendering.
+## Reference
 
-Based on frontend-v1-design at c1a39b94b33bcefe38bdf9ac096303daafb682c0.
+The approved `SjekkPris-designpakke-v1.zip` (12 October), its HTML prototype and desktop/mobile reference PNGs were recovered and inspected. The existing three-column desktop hero, mobile name-before-image order, mint price panel, search header and responsive offers remain the design basis.
+
+The later agreed price decision takes precedence over the prototype: item price by default, synchronized “Inkluder frakt” toggle. Unknown shipping is never zero shipping.
 
 ## Changes
 
-- Shared header with working search form and native disclosure menu; homepage uses only its hero search.
-- Product presentation in product_ui.py: mobile title before image, compact price panel, desktop offers/history layout, mobile offer cards, five visual desktop offer columns.
-- Product image sizing and header gap aligned with approved HTML values. Automatic legacy dark tokens removed to keep the approved light presentation consistent.
-- Homepage in home_ui.py: locked headline/copy, dominant search, catalogue-based examples, ordinary product cards, honest missing-image and no-price states.
-- Autocomplete supports keyboard selection, Escape, accessible option state, request-race handling and ordinary form submission fallback.
-- Existing API access, winner references, monetary formatting, clickout gates, routes and noindex retained.
+- Integrated the catalogue-delivery changes from main without replacing the design renderer.
+- Product hero and shared cards use validated public images and supplied responsive variants.
+- Catalogue and offer requests ask for Norwegian metadata (`locale=nb`).
+- Brand and translated categories render from real data; full category path is expandable.
+- Removed duplicate category text in specifications and duplicate mobile item price.
+- Added repeatable real-product screenshot capture to the no-deploy product-preview workflow.
 
 ## Evidence
 
-66 Python unit tests passed locally, including the existing output guard checks. Homepage JavaScript parsed successfully with Node.
-These are code checks, NOT browser interaction tests, overflow checks, accessibility certification or visual comparisons.
-Local Chromium installation failed; cloud browser policy blocked local file navigation. No new rendered screenshots were produced.
+Initial integration commit: `003408656c3772d32bf2300025aaed922e8b6644`.
+- Local: 79 Python tests and 3 Node tests passed.
+- GitHub real-data build and output guard passed: run 38791273280.
+- Real images decoded and no horizontal overflow at 390/1280px for Alligator and Baby Brezza Bottle Washer Pro (white and black).
+- Twelve full-page screenshots cover the three products, two widths and shipping on/off. Screenshots were inspected, not just generated. The visual review found duplicate category text and mobile item-price repetition, addressed in the follow-up.
+- Separate demo journey run 38791273171 passed, including the no-image/no-offer state. No real no-image product was present in the selected catalogue.
 
-## Remaining review
+## Remaining boundaries
 
-Render homepage and product page at 360, 390, 430 and 1280 px. Compare product to the approved SjekkPris-produktside.html and homepage to the locked homepage image/D05.
-Check header, spacing, type sizes, product photos, fallback height, overflow and offer rows. Exercise menu, search suggestions (typing/arrows/Enter/Escape), result navigation and section anchors.
-Render known total (with item/shipping breakdown), confirmed free shipping, unknown shipping, missing winner and empty offers. Do not follow tracking/clickout links while testing.
+This is not a pixel-identical reproduction of the populated TV reference. Current products have one supplied image; no verified gallery, variant links, descriptions, technical specifications or price history are available in the renderer. These are not invented. Header category navigation from the reference is still absent. Product image sharpness depends on source and delivered image sizes.
 
-## Known differences / data limits
+The current real examples have unknown shipping, so their shipping-on screenshots show the explicit unknown-total state. Known-total winner changes remain covered by fixture/interaction tests, not by these real-product screenshots.
 
-- Homepage has ordinary Products, not unsourced deals/popularity/editorial/history/category modules. Catalogue has no image field; product cards currently use missing-image state.
-- Homepage robot artwork is not integrated. No fake microphone, account or favourites action.
-- Product page has honest empty history/about sections and only available identity metadata; no invented graph, specifications, variants, delivery times or merchant logos.
-- No category navigation is rendered without supported category destinations.
-- CSS includes legacy rules for other pages; scoped new components still require a real-browser collision check.
-- Search results page retains its previous presentation and is not claimed to match the full search design.
-
-User approval is still required after visual review. This checkpoint does not mark either page as complete.
+Visual acceptance and merge approval are still pending.

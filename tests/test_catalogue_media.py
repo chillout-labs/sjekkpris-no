@@ -34,7 +34,7 @@ class MediaTest(unittest.TestCase):
         for html in (home, detail):
             self.assertIn('src="' + IMAGE + '"', html)
             self.assertIn('?w=108 108w,', html)
-            self.assertIn('Kategori: Løkhakkere', html)
+            self.assertIn('Løkhakkere', html)
             self.assertIn('Brand &lt;x&gt;', html)
             self.assertNotIn('Synthetic <chopper>', html)
         self.assertIn('Kjøkken › Løkhakkere', detail)

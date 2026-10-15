@@ -39,14 +39,14 @@ def image_markup(image, name, *, sizes, eager=False):
             f'{responsive} loading="{"eager" if eager else "lazy"}" decoding="async" referrerpolicy="no-referrer">')
 
 
-def category_markup(categories, *, full=False):
+def category_markup(categories, *, full=False, show_primary=True):
     if not isinstance(categories, dict):
         return ""
     primary = categories.get("primary")
     if not primary or not primary.get("active", True):
         return ""
     name = html.escape(primary.get("display_name") or primary.get("name") or "")
-    result = f'<p class="sp-product-category">Kategori: {name}</p>'
+    result = f'<p class="sp-product-category">Kategori: {name}</p>' if show_primary else ""
     if full:
         path = " › ".join(item.get("display_name") or item["name"] for item in primary.get("path", []))
         result += f'<details><summary>Vis hele kategorien</summary><p>{html.escape(path)}</p>'
