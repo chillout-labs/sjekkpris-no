@@ -1,0 +1,296 @@
+SJEKKPRIS FRONTEND V1 – IMPLEMENTERINGSBRIEF TIL CLAUDE CODE
+Repo: chillout-labs/sjekkpris-no
+Dato: 11. oktober 2026
+Status: Implementeringsbrief basert på vedtatt design. Foreslått teknisk oppdeling er ikke en ny designgodkjenning.
+
+NYERE BRUKERBESLUTNING – 12. oktober 2026:
+Varepris uten frakt er nå standard, også i vinnerboksen. «Inkluder frakt» over
+prislisten styrer både hovedpriser, visningssortering og vinnerboks. Dette
+overstyrer briefens tidligere totalpris-først-regel og kravet om uendret
+visningsrekkefølge ved skifte av prisgrunnlag. Chillout eier fortsatt begge
+vinnerreferanser og eligibility. Se PRICE-DISPLAY-DECISION-2026-10-12.md for
+avgrensning, ukjent frakt og tester. Ingen merge-/publiseringsgodkjenning.
+
+OPPDRAG
+
+Gjør den eksisterende integrasjonstesten til første reelle SjekkPris-frontend. Reproduser vedtatt design og UX; ikke lag en ny visuell retning. Behold den fungerende Chillout-integrasjonen, GitHub Pages, offentlig produktidentitet og clickout.
+
+Frontend v1 har to forskjellige grenser: Design Bible beskriver det vedtatte produktet; dagens publiserbare leveranse viser bare de delene som har reelle data og fungerende handlinger. En besluttet komponent er ikke bevis for at datagrunnlaget finnes. Ikke fyll manglende deler med oppdiktede produkter, priser, grafer, artikler eller signaler.
+
+Denne briefen bestiller frontendarbeid, ikke en ny Chillout-plattform. Registrer manglende plattformdata som konkrete kontraktsbehov. Ikke implementer egen forretningslogikk som erstatning.
+
+1. KILDER OG PRIORITET
+
+Bruk følgende rekkefølge ved konflikt:
+
+1) Nyere eksplisitte brukerbeslutninger for SjekkPris.
+2) D05, SjekkPris Frontend Design Bible v1.0, 25.09.2026, LOCKED BASELINE; funksjonelle regler og visuell retning. D06 utdyper vedtatt søkeopplevelse.
+3) Entydig godkjente originalmockuper for visuelle proporsjoner. Mockuptekst med eksempeldata er ikke produktfakta. Ved konflikt styrer D05 funksjonen, godkjent mockup proporsjonene.
+4) D02, Website Architecture & Build Plan, 25.09.2026, APPROVED DIRECTION / IMPLEMENTATION PLAN; separat property-repo og versjonerte lesekontrakter.
+5) D03, verifikasjonsrapport 06.10.2026, presiserer kjent totalpris, frakt og eksisterende clickout. Dette er delvis verifikasjon, ikke full produksjonsgodkjenning.
+6) D01 og D11 er utkast til web-/SEO-standarder. Ikke behandle åpne ruteforslag som låste vedtak. D07/D08/D10 er eldre søk-/plattform-/backofficegrunnlag; de utvider ikke frontendomfanget over D05/D02.
+
+Kildepakken er et øyeblikksbilde, ikke full samtalehistorikk eller automatisk oppdatert Drive. Den inneholder 12 dokumenttekster og 23 registrerte originalbilder. ZIP-arkivet er kontrollert uten arkivfeil. Bildene er visuelt gjennomgått samlet; sentrale homepage- og produktreferanser er også inspisert separat.
+
+Gjeldende kodegrunnlag lest i denne gjennomgangen:
+- SjekkPris main: 58279a67512880dbf58e49ab5c5635b323051cd8.
+- README.md, build.py, check_output.py og .github/workflows/pages.yml.
+- Chillout main observert: 31f1a741881938d799482abe7758afe86f1b55d9.
+- src/chillout/api/offers.py, src/chillout/read/contract.py, src/chillout/read/comparison.py og tests/test_catalogue_index.py.
+
+Kildekode viser kontraktkapasitet, ikke at alle felter er utfylt eller at akkurat denne backendversjonen er i produksjon. Brukeren bekrefter live ende-til-ende-integrasjon. Direkte offentlig sidehenting lyktes ikke i denne gjennomgangen; live HTML, produksjonspayload og kjørte tester er derfor ikke nyverifisert her. Claude skal kontrollere dagens SHA og et renset faktisk payload før implementeringens datamapping låses.
+
+2. DET SOM ALLEREDE ER BESLUTTET
+
+Identitet og uttrykk
+- Uavhengig norsk prissammenligning og produktinformasjon, ikke nettbutikk.
+- Mobil først, søk først. Rolig skandinavisk uttrykk: hvite/lyse flater, mørk marine tekst, dempet grønn/teal, svært forsiktige skygger.
+- Tagline: «Smartere valg. Mer for pengene.»
+- Ett søkefelt. Ingen vanlig-søk/AI-søk-bryter. «Spør SjekkPris»; ingen separat AI-personlighet i v1. Eldre «K@i» overstyrer ikke D05.
+- Ingen SALE-estetikk, kunstig hastverk, store dekorative gradienter eller generisk AI-tjenesteuttrykk.
+
+Layout og typografi
+- Mobilreferanse 360–430 px. Desktop sentrert container ca. 1180–1280 px; tablet er responsiv overgang.
+- 4/8-basert spacing. Kort normalt 12–16 px radius, store søkeflater 18–24 px. Touchmål minst 44 × 44 px.
+- Én moderne sans-serif med gode norske tegn. Brødtekst 15–16 px, metadata 12–14 px. H1 ca. 38–48 px desktop / 28–34 px mobil. H2 ca. 26–32 / 22–26 px.
+- Priser tydelige, gjerne tabular numerals. Format «14 990 kr», med øre når beløpet faktisk har øre.
+- En eksakt fontfamilie og eksakte hexverdier er ikke fastsatt i D05. Hent eventuelle autoritative tokens fra designgrunnlaget; ellers dokumenter avledede implementeringsverdier for visuell kontroll. Ikke kall dem tidligere godkjent. Mulish-valget for Kontaktlinser er ikke automatisk et SjekkPris-vedtak.
+
+Forsiden
+- Låst topp: header/logo, «Hva vil du sammenligne?», «Søk etter et produkt, eller beskriv hva du trenger.», stort søkefelt med «Søk eller beskriv hva du ser etter …» og «Prøv for eksempel» med chips.
+- Robot kan brukes visuelt; ikke påkrevd ny maskot eller nytt illustrasjonskonsept.
+- Vedtatt innholdsrekkefølge: Dagens beste priser → Fortsett der du slapp (bare relevant) → Mest søkt akkurat nå → Nytt og aktuelt → Utforsk kategorier → trust/footer.
+- Mobil: to kort side ved side i første prisrekke, med horisontal fortsettelse. Ikke fyll skjermen med mange portalbokser.
+
+Søk og kategori
+- Autocomplete med grupper for søkeforslag, kategorier/merker og produkter når data finnes. Tastaturstyring og tydelig valgt rad.
+- Naturlig søk: forstå kriteriene, vis eventuelt 1–3 dokumenterbare fremhevinger, deretter alle relevante treff. Aldri fyll tre plasser kunstig.
+- Kategori mobil: kompakt listing, filter/sortering og filterpanel i full høyde. Desktop: rolig sticky filterkolonne og normalt 3–4 produktkolonner.
+- Ingen konstruerte kategorier fra affiliate-feedens kategoritre eller fra gjetning på produktnavn.
+
+Produkt og tilbud
+- Product-kort representerer produktet, ikke butikkens Offer. Ingen stor «Kjøp»-knapp i listing.
+- Desktop hero: bilde venstre, produktinformasjon i midten, pris-/tilbudskort høyre.
+- Mobil: navn → bilde → eventuell variant/nøkkelinfo → prishero → tilbud → videre produktkunnskap. Behold rask beslutning øverst og utdypning lenger ned.
+- Konkret butikktilbud bruker «Gå til butikken» i hero. Tilbudsrader bruker «Gå til butikk».
+- Kjent totalpris prioriteres. Ukjent frakt er aldri null. Ved ufullstendig fraktdekning brukes «Laveste kjente totalpris» og tydelig informasjon om ukjent frakt.
+- Prishistorikk er vedtatt som førsteklasses komponent, men krever faktiske historikkdata.
+- Ingen standardstjerner, oppdiktede anmeldelser, universell SjekkPris-score eller udokumenterte «god pris»-påstander.
+- «Passer til dette produktet»/«Tilbehør som passer» er noe annet enn lignende produkter. Ikke «Andre kjøpte også» uten eget vedtatt grunnlag.
+
+Arkitektur
+- Eget repo og egen deploy for SjekkPris. Chillout eier produkt-/tilbudssannhet og felles kapabiliteter.
+- Ingen direkte databasekobling, providercredentials eller selvstendig AI-/rankingmotor i frontend.
+- D02s tidlige «fixtures først» er nå et verktøy for utvikling og test; det er ikke grunn til å erstatte ekte live data med demoer.
+
+3. KONKRET DAGENS KONTRAKT
+
+Bygget bruker:
+GET /api/v1/properties/sjekkpris-no/catalogue
+GET /api/v1/properties/sjekkpris-no/catalogue/{namespace}/{local_slug}/offers
+
+Katalogresponsen har products med namespace, local_slug, local_name, lowest_item_price, offer_count og lowest_item_price_confirmed_at. Her er lowest_item_price et beløp med minor/currency, ikke en offerreferanse. offer_count teller offers + excluded; det er verken antall butikker eller nødvendigvis antall kjøpbare tilbud.
+
+Detaljresponsen har:
+- identity: local_name, local_slug, namespace samt mulige local_brand, local_category, local_pack_size og image.
+- identity.image: property-valgt bilde med URL/basis; ikke et automatisk valgt canonical produktbilde. Gyldig felt må også peke på et faktisk tilgjengelig bilde.
+- offers og excluded.
+- lowest_item_price og lowest_known_total_price: offer_id-referanser, ikke beløp.
+- basis: prisgrunnlaget som den returnerte tilbudslisten er sortert etter.
+- Hvert Offer: advertiser, item_price, known_total_price, shipping, availability, last_confirmed_at, stale, withdrawn, deselected, comparison_status, ranking per prisgrunnlag og link.
+
+Beløp beholder valuta og minor units. Ikke endre dataskala ved formatering. Ukjent verdi forblir ukjent. last_confirmed_at er når tilbudet sist ble positivt bekreftet; tidspunktet for frontendbygget er ikke ny prisbekreftelse.
+
+Det finnes ikke et komplett strukturert produktinnhold, variantgraf, kategoritre, historikk, popularitetsgrunnlag eller AI-svar i disse to kontraktene. Ett local_category-felt er ikke et kategorisystem. Ett local_pack_size-felt er ikke en variantrelasjon. Ikke påstå at hele Chillout mangler slike data; de er ikke tilgjengelige gjennom den verifiserte integrasjonsflaten.
+
+4. LEVERANSEMATRISE
+
+Del | Kan implementeres nå | Vilkår / hva som venter
+--- | --- | ---
+Tokens, shell, header, footer, responsive grunnkomponenter | Ja | Følg D05 og visuelle referanser; ingen ny stilretning.
+Søkefelt og enkelt produktsøk/autocomplete | Ja, som begrenset katalogsøk | Lag offentlig, sanitert søkeindeks ved bygg fra faktiske publiserte produkter. Kun navnesøk; ingen påstått behovsforståelse.
+Product-kort og ordinære treff | Ja | Navn, faktisk prisgrunnlag, tilbudsantall, eventuell bekreftet merke/pakning/bilde. Manglende metadata utelates.
+Produktside og tilbudsliste | Ja | Behold canonical Product/Offer-skille og eksisterende produkt-URL-er.
+Laveste kjente totalpris i prishero | Kontrakten støtter dette | Krever reell gyldig vinnerreferanse og produksjonsfraktgrunnlag. Null håndteres eksplisitt.
+Lagerstatus og sist bekreftet | Ja, for tilbud | Vis kontraktens tekstlige status; ikke generaliser ett tilbud til hele produktet.
+Produktbilde og merke | Betinget | Detaljkontrakten har felter; reell dekning og fungerende bilde-URL må kontrolleres. Fallback ved null.
+Butikklogo og leveringstid | Ikke dokumentert i lest respons | Bruk butikknavn nå. Ingen fabrikkert logo eller «1–3 dager».
+Dagens beste priser | Designet er besluttet; ikke automatisk dataklart | Krever definert og kildebelagt utvalg. Vanlig lowest_item_price er ikke et «dagens beste»-signal.
+Fortsett der du slapp | Vent i første leveranse | Krever faktisk nylig-visningshistorikk og avklart lagring. Ikke kopier mockuphistorikk.
+Mest søkt akkurat nå | Vent | Krever målte søke-/popularitetsdata med definert periode og rangering.
+Nytt og aktuelt | Vent | Krever publiserte godkjente guider/nyheter; ikke generer artikler for å fylle kort.
+Kategorier og fasetter | Vent på kontrakt | Canonical taksonomi, norske etiketter, tilordning og filterdefinisjoner. Category-komponenter kan testes isolert.
+Behovssøk, kriteriechips, 1–3 fremhevinger | Vent på kapabilitet | Krever tolket query, dokumenterte kriterier, relevante produkter og grunnlag for signalene fra Chillout.
+Prishistorikk | Vent på data | Tidsserie, prisgrunnlag, periodedekning og kilde/oppdatering. Ikke tegn graf fra nåprisen.
+Spesifikasjoner, variantvalg, produkttekst, FAQ | Betinget / ellers vent | Strukturerte felter og godkjent innhold/relasjoner. Ikke utled tekniske egenskaper fra navn.
+Bruksområder, verdi-alternativer, kompatibelt tilbehør | Vent | Krever forklarbare attributter, relasjoner og sammenligningsgrunnlag.
+Rapporter feil / Slik rangerer vi | Bare ved fungerende mål | Ikke lag døde lenker eller ny innsendingstjeneste som skjult tillegg.
+Konto, synkroniserte favoritter, prisvarsel, lagerovervåking, fysisk lager, full produkt-mot-produkt og avansert testaggregator | LATER | Eksplisitt utenfor v1 i D05; ikke bestill backend for disse i dette arbeidet.
+
+«Vent» betyr at delen er utelatt fra offentlig UI inntil vilkåret er oppfylt. Ikke vis tomme karuseller, permanent skeleton, deaktiverte fristelser eller «kommer snart»-seksjoner. Dette er kontrollert delvis implementasjon av vedtatt design, ikke fjerning av designbeslutningen.
+
+5. SKJERM FOR SKJERM
+
+A. Forside nå
+
+Reproduser låst topp, søkets dominans og de lyse marine/teal-flatene. Behold vedtatt hero-tekst. Siden søket foreløpig bare matcher produktnavn, vis en kort, nøktern kapabilitetsavgrensning ved feltet; foreslått tekst: «Søket finner foreløpig produkter etter navn.» Den teksten er en implementeringspresisering, ikke et tidligere vedtak.
+
+«Prøv for eksempel»-chips skal bruke produktnavn som faktisk finnes i katalogen og gir treff. Ikke bruk TV, valpeleker, vannkokere eller naturlige behovseksempler fra mockupen dersom de ikke støttes.
+
+De vedtatte innholdsmodulene aktiveres bare med eget datagrunnlag. Behold i mellomtiden den eksisterende nøytrale kataloginngangen «Produkter», presentert med D05 Product-kort. Dette er foreslått overgangsløsning for å gjøre publiserte produkter tilgjengelige, ikke en ny «anbefalte produkter»-modul. Ikke omdøp tilfeldig katalogrekkefølge til «Dagens beste priser».
+
+Én katalogpost gir ett kort. Ikke dupliser produktet for å fylle to eller fire plasser. Trust/footer bruker bare sannferdige formuleringer, eksempelvis at totalpris vises når frakt er kjent. Ikke kopier «alltid oppdatert», «flere ganger daglig», «gratis frakt» eller «ingen skjulte kostnader» som generelle løfter.
+
+B. Katalogsøk nå
+
+Generer en liten, eksplisitt tillatt offentlig indeks ved build. Den kan inneholde lokal identitet/URL, navn og allerede godkjente presentasjonsfelter. Ingen rå API-dump. Bruk den til raskt, deterministisk navnesøk og produktforslag i samme søkefelt.
+
+Vis bare grupper det faktisk finnes data for. Produktforslag kan vise bilde/merke/pris når kjent. Ikke lag kategori- eller merkeregister ved å gjette på navn. Tastatur: opp/ned, Escape, Enter og tydelig focus/selected state. Enter på et valgt produkt åpner produktet; ellers vises alle navnetreff.
+
+Behold query i feltet. Ikke vis «Vi har forstått at …», behovschips eller AI-anbefalinger for et rent tekstsøk. Ingen popularitetssortering eller «Beste valg» uten definert grunnlag. En egen resultatrute, hvis nødvendig, er et dokumentert implementeringsvalg under eksisterende beta/noindex, ikke en permanent SEO-rutelås.
+
+Ved null treff: forklar begrensningen, behold søket redigerbart og gi vei tilbake til den faktiske katalogen. Nærmeste treff kan bare vises dersom en faktisk matchregel finner dem; ikke dikt opp alternative modeller eller treffantall. Oppgi delvis oppfyllelse av D05s rikere nulltreffopplevelse til behovssøk finnes.
+
+C. Produktside nå
+
+Mobil beholder vedtatt innholdsrekkefølge; desktop bruker trekolonners hero. Bildeplassen har stabil størrelse og object-fit: contain. Ved manglende bilde brukes en rolig «Bilde mangler»-tilstand, ikke generert eller tilfeldig produktfoto. Ett bilde gir ikke galleri-piler eller falske thumbnails.
+
+Vis faktisk navn, eventuelt merke og pakningsstørrelse. Ikke fyll 4–5 nøkkelattributter dersom de ikke finnes. Prishero viser riktig vinner/tilbud og knyttet butikk. Tilbudslisten følger nedenfor. Tilbudstabell på desktop blir lesbare tilbudskort/-rader på mobil; siden skal ikke kreve horisontal scrolling for kjerneinformasjonen.
+
+Vis bare ankere/tabs som har en reell seksjon. Ingen tom «Prishistorikk», «Spesifikasjoner» eller «FAQ». Forskjellige datamengder skal bruke samme komponentfamilie, med dokumenterte partial-data-varianter. Ikke legg til salgsargumenter for å kompensere for lite innhold.
+
+D. Navigasjon
+
+Header og mobilnavigasjon henter form fra godkjent design. Bare fungerende destinasjoner eksponeres. Konto, favoritter, produkt-mot-produkt og mikrofon er ikke operative bare fordi ikonene finnes i en mockup. Behold komponentmuligheten i designsystemet; ikke legg inn døde handlinger. Ikke fyll kategorimeny med et uverifisert tre.
+
+6. PRIS OG CLICKOUT – IMPLEMENTERINGSREGLER
+
+1) Slå opp detaljresponsens lowest_known_total_price i offers. Referansen må finnes, totalbeløpet må være kjent, ranking for total_price må tillate påstanden, og shipping.terms.is_test_data må ikke være true. Bruk API-ens avgjørelse; ingen lokal min()-vinner.
+2) Vis «Laveste kjente totalpris» og konkret butikk når grunnlaget finnes. Når andre tilbud har ukjent frakt, si tydelig at de kan ha en annen totalpris. Varepris/frakt/total må være konsistente i hero og tilbudsraden.
+3) Uten gyldig totalprisvinner: bruk API-ens gyldige vareprisvinner med etikett «Laveste varepris» og «Frakt ukjent» / «Totalpris ukjent» etter faktisk grunnlag. Ikke skriv «inkl. frakt».
+4) Uten noen gyldig prisvinner: ingen vinnerbadge eller pris-CTA som antyder et beste tilbud. Vis relevant tom-/partial-data-tilstand og de tilgjengelige tilbudsopplysningene.
+5) Katalogkort kan bygges fra detaljresponsen som allerede hentes per produkt, slik at kjent totalpris kan prioriteres også der. Katalogens lowest_item_price alene må aldri merkes som totalpris.
+6) Ikke merk listen «sortert etter totalpris» hvis response.basis sier noe annet. Behold plattformrekkefølgen, og avklar eksponering/valg av totalprisgrunnlag gjennom eksisterende Chillout-kontrakt. En totalprisvinner kan fremheves uten at frontend omskriver hele rankingpolicyen.
+7) Hold excluded adskilt med forklaring. Ukjent frakt alene gjør ikke et tilbud til excluded. Stale/withdrawn/ukjent lager skjules ikke ved å få optimistiske etiketter.
+8) Behold dagens clickout-gate: link.clickout_available, gyldig /go/tgt_-token og ranking.item_price.ranking_eligible === true; excluded er ikke klikkbart i nåværende frontend. Backendens lenkekapasitet er bredere enn denne frontendregelen. Ikke utvid regelen stille som del av designarbeidet.
+9) CTA peker på nøyaktig https://sjekkpris.no + kontraktens clickout_url, med rel="sponsored nofollow". Ingen provider-URL, rekonstruert affiliate-lenke eller ny clickouttjeneste. Ingen gyldig link betyr ingen aktiv butikk-CTA.
+10) Ikke legg prefetch, automatisk linkcheck eller nettlesertest som besøker ekte /go/-lenker. Et GET kan registrere et klikk selv uten å følge redirect. Test href/gate med lokale fixturetargets.
+
+7. VISUELLE REFERANSER OG AVKLARINGER
+
+Originaler ligger under Originalfiler/ i SjekkPris-originalarkiv-2026-10-11.zip. B-numrene er fra bilderegister.json/prosjektgrunnlaget. Bildekatalog-PDF er navigasjonshjelp; bruk PNG-originalene ved visuell sammenligning.
+
+Referansekandidater, ikke nyerklærte endelig godkjente filer:
+- Homepage/overview: B002 «SjekkPris – Låst hjemmesidedesign v1.0.png». B003 er nærliggende alternativ; B004 viser mobilutgaven.
+- Produktside desktop: B009 «LG OLED C4 prissammenligning hos SjekkPris.png»; B010 er alternativ som må avstemmes.
+- Produktside mobil: B011 «SjekkPris mobilprodukt-side for LG OLED TV.png»; B012/B013 er beslektede referanser. B014 er tre konsepter, ikke tre samtidige implementeringskrav.
+- Kategori/listing/filter: B008 «SjekkPris: OLED-TV sammenligning.png» og B007 «SjekkPris: Norsk søkeopplevelse i flere skjermer.png».
+- Søk/autocomplete: B005/B006/B007.
+- Naturlige resultater: B001 «SjekkPris: Vannkokere under 1000 kr.png».
+- Logo: B015–B018 og B020–B022 er ulike assets/retninger, ikke bevis for at alle er vedtatt. B019/B023 skal ikke automatisk erstatte den senere låste heroen.
+
+B002 har SHA256 ff928ae2403a505a7a4f1de56577b9327daedc56d88a90643482b44d160ad2e7.
+B009 har SHA256 63361445f59608d3367fba5759d7e83cfa4a1c11a34615b1a51a19388441c7b3.
+B011 har SHA256 3211d42cfc307798f3b52d8ce5ad23477f8ca4f6f6e1f62574d8b7980689b5bc.
+
+Det dokumenterte godkjenningssporet bekrefter designretning og homepage v1, men ikke entydig siste fil for alle skjermer. Lag et kort referansekart med skjerm, B-ID, fil/hash, godkjenningsbelegg og åpne avvik. Bruk kandidatene til reviewbare utkast. Endelig påstand om 95 %+ visuell fidelity krever avstemt referanse per skjerm; ikke finn opp en målt prosent.
+
+Mockupenes anmeldelser, rabattprosenter, butikker, leveringstider, grafer og produkttall er illustrerende. D05s funksjonelle regler overstyrer disse der grunnlag mangler. Noter databegrunnede utelatelser separat fra visuelle avvik.
+
+8. TEKNISK OPPDELING OG REKKEFØLGE
+
+Foreslått gjennomføring innen eksisterende Python/static-oppsett. Ikke bytt til Next.js, serverruntime eller Sites som del av denne briefen. Eventuelt behov for byggeverktøy må begrunnes konkret, ikke brukes som anledning til total omskriving.
+
+Steg 0 – Avgrens basen
+- Les repoets eventuelle AGENTS.md og gjeldende kode, test- og deployoppsett.
+- Noter faktisk base-SHA. Kontroller renset produksjonspayload for katalog og et produkt; før feltdekning uten hemmeligheter eller rå providerdata.
+- Opprett referansekart og kapabilitetsmatrise. Behold eksisterende produktstier /p/{namespace}/{local_slug}/ og BASE_PATH-støtte. Ikke migrer til /produkt/ fra D01-utkastet.
+
+Steg 1 – Foundation og shell
+- Skill CSS/tokens og gjenbrukbar rendering fra datainnhenting etter behov; behold fungerende sikkerhetsgrenser.
+- Implementer header, søkefelt, typografi, spacing, kortflater, focus og footer.
+- Bruk eksisterende autoritativ logo dersom den finnes; logoalternativene avstemmes, ikke redesignes.
+
+Steg 2 – Presentasjonsadapter og kort
+- Lag eksplisitt tillatte view-data fra kontrakten. Hold rå response og intern identitet ute av HTML/JS/søkeindeks.
+- Løs vinnerreferanser uten å beregne egne vinnere. Skill totalpris, varepris og manglende data.
+- Bygg ProductCard og produktforslag; test lange navn, manglende bilde, ingen pris og ett tilbud.
+
+Steg 3 – Homepage mobil, deretter desktop
+- Implementer vedtatt topp og datadrevne moduler innen faktisk kapasitet.
+- Koble enkelt katalogsøk og autocomplete. Skjermbilder og sammenligning mot referansekandidat før neste skjerm.
+
+Steg 4 – Produkt mobil, deretter desktop
+- Hero, prisboks, tilbudsliste og relevante metadata; ingen tomme forskningsseksjoner.
+- Sammenlign visuelt, og kontroller at samme prisgrunnlag/tilbud brukes gjennom siden.
+
+Steg 5 – States og QA
+- Fullfør keyboard, responsive varianter og partial/error-states.
+- Category og natural-language results ligger i vedtatt videre rekkefølge, men aktiv offentlig implementering venter på kontraktene. Isolerte fixtures er tillatt for utviklingsvisning, ikke produksjonsinnhold.
+
+Hver ferdig skjerm leveres med mobil-/desktopbilder, referanse-ID og kort avviksliste. Visuelle utelatelser på grunn av manglende data skal ikke skjules som «ferdig full v1».
+
+9. BEVAR INTEGRASJONEN
+
+- Chillout hentes ved build med property-scoped nøkkel. Nettleseren skal fortsatt ikke kalle det private API-et.
+- Behold check_output.py og utvid relevante tester ved nye assets/JS/JSON; ikke fjern kontrollene for å få et større søkeindeksformat gjennom.
+- Ikke eksponer apk_, nøkkelen, intern origin, prd_-ID-er, rå match/canonical_ids, godkjenneridentiteter, providerdata eller fraktens interne bevismateriale i frontend.
+- Behold noindex i beta. Designarbeid innebærer ikke godkjenning av indexering, endring i robots-policy, legacy-migrering eller permanente nye SEO-ruter.
+- Behold prerenderte produktsider og lenker som virker uten JS. Klientsøk kan forbedre siden; det skal ikke bli eneste tilgang til produktene.
+- Feilet API-lesing/build skal ikke erstatte publisert fungerende versjon. Dette beskytter sidevisningen; det er ingen garanti for at clickout virker under Chillout-driftsutfall.
+- Gjeldende workflow deployer ved push til main. Arbeid på branch/PR; reviewbare endringer skal ikke utilsiktet publiseres ved å bruke main som arbeidsbranch.
+
+10. AKSEPTANSEKRITERIER
+
+Visuelt og UX
+- Samme dokumenterte design-DNA på homepage, søk og produkt; ingen ny stilretning.
+- Kontroll ved 360, 390 og 430 px samt representativ desktopbredde. Ingen overflow eller avkuttede navn/CTA-er; 44 px touchmål.
+- Søk er primær handling. Keyboard/focus, semantikk, AA-kontrast og reduced-motion ivaretatt.
+- Reserverte bildedimensjoner, lazy loading under fold og begrenset JS. Ingen store dekorative videoer eller animasjoner.
+- Ingen funksjonsløse favoritt-, konto-, filter-, mikrofon- eller tabkontroller.
+
+Data og pris
+- Test totalprisvinner forskjellig fra vareprisvinner; ukjent frakt; testfrakt; null pris; ingen tilbud; ett/flere tilbud; stale; withdrawn; ukjent/utsolgt lager; excluded valuta/mva; manglende eller inkonsistent vinnerreferanse.
+- Null blir aldri 0, offer_count blir aldri butikker, og byggetid blir aldri «pris oppdatert».
+- Ingen hjemmelaget totalprisvinner eller rankingpolicy. Kjent totalpris på kort/hero/tilbudsrad stemmer med samme faktagrunnlag.
+- Ingen historikk-, rabatt-, popularitets-, leverings- eller reviewpåstand uten kildedata.
+
+Teknisk
+- Kjør eksisterende unittest-suite og check_output.py på endelig output. Rapporter faktiske resultater og SHA, ikke tidligere testtall.
+- Test sanitizer på HTML, JS og JSON. Kontroller at kun tillatte offentlige presentasjonsfelt slipper ut.
+- Test eksisterende produkt-URL-er, BASE_PATH og butikklenkenes format/gate uten ekte clickouttrafikk.
+- Kontroller generert noindex og at feil ikke publiserer delvis/defekt bygg.
+- Avvik som skyldes manglende kontrakt dokumenteres med felt/kapabilitet og konkret UI-konsekvens.
+
+11. HVA CLAUDE SKAL LEVERE
+
+1) En avgrenset frontendendring på branch/PR, med eksisterende integrasjon bevart.
+2) Referansekart med avstemt/provisorisk status per skjerm og logo.
+3) Feltmapping fra katalog/detaljrespons til UI, inkludert null- og prisgrunnlag.
+4) Ferdige datastøttede homepage-/søke-/produktskjermer og mobil/desktop-skjermbilder.
+5) Testresultater, base-/endrings-SHA og liste over reelle avvik.
+6) Kort Chillout-backlog: bilder/produktmetadata ved manglende dekning; taksonomi/filter; historikk; søk/intent/signaler; redaksjonelt innhold/relasjoner; eventuelt totalpris-sorteringsgrunnlag. Ingen automatisk bestilling av alle senere funksjoner.
+
+Ferdig betyr: et gjenkjennelig SjekkPris i den vedtatte formen, med reelle produkter og ærlige dataavgrensninger. Det betyr ikke at alle modulene fra mockupene er fylt eller at hele Design Bible er funksjonelt levert.
+
+KILDELENKER
+
+D05 Design Bible:
+https://docs.google.com/document/d/164JsHlO0TCMix2rRMmrdDXosv214jn_HDOBse5hjOlU/edit
+D06 Search v1:
+https://docs.google.com/document/d/1s6rkOn3-XxJr54RgigzIZ6KcXwHoyS8ljSkvW68CmKY/edit
+D02 Architecture & Build Plan:
+https://docs.google.com/document/d/1bgo-BiB1TQ6kMNs1SohZsSNBmHkXbZWb7GVO1aDj0pI/edit
+D03 Verifikasjon:
+https://docs.google.com/document/d/15UqwPFFnFVYpl-Vf0V4mHPV3FqDYU3SKtdHw3koGOE8/edit
+D01 Web Profile, draft:
+https://docs.google.com/document/d/1zvSFOS-eb-c8e4MTRXmXDwISTMBzEJDNkqcjwSCBzk4/edit
+SjekkPris kodebase:
+https://github.com/chillout-labs/sjekkpris-no/tree/58279a67512880dbf58e49ab5c5635b323051cd8
+Chillout property-respons:
+https://github.com/chillout-labs/chillout-platform/blob/31f1a741881938d799482abe7758afe86f1b55d9/src/chillout/api/offers.py
+Chillout tilbudskontrakt:
+https://github.com/chillout-labs/chillout-platform/blob/31f1a741881938d799482abe7758afe86f1b55d9/src/chillout/read/contract.py
+
+Vedlegg som følger overleveringen: denne briefen, SjekkPris-originalarkiv-2026-10-11.zip og SjekkPris-prosjektgrunnlag-2026-10-11.txt. Bildekatalog-PDF er nyttig som oversikt, men erstatter ikke originalene.
+

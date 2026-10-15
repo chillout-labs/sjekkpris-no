@@ -159,21 +159,27 @@ class BuildTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def test_nok_renders_with_comma_dash_and_a_non_breaking_separator(self):
+    def test_nok_renders_in_norwegian_format(self):
         self.assertIn("1 299 kr", self.index)
-        self.assertEqual(build.money({"minor": 31050, "currency": "NOK"}), "NOK 310,50")
+        self.assertEqual(build.money({"minor": 31050, "currency": "NOK"}), "310,50 kr")
 
     def test_a_null_price_is_no_price_never_zero(self):
         self.assertIn("Ingen pris", self.index)
         self.assertIn("Ingen pris", self.empty)
-        self.assertNotIn("NOK 0", self.index + self.empty)
+        self.assertNotIn("0 kr", self.index + self.empty)
 
     def test_lowest_price_badge_only_on_the_offer_the_api_names(self):
-        winner_row = next(r for r in self.lamp.split("<tr>") if "FIXTURE Winner Shop" in r)
-        self.assertIn("Laveste pris", winner_row)
+        # Find table rows (after "<tbody>") to avoid hero section
+        tbody_idx = self.lamp.find("<tbody")
+        self.assertTrue(tbody_idx > 0, "Table body not found")
+        tbody = self.lamp[tbody_idx:]
+
+        winner_row = next(r for r in tbody.split("<tr>") if "FIXTURE Winner Shop" in r and "<td>" in r)
+        self.assertIn("Laveste pris", winner_row, "Badge should be on winner")
+
         for other in ("FIXTURE Stale Shop", "FIXTURE Empty Shelf"):
-            row = next(r for r in self.lamp.split("<tr>") if other in r)
-            self.assertNotIn("Laveste pris", row, other)
+            row = next(r for r in tbody.split("<tr>") if other in r)
+            self.assertNotIn("Laveste pris", row, f"Badge should not be on {other}")
         self.assertNotIn("Laveste pris</span>", self.empty)
 
     def test_stale_and_out_of_stock_are_stated(self):
@@ -235,12 +241,21 @@ class BuildTest(unittest.TestCase):
         self.assertNotIn("127.0.0.1", str(raised.exception))
 
     def row(self, name):
-        return next(r for r in self.lamp.split("<tr>") if name in r)
+        # Find table row (not hero section which may also contain the name)
+        tbody_idx = self.lamp.find("<tbody>")
+        tbody = self.lamp[tbody_idx:] if tbody_idx > 0 else self.lamp
+        return next(r for r in tbody.split("<tr>") if name in r and "<td>" in r)
 
     def test_the_eligible_servable_offer_links_to_its_clickout_url_on_sjekkpris(self):
+        # Link should appear in table row
         self.assertIn(
             f'href="https://sjekkpris.no/go/{TOKEN_WINNER}" rel="sponsored nofollow"',
             self.row("FIXTURE Winner Shop"),
+        )
+        # Also check it appears in hero section
+        self.assertIn(
+            f'href="https://sjekkpris.no/go/{TOKEN_WINNER}" rel="sponsored nofollow"',
+            self.lamp,  # Entire page
         )
 
     def test_no_link_for_stale_out_of_stock_unrouted_or_malformed(self):
@@ -254,8 +269,10 @@ class BuildTest(unittest.TestCase):
         self.assertIn("Ikke bekreftet nylig", self.row("FIXTURE Stale Shop"))
         self.assertIn("Ikke på lager", self.row("FIXTURE Empty Shelf"))
 
-    def test_exactly_one_clickout_link_on_the_page(self):
-        self.assertEqual(self.lamp.count("https://sjekkpris.no/go/"), 1)
+    def test_exactly_one_clickout_link_per_offer_in_hero_and_table(self):
+        # With 3-column hero, the winning offer appears in both hero and table,
+        # so 2 clickout links to the same offer. Per-offer: hero CTA + table row.
+        self.assertEqual(self.lamp.count("https://sjekkpris.no/go/" + TOKEN_WINNER), 2)
 
     def test_the_guard_allows_only_well_formed_clickout_links(self):
         env = {"CHILLOUT_READ_KEY": KEY, "CHILLOUT_ORIGIN": self.origin}

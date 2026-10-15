@@ -1,0 +1,147 @@
+SjekkPris – Universal Search & AI Product Discovery v1.0
+https://docs.google.com/document/d/1tolmeKSwxkTDk3ghiaOHqkNuFcFsGjaqUtYF4KKQQoY/edit?usp=drivesdk
+Endret: 2026-09-14T17:18:19.384Z
+
+﻿SjekkPris – Universal Search & AI Product Discovery v1.0
+
+
+Purpose
+Define the search experience for SjekkPris as a product-first comparison platform where one search field supports both fast product discovery and natural-language questions without turning SjekkPris into a service-comparison site.
+
+
+1. Core principle
+SjekkPris remains focused on products. The search field should feel universal, but the primary destination is product discovery and product comparison. AI is an intelligence layer around the product graph, not a replacement for structured search.
+
+
+2. Hybrid search model
+The same search field supports two modes automatically:
+
+
+• Product intent: While the user types a known product, brand, model, GTIN/MPN-like identifier or clear category term, show instant autocomplete and structured product/category results. This path should be fast, cheap and deterministic.
+
+
+• Natural-language intent: If the query looks like a question, problem statement, compatibility request, recommendation request or other free text, invoke the AI layer. Examples: “best robot vacuum for dog hair under 5000 kr”, “which charger fits my MacBook Air M3?”, or “what is the difference between these two models?”.
+
+
+The user should not have to choose between “Search” and “AI”. Intent detection happens automatically.
+
+
+3. Product-first result behavior
+AI answers should be grounded in SjekkPris product, merchant, offer and compatibility data wherever possible. The preferred answer structure is:
+
+
+• Short direct answer.
+• Relevant products or categories.
+• Clear reasons or matching criteria.
+• Current comparison data and price links when available.
+• Follow-up refinements that keep the user inside the product journey.
+
+
+4. Autocomplete before AI
+Autocomplete should activate immediately and should be the default for recognizable product queries. AI should not be called merely because a user typed text into the search box. This keeps latency and cost low and gives a familiar Google-like experience.
+
+
+Suggested routing order:
+1. Exact identifier / canonical product match.
+2. Product and brand autocomplete.
+3. Category and attribute search.
+4. Semantic/vector retrieval when useful.
+5. AI reasoning only when the query requires interpretation or synthesis.
+
+
+5. AI activation signals
+Likely AI triggers include:
+
+
+• Full questions.
+• Comparative phrases such as “best”, “which”, “difference between”, “worth it”, “cheapest that…”.
+• Compatibility questions such as “fits”, “works with”, “for my…”.
+• Multi-constraint searches containing price, use case, size, feature or audience requirements.
+• Queries that do not map confidently to one product/category but contain clear shopping intent.
+
+
+6. Service-related queries
+SjekkPris itself should remain product-focused. If a user asks for electricity, telecom, insurance or another service category that belongs to a separate future property, the AI/search layer may identify the intent and route the user to the relevant Chillout property when one exists. It should not silently expand SjekkPris into a service-comparison engine.
+
+
+7. Shared Chillout intelligence layer
+The long-term architecture should allow the same search and AI orchestration layer to be reused across Chillout properties while preserving property-specific data, business rules and vertical intelligence.
+
+
+Recommended architecture:
+
+
+Query → lightweight intent classifier → structured search/retrieval → property/vertical rules → optional AI reasoning → grounded answer + products/actions.
+
+
+The model layer should be provider-independent. Do not hard-wire the platform to Gemini, OpenAI or another single provider. Models can be selected by task, quality, latency and cost.
+
+
+8. Cost strategy
+The key cost-control principle is that most searches should never require a full LLM call. Autocomplete, exact matches, category search, filters and conventional retrieval are inexpensive compared with generative reasoning.
+
+
+For 100,000 total searches, the AI cost depends primarily on what percentage truly invokes a model and how large each request/response is. If only a minority of searches require AI, the effective cost per total search can remain very low. The platform should therefore track:
+
+
+• total searches,
+• structured-only searches,
+• AI-triggered searches,
+• model/token usage,
+• latency,
+• answer-to-product click rate,
+• zero-result rescue rate,
+• cost per AI search and cost per total search.
+
+
+Use model routing: inexpensive/small models for intent classification and simple synthesis; stronger models only for complex product reasoning.
+
+
+9. Data and grounding requirements
+AI quality depends on the shared commerce/data platform. Priority sources include:
+
+
+• Canonical Product Identity.
+• Brand, model, GTIN and MPN.
+• Categories and attributes.
+• Merchant offers and total price including shipping where available.
+• Price history.
+• Compatibility relationships.
+• Source/provenance metadata.
+• Property and market context.
+
+
+The AI layer should distinguish verified structured facts from inferred guidance.
+
+
+10. UX direction
+Mobile-first and visually simple. One prominent search field remains the center of the SjekkPris experience. The transition between autocomplete and AI should feel seamless rather than like two separate products.
+
+
+Possible interaction:
+• User types “Dailies Total1” → dropdown immediately shows matching products.
+• User types “which daily lenses are best for dry eyes?” → AI mode answers and presents relevant product cards.
+• User types “billigste strømavtale” → SjekkPris explains/reroutes to the relevant service property if available.
+
+
+11. Rollout plan
+Phase 1: High-quality autocomplete, product/category search, query logging and intent signals.
+Phase 2: AI fallback for natural-language product questions and zero-result rescue.
+Phase 3: Grounded recommendation/comparison answers using product graph and live offer data.
+Phase 4: Compatibility/ownership queries and cross-property routing within Chillout.
+Phase 5: Continuous model routing, evaluation, personalization where appropriate and automated quality monitoring.
+
+
+12. Decision summary
+• SjekkPris is product-first.
+• One search field supports both structured search and AI.
+• Product autocomplete is the default and should respond before AI.
+• AI activates only when interpretation or reasoning adds value.
+• AI should be grounded in Chillout/SjekkPris product data.
+• Service queries may be routed to separate properties, not absorbed into SjekkPris.
+• Shared AI infrastructure should support multiple Chillout properties.
+• Model/provider selection remains flexible.
+• Cost is controlled by keeping most searches structured and using tiered model routing.
+
+
+Status: Approved direction for platform planning. Treat this as a living design/architecture document and update it as search, product graph and AI capabilities mature.

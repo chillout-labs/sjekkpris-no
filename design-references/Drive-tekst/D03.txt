@@ -1,0 +1,85 @@
+SjekkPris – Verifikasjonsrunde 1: faktiske tester og avklaringer
+https://docs.google.com/document/d/15UqwPFFnFVYpl-Vf0V4mHPV3FqDYU3SKtdHw3koGOE8/edit?usp=drivesdk
+Endret: 2026-10-05T23:36:39.951Z
+
+﻿SjekkPris – Verifikasjonsrunde 1
+Faktiske tester, kildekontroll og avklaringer før implementasjon
+Kontrolldato: Oct 6, 2026
+Status: DELVIS VERIFISERT. Ingen produksjonsgodkjenning eller automatisk LOCK.
+
+
+1. Hva som faktisk er utført
+Denne runden skiller mellom kjørte lokale tester, kildekode som er lest, offisiell dokumentasjon og forhold som ennå ikke er verifisert. De tidligere stress-testdokumentene er scenario- og kravgjennomganger, ikke bevis på gjennomførte produksjonstester.
+31 lokale kontrakttester er kjørt: 31 bestått, 0 feil og 0 unntak. De tester en liten demonstrasjonsimplementasjon av URL-livssyklus og pris-/schema-konsistens. De tester ikke den virkelige Chillout-backenden eller en ferdig SjekkPris-side.
+19 reelle produktnavn er testet: 5 kontaktlinseprodukter og 14 linsevæsker, hentet fra komplette poster i GitHub-utdrag. Utvalget er lite og ikke representativt for en bred SjekkPris-katalog. Det er ikke kjørt noen CDON- eller produksjonsdatabaseeksport.
+Eksisterende clickout-kode er lest. Ingen clickout-URL er kalt, ingen klikkrad opprettet, og ingen kode, database, DNS eller produksjonskonfigurasjon er endret.
+Testkode, datagrunnlag, resultater og begrensninger ligger i SjekkPris-valideringspakke-v0.1.zip. ZIP-filen er kontrollert lokalt og lastet opp til samme Drive-mappe.
+
+
+2. Slug-testen: et første positivt resultat, ikke en skaleringsgaranti
+De 19 produktnavnene ga 19 forskjellige kandidat-slugs. Alle samsvarte med de avleste eksisterende slugstrengene i utvalget. Dette gjelder navnene, ikke flytting av eksisterende Kontaktlinser-URL-er. Produktidentitet, kliniske egenskaper og korrektheten i forhandlerkoblinger er ikke undersøkt i denne testen. [K1–K2]
+Syntetiske tester dekker blant annet norske tegn, Unicode-normalisering, forskjellige pakningsstørrelser, navneendring uten URL-endring, eksplisitt omdøping med aliaser, reserverte historiske slugs og avvisning av navnekollisjoner.
+Et viktig kanttilfelle er at «A/B» og «A B» blir samme grunnslug. Riktig reaksjon er å oppdage kollisjonen og beholde separate identiteter, ikke å slå produktene sammen. Den lokale demonstrasjonen bruker en offentlig id som reservesuffiks. Den endelige disambigueringsregelen er fortsatt et implementasjonsvalg.
+Anbefalingen står: en beskrivende, fryst produkt-slug med et varig register. Men testen beviser ikke databaseunikhet, samtidige registreringer, millioner av produkter eller komplett migrering. Før en bred utrulling må samme regel prøves på faktiske lanseringskategorier, inkludert like modellnavn, farger, kapasiteter, språk og pakningsvarianter.
+
+
+3. Pris-eksempel som avklarer design og datakontrakt
+Følgende er oppdiktede testtilbud for nøyaktig samme produkt, ikke virkelige butikkpriser:
+Tilbud A: varepris 749 kr + frakt 99 kr = totalpris 848 kr.
+Tilbud B: varepris 799 kr + bekreftet frakt 0 kr = totalpris 799 kr.
+Tilbud C: varepris 699 kr + ukjent frakt = ukjent totalpris.
+B er laveste kjente totalpris. C er laveste varepris, men vi vet ikke om C er billigere totalt. En overskrift som bare sier «laveste totalpris» må derfor suppleres med tydelig avgrensning når noen tilbud mangler frakt, for eksempel «Laveste kjente totalpris» og informasjon om tilbud med ukjent frakt.
+Ved et hardt totalbudsjett på 800 kr er B bekreftet innenfor. C kan ikke markeres som bekreftet innenfor budsjettet, men er heller ikke bevist for dyrt. Det kan vises separat som et tilbud der totalprisen må avklares.
+Testene dekker også null tilbud, ett tilbud, ukjent lagerstatus, utdaterte tilbud, annen valuta og feil produktvariant. Vinnerutvalget i akkurat denne demonstrasjonen er ferske, lagerførte tilbud i NOK. Dette er ikke et vedtak om å skjule bestillingsvarer eller forhåndsbestillinger i den virkelige tjenesten.
+Chillout data requirement: frontend må kunne skille varepris, kjent totalpris, prisgrunnlag og manglende frakt. Dette er et innspill til eksisterende kontrakt, ikke et nytt backenddesign.
+
+
+4. Tre presiseringer til schema- og variantstandarden
+Schema.org-beskrivelse, Googles rich-result-krav og vanlig sideindeksering er forskjellige vurderinger. Googles Product-snippetprofil krever navn og minst ett av offers, review eller aggregateRating. Fravær av disse betyr ikke automatisk at produktet skal slettes eller siden noindexes. En semantisk Product-beskrivelse uten tilbud er et annet spørsmål enn kvalifisering til dette søkeresultatet. [G1, S1]
+AggregateOffer skal ikke aggregere priser for forskjellige produktvarianter. Den må avgrenses til det samme produktet. Antall Offers er dessuten ikke automatisk det samme som antall butikker; en eventuell «butikker»-etikett må bygge på en egen, entydig opptelling. [G1]
+En redaksjonell produktserie er ikke automatisk et ProductGroup. Kontaktlinser-filen grupperer flere typer linser i kuraterte serier. Før slik gruppering gjenbrukes i SjekkPris-schema, må den konkrete variantrelasjonen vurderes separat. Dette er en modellpresisering, ikke et forslag om medisinsk utskiftbarhet. [K3, G2]
+Det lokale schema-eksempelet bruker varepris som kandidatgrunnlag og holder kjent totalpris separat. JSON-parsing og intern konsistens er testet. Rich Results Test, en ekstern schema-validator og Search Console er ikke kjørt. Ingen validator kan alene bevise den kommersielle prisdefinisjonen eller garantere visning hos Google.
+
+
+5. Clickout: eksisterende løsning, ikke et nytt byggeprosjekt
+Kilden viser at GET /go/{target_token} allerede finnes. Vellykket redirect returnerer 302 med Cache-Control: no-store. Property kommer fra edge-laget og brukes i oppslaget sammen med tokenet. URL-parametre brukes ikke som vilkårlig redirect-destinasjon. Dette er observert i koden, ikke testet mot en live utrulling. [K4]
+Derfor skal «bestemme clickout-rute fra bunnen» fjernes som generell forutsetning i byggeplanen. SjekkPris trenger å kobles korrekt til den eksisterende kontrakten og få sin egen edge-/property-verifisering.
+Samtidig dokumenterer koden selv en viktig begrensning: nåværende løsning deler prosess/container med backoffice og leser databasen. Sesjonsuavhengighet er derfor ikke det samme som uavhengighet ved database- eller driftsutfall. Dette registreres som en eksisterende driftsavgrensning, ikke som et nytt krav som må stoppe byggingen av startsiden. [K4–K5]
+Verifikasjonsskriptet beskriver at et ekte GET oppretter en klikkrad selv når provider-redirect ikke følges. Det er lest, men ikke kjørt. [K6]
+Robots-policy må fortsatt vurderes på faktisk publisert domene. Disallow er crawl-kontroll, ikke en garanti for fjerning fra indeks; Google må kunne hente en respons for å se en noindex-instruks. Vi skal ikke kombinere motstridende regler og anta at de virker. [G3]
+
+
+6. Legacy SjekkPris: bare et første spor er bekreftet
+Webverktøyet hentet en mellomlagret representasjon av den gamle EuroFlorist-stien med under-utviklingstekst. Det viser at vi har et konkret historisk URL-spor, men ikke at URL-en er indeksert hos Google nå, returnerer en bestemt HTTP-status, eller er riktig omdirigert. [W1]
+Forsøk på direkte HTTP-kontroll fra arbeidsmiljøet feilet i nettverk/DNS. Feilen er dokumentert i http-probe.json og skal ikke tolkes som nedetid på SjekkPris. En komplett liste over historiske URL-er, gjeldende redirects, canonicals og statuskoder er ikke verifisert.
+Et avgrenset Drive-søk fant ingen CSV-/JSON-/regnearkeksport med SjekkPris/CDON i navnet. Det beviser ikke at dataene ikke finnes andre steder. Ingen Search Console-konto eller CDN-logg er lest i denne runden.
+For å fullføre migreringskontrollen trenger vi tilgjengelige gamle URL-kilder: Search Console-sideeksporter, tidligere sitemap/database, eksisterende redirectkart og eventuelle aggregerte CDN-/serverlogger. Hver kilde har begrensninger; en enkelt eksport kan ikke uten videre kalles fullstendig inventar.
+
+
+7. Hva dette betyr for byggingen
+Arbeidsgrunnlaget for komponenter og beskyttet preview kan brukes nå: godkjent design, fryste produkt-URL-er som prinsipp, tydelig Product/Offer-skille, kjent/ukjent prisgrunnlag og ikke-indekserte vilkårlige søk.
+Før offentlige SjekkPris-ruter publiseres må vi avklare valgt produksjonshost og slash-konvensjon, kjøre større kollisjonstest, bekrefte lanseringskategorienes variantregler og kontrollere konkrete HTML-/schema-/robots-responser. Legacy-kartet må være godt nok til den faktiske lanseringen, men trenger ikke stoppe lokal komponentbygging.
+Før ekte butikktrafikk kobles på må SjekkPris-propertyens edge, ruting og nødvendige sikkerhetsgrenser kontrolleres mot eksisterende clickout. Det er integrasjon og verifisering, ikke en ny clickout-arkitektur.
+«LOCKED» bør bety godkjent beslutning med kjent testgrunnlag og avgrensning. Det skal ikke bety at vi lover Google-rangering, AI-siteringer eller fravær av alle fremtidige policyproblemer. Googles egen veiledning gir ingen garanti for crawling, indeksering eller visning. [G4]
+
+
+8. Konkret neste leveranse fra Work
+Et renset produktuttrekk fra de faktiske lanseringskategoriene, gjerne titusener av poster dersom tilgjengelig: eksisterende canonical product-id, tittel, merke, modell, produkttype, relevant variant/pakning og eventuell nåværende slug. GTIN og variantgruppe tas med når de finnes og er kjent, ikke gjettes. Ingen API-nøkler, private tilkoblingsstrenger, affiliate-destinasjoner eller persondata trengs.
+Suppler med tilgjengelige SjekkPris legacy-URL-kilder. Da kan vi erstatte denne lille demonstrasjonen med katalogbasert kollisjonsrapport og et faktisk migreringskart. Resultatene skal fortsatt skille kildekontroll, lokal test og produksjonsverifisering.
+
+
+Kilder og vedlegg
+K1 – Produktnavn: products_meta.json
+K2 – Produktnavn: solutions_meta.json
+K3 – Kuraterte serier: product_families.json
+K4 – Eksisterende clickout-ruter
+K5 – Clickout serving og driftsavgrensning
+K6 – Verifikasjonsskript med eksplisitt bivirkning
+G1 – Google Product snippets
+G2 – Google Product variants
+S1 – Schema.org Product
+G3 – Google noindex og crawling
+G4 – Google generativ AI og Search
+W1 – Hentet legacy-eksempel, ikke live HTTP-bevis
+Vedlegg – Kjørbar valideringspakke v0.1
+Filreferanser og SHA-er, testutdata og metodebegrensninger er også lagret i ZIP-pakken. Ingen av de eksisterende hovedstandardene er automatisk merket LOCKED av denne rapporten.

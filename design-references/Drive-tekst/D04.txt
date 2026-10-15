@@ -1,0 +1,287 @@
+Kontaktlinser SEO Architecture Audit → SjekkPris Input v1.0
+https://docs.google.com/document/d/1jYakmrPIkC8lO_e3qz3QP6TZP-TSpl2oGF0IOMY3SLA/edit?usp=drivesdk
+Endret: 2026-10-05T22:03:53.191Z
+
+﻿Kontaktlinser SEO Architecture Audit → SjekkPris Input v1.0
+Faktabasert revisjon av URL-, SEO-, AEO/AI- og indekseringsarkitekturen på Kontaktlinser.no, skrevet som beslutningsgrunnlag for SjekkPris.no. Dokumentet er ikke et designforslag og anbefaler ikke at SjekkPris kopierer Kontaktlinser.no. Hvert punkt skiller mellom det som er målt i den bygde siten, det som er dokumentert i prosjektets egen logg, og det som ikke er kjent.
+Grunnlag og avgrensning
+* Målt: alle 425 genererte HTML-sider, 8 sitemap-filer, robots.txt, llms.txt og genereringskoden, bygget fra repoet 6. oktober 2026.
+* Dokumentert: prosjektloggen (CLAUDE.md), som beskriver beslutninger, feil og rettelser siden første commit 10. august 2026.
+* Ikke tilgjengelig i denne revisjonen: eksport fra Google Search Console (indekserte sider, dekningsrapport, visninger per sidetype), serverlogger, Core Web Vitals og måling av AI-siteringer. Alt som sies om Search Console under bygger derfor på det som er notert i loggen, ikke på tall.
+* Kontaktlinser.no er en statisk side generert med Python, publisert på GitHub Pages og plassert bak Cloudflare. Mange av funnene under er konsekvenser av akkurat den plattformen.
+Sammendrag
+* Arkitekturen er enkel og konsekvent: én statisk HTML-side per entitet, selvrefererende canonical på alle 425 sider, nøyaktig én H1 per side, ingen noindex-tagger på innholdssider, ingen paginering og ingen indekserbare filter-URL-er.
+* Sterkeste egenskaper: alt kjerneinnhold ligger i rå HTML, strukturert data valideres i byggesteget, sitemap-datoer er ærlige, og FAQ-innhold genereres bare fra data som finnes.
+* Svakeste egenskaper: titler og metabeskrivelser overskrider ofte Googles visningsgrenser, 54 produktsider har relativ og dermed ugyldig og:image-URL, dype entitetssider (tilbehør, serier) har svært få interne lenker, og legacy-redirects var lenge bare mulig som klientside-JavaScript.
+* Noen valg er bevisst bundet til plattformen (GitHub Pages kan ikke gjøre server-side 301). De bør ikke leses som anbefalte mønstre for en annen plattform.
+1. URL-struktur
+Alle URL-er er små bokstaver, har avsluttende skråstrek, ingen filendelser og ingen query-parametre. Slug er navn pluss pakningsstørrelse, uten database-ID.
+Sidetype
+	Mønster
+	Antall sider
+	Forside
+	/
+	1
+	Kategori
+	/kontaktlinser/{kategori}/
+	5
+	Produkt (kontaktlinse)
+	/kontaktlinser/{merke}/{produkt-pakning}/
+	141
+	Merke
+	/merke/{merke}/ (også private label-serier som iWear, EyeQ, TrueLens)
+	31
+	Serie (produktfamilie)
+	/serie/{serie}/
+	52
+	Produsent
+	/produsent/{produsent}/
+	7
+	Private label-produkt
+	/private-label/{navn}/ pluss oversikt
+	75 (74 produkter og én oversikt)
+	Linsevæske
+	/linsevaeske/{merke}/{produkt}/ pluss oversikt
+	24
+	Øyedråper
+	/oyedraper/{merke}/{produkt}/ pluss oversikt
+	36
+	Tilbehør
+	/tilbehor/{merke}/{produkt}/ pluss oversikt
+	3
+	Guide
+	/guide/{slug}/ pluss oversikten /guider/
+	41
+	Tillits- og juridiske sider
+	/om-oss/, /slik-sammenligner-vi-priser/, /personvern/ med flere
+	9
+	Merknader:
+* Produktet ligger under kategori og merke i URL-en. Brødsmulen viser kategori, merke og produkt, men URL-en inneholder merke, ikke kategori-segmentet i brødsmulens rekkefølge, så en kategoriendring flytter ikke URL-en.
+* Pakningsstørrelse er del av produktets slug og dermed del av identiteten. 30-pack og 90-pack er to separate URL-er.
+* Merke-URL-ene var lenket i brødsmulen fra første dag, men sidene ble ikke bygget før feilen ble oppdaget 28. august 2026. Alle lenker var altså 404 inntil da.
+* Tilbehør, linsevæske og øyedråper deler én rendringsfunksjon og skilles bare av kategori-prefikset. Det har gjort utvidelse billig, men også gitt tilbehørssidene svak intern lenking (se avsnitt 5).
+2. Canonical-regler
+* Alle 425 sider har én absolutt, selvrefererende canonical som er identisk med sidens egen URL (verifisert: 0 avvik).
+* Ingen canonical peker til en annen side, heller ikke fra private label-sider til det virkelige produktet. Private label-sidene gjenbruker de samme tilbudene som hovedproduktet, så de har overlappende innhold med egen canonical. Om Google behandler dem som duplikater er ikke verifisert (ingen Search Console-data).
+* Ingen hreflang. Siden er kun norsk.
+* Pakningsvarianter av samme produkt er ikke samlet under én canonical. De er separate sider som lenker til hverandre ("Finnes også i X-pakning") og til en serieside.
+3. Redirects og slug-endringer
+* Domenet har vært en prissammenligningsside siden minst 2010 med .aspx-URL-er. Den nye siden ble lansert 10. august 2026. Kartleggingen via Wayback Machine ga 239 gamle innholds-URL-er.
+* GitHub Pages kan ikke gjøre server-side redirects, og .aspx serveres som nedlasting. Første løsning var en klientside-JavaScript-oppslagstabell på 404-siden (LEGACY_REDIRECTS). Det gir ingen HTTP-301 og hjelper ikke roboter som ikke kjører JavaScript.
+* Ekte 301 ble først mulig da domenet ble lagt bak Cloudflare (18. august 2026) med Bulk Redirects. Kildefilen cloudflare_bulk_redirects.csv i repoet har i dag 294 rader (gamle .aspx-stier til nye URL-er, mest /produkt/ og /kontaktlinser/).
+* Cloudflare-sonen ble flyttet til en annen konto 10. september 2026. Redirect-listen er ren dashbordkonfigurasjon og ligger ikke i koden. Hvorvidt dagens aktive liste i den nye kontoen er identisk med CSV-filen kan ikke bekreftes fra repoet.
+* Slug-endringer innenfor den nye strukturen har ingen redirect-mekanisme. Ved revisjon 28. september 2026 fant man 9 interne lenker i guideinnhold som pekte på gamle slugs og ga ekte 404. De ble rettet i kildeinnholdet.
+* 404-siden er en ekte HTTP 404 med noindex.
+4. Breadcrumbs
+* Synlig og strukturert brødsmule (BreadcrumbList) på produkt-, merke-, serie-, produsent-, kategori-, private label-, linsevæske-, øyedråpe- og tilbehørssider. Eksempel: Hjem, Månedslinser, Acuvue, Acuvue Oasys 6-pack.
+* Mangler BreadcrumbList: forsiden (forventet), alle 40 guider, guideoversikten og 7 av 9 tillitssider.
+* Brødsmulen er på produktsider bundet til kategori og merke, ikke til serie, selv om serien er den mest samlende hubben.
+5. Intern lenking
+Antall sider som lenker til en gitt side (målt som unike lenkende HTML-sider, der delt navigasjon og footer teller for alle):
+Sidetype
+	Minimum
+	Median
+	Maksimum
+	Kontaktlinseprodukt
+	2
+	4
+	425
+	Serie
+	2
+	3
+	8
+	Guide
+	3
+	5
+	425
+	Private label-produkt
+	3
+	4
+	425
+	Linsevæske, øyedråper, tilbehør (enkeltprodukter)
+	1
+	1
+	1
+	Produsent
+	3
+	22
+	45
+	* Enkeltprodukter innen linsevæske, øyedråper og tilbehør har typisk bare én innkommende lenke (fra kategorioversikten). De er med i sitemap, men er svakt koblet.
+* Serie-sidene hadde 2026-09-18 lav intern lenking og ble notert som mulig årsak til "Oppdaget, ikke indeksert". Tiltak 27. september: serier søkbare fra forsiden, lenker fra merkesider. De har fortsatt median 3 innkommende lenker.
+* Forsiden har bevisst ingen liste over alle produkter (fjernet 15. august 2026 for å unngå at forsiden konkurrerer med kategori- og merkesider om samme søk). Produktene nås via kategori, merke, serie, sitemap og søk.
+6. Sitemap-struktur
+* Én sitemap-indeks (sitemap.xml) og 7 under-sitemaps etter innholdstype. Totalt 424 URL-er: statiske sider 14, kategorier og merker og produsenter 43, kontaktlinseprodukter 141, guider 40, linsevæske og øyedråper og tilbehør 60, private label 74, serier 52.
+* Alle URL-er i sitemap har et bygget mål, og alle bygde sider står i sitemap, med ett unntak: guideoversikten /guider/ er bygget men ikke i sitemap (verifisert).
+* lastmod er ærlig: guider bruker redaksjonell oppdateringsdato, prissider bruker datoen prisene sist ble bekreftet, og ingen side får en dato eldre enn siste faktiske innholdsendring (signatur-hash i lastmod_state.json). Før 26. september stod alle URL-er på byggedagen, noe som ble rettet.
+* Sitemap-filene genereres ved bygging og er ikke versjonert i repoet.
+* Ingen bilde-sitemap.
+7. Robots, index og noindex
+* Ingen meta robots-tag på noen innholdsside. Eneste noindex er på 404-siden.
+* robots.txt tillater alt for vanlige søkeroboter og AI-søkeroboter (OAI-SearchBot, ChatGPT-User, Claude-SearchBot, Claude-User, PerplexityBot). AI-treningsroboter er forbudt: GPTBot, ClaudeBot, anthropic-ai, Google-Extended og Applebot-Extended (konsernbeslutning 10. september 2026, som reverserte en åpen policy fra 15. august), samt Bytespider.
+* robots.txt har ingen regel for klikkvegen /go/. Hvordan crawlere behandler den er ikke verifisert.
+* Cloudflare "Managed robots.txt" ble som standard slått på ved DNS-flytting 18. august og overstyrte stille sidens egen policy. Måtte skrus av manuelt. Samme risiko finnes for enhver ny Cloudflare-sone.
+8. Paginering, query-parametre og filtrerte sider
+* Ingen paginering på noen side. Kategorisider viser alle produkter på én side.
+* Filter (merke, basiskurve, diameter, vanninnhold) og sortering er ren klientside-tilstand. De skaper aldri nye URL-er. Verifisert: 0 interne lenker med query-streng i hele bygget.
+* Valg som "Pris inkludert frakt" lagres i nettleserens localStorage, ikke i URL.
+* Sidens innhold er identisk med eller uten JavaScript, siden alle filterverdier ligger som ekte HTML (details-elementer).
+* Konsekvens: ingen filterkombinasjoner kan rangere som egne sider. Bevisst valg for å unngå indeksbloat, men også en forgjenget mulighet for kombinasjonssøk som "dagslinser fra Acuvue".
+9. Strukturert data per sidetype
+Sidetype
+	JSON-LD-typer
+	Alle sider
+	WebSite
+	Forside
+	FAQPage
+	Kategori og oversikter
+	BreadcrumbList, ItemList
+	Produkt (alle fire produktfamilier)
+	BreadcrumbList, Product (AggregateOffer med lowPrice, highPrice, offerCount i NOK, additionalProperty for spesifikasjoner, brand, image, dateModified), FAQPage
+	Private label
+	BreadcrumbList, WebPage med about som Product (AggregateOffer), FAQPage
+	Serie
+	BreadcrumbList, CollectionPage, FAQPage
+	Merke
+	BreadcrumbList, ItemList, FAQPage
+	Produsent
+	BreadcrumbList, Organization
+	Guide
+	Article (forfatter og utgiver er Organization Kontaktlinser.no, datePublished, dateModified), FAQPage
+	* Ingen review eller aggregateRating, fordi siden ikke har egne vurderinger. Prisen i AggregateOffer er produktpris uten frakt.
+* Alle JSON-LD-blokker parser som gyldig JSON, og byggesteget stopper utrulling ved ugyldig JSON-LD.
+* Produkter uten ekte tilbud får ingen Product-blokk i det hele tatt (se avsnitt 15).
+* Google har faset ut FAQ-rich results. FAQPage beholdes som innhold for AI-svar og long-tail, ikke for SERP-utvidelser. Verifisert mot Googles egen oppdateringslogg.
+10. Varianter, familier og aliaser
+* Pakningsvariant: separat URL og separat canonical, krysslenket.
+* Produktfamilier: 28 kuraterte familier i product_families.json (sfærisk, torisk, multifokal, XR av samme linsedesign) samt kjedevarianter gir 52 serieider. Serien er hub for varianter, med "Finn din variant", sammenligningstabell og prisinnsikt.
+* Bevisst separate familier selv ved delt materiale (for eksempel PureVision og PureVision2). Delt materiale er ikke bevis for samme produktlinje.
+* Rene aliaser (for eksempel Focus Dailies som Dailies AquaComfort Plus) håndteres med duplicate_products, ikke som egen familie.
+* Private label (iWear, EyeQ, Easyvision, Ascend, TrueLens): egne sider med egne titler og egen produktidentitet, men gjenbruker det ekte produktets tilbud. Koblingene er manuelt verifisert mot Lensways egne data. En feilkobling (Biofinity XR 6-pack mot 3-pack) ble funnet og rettet.
+11. Title, H1 og meta description
+Sidetype
+	Title-mønster
+	Over 60 tegn
+	Forside
+	Billige kontaktlinser – Sammenlign priser | Kontaktlinser.no
+	0 av 1
+	Kategori
+	Billige dagslinser – Sammenlign priser | Kontaktlinser.no
+	3 av 5
+	Merke
+	Acuvue kontaktlinser – Sammenlign priser | Kontaktlinser.no
+	14 av 31
+	Produkt
+	{Navn} – Sammenlign og få billigste pris
+	73 av 141 (maks 91)
+	Serie
+	{Serie}-serien – Sammenlign og få billigste pris
+	15 av 52
+	Private label
+	{Navn} – Sammenlign og få billigste pris
+	21 av 74
+	Guide
+	{Spørsmål} | Kontaktlinser.no
+	14 av 40
+	Produsent
+	{Produsent} – Produsenten bak {alle merker} | Kontaktlinser.no
+	5 av 7 (maks 112)
+	* Nøyaktig én H1 per side på alle 425 sider. Ingen manglende eller dupliserte titler eller metabeskrivelser.
+* Metabeskrivelser: 26 av 31 merkesider er over 160 tegn (maks 227), fordi malen lister tre eksempelprodukter ved navn. Øvrige sidetyper holder seg stort sett under 160.
+* Pris i title ble vurdert og avvist (varierende navnelengde ville presset merkenavnet ut av tittelen). Pris står i en synlig sammendragsboks under H1 og i metabeskrivelsen på produktsider (produktpris uten frakt).
+* Kapitalisering etter tankestrek ble gjort konsekvent 15. august 2026.
+12. Bilder og bilde-SEO
+* Lisensierte bilder: feedbilder (affiliate) eller produsentens pressebilder. Scrapede bilder brukes aldri, og det hotlinkes ikke fra forhandlere. Manuelt kuraterte bilder ligger lokalt i /static/products/ (104 filer, JPEG). Hero, kategorier og guider bruker WebP i flere størrelser.
+* Alle img-tagger har alt-attributt. Produktbilder har produktnavnet som alt-tekst. Dekorative bilder har tom alt.
+* Product-JSON-LD har image-felt (lagt til 15. august 2026).
+* Feil: og:image er relativ (/static/products/...) på 54 produktsider, mot absolutt på 370 sider. Samme relative sti brukes i Product.image i JSON-LD. Relative URL-er er ugyldige for og:image og bør være absolutte.
+* En bildeaudit viste at 42 kontaktlinse-heroer er 170 px miniatyrer, uten egen thumb-, kort- og hero-pipeline. Ingen bilde-sitemap.
+13. Statisk rendering og crawler-fallback
+* All kjerneinnhold (priser, tilbud, spesifikasjoner, FAQ, prisgrafer som SVG, priseintelligens) ligger i server-rendret HTML. Begrunnelse: mange AI-roboter kjører ikke JavaScript.
+* JavaScript brukes kun til progressiv forbedring: søk, fanebytte i priseperioder (alle paneler ligger ferdig i DOM), filtre, antallsvelger og samtykkebanner. GTM lastes først etter samtykke.
+* Skjult innhold er bare det som er legitimt interaktivt (details-elementer). En tidligere løsning med tekst plassert utenfor skjermen ble erstattet etter å ha lest Googles spam-retningslinjer.
+* Ingen dynamic rendering. Eneste JavaScript-baserte fallback er legacy-redirect på 404-siden.
+* Prisdata hentes ved bygging. Siden er statisk mellom bygg (daglig). Tidsrelative tekster som "oppdatert for 3 timer siden" ble fjernet fordi de ble feil mellom to bygg. Siden viser absolutt dato.
+14. AI og AEO-tiltak
+* llms.txt med metodikk og nøkkelsider. Funn: filen sier fortsatt at rangering er "sortert etter total pris inkludert frakt" og at "priser eldre enn 24 timer" ikke vises som laveste pris. Begge utsagn er foreldet (standard er pris uten frakt, og stale-grensene er 36 og 60 timer). Et statisk dokument rettet til AI-systemer driver ut av takt med produktet.
+* Synlig, dynamisk AI-sammendragsboks under H1 på produktsider med faktisk antall forhandlere og laveste pris, uten overdrivelser. Egen fallback når produktet ikke har noe bekreftet tilbud.
+* Siterbar oppsummering i hero på forsiden og redaksjonelle prinsipper, metodikk og affiliate-sider som tillitssignaler.
+* FAQ-blokker generert fra data via regelmotor, aldri fylt opp til et fast antall. Guider har sitater fra verifiserte kilder (NHI, Helsenorge) i 7 av 40.
+* Søkeboksene i guider er data-nosnippet for å holde dem utenfor utdrag.
+* Målt effekt på AI-siteringer: ingen data finnes.
+15. Hva som faktisk er ment å indekseres
+Alle 424 sider i sitemap er ment å indekseres: forside, kategorier, merker, serier, produsenter, produkter, private label, tilbehørsfamilier og guider. Det finnes ingen dokumentert prioritering mellom dem. Ikke ment å indekseres: 404-siden. Funn: guideoversikten /guider/ er bygget og lenket, men utelatt fra sitemap uten dokumentert grunn. Det finnes ingen eksplisitt beslutning om å holde noen sider utenfor indeks.
+16. Produkter som forsvinner eller mister tilbud
+* Et produkt uten pålitelige tilbud publiseres uten priser, ikke med gammel data. Eksempel: Precision7 6-pack (ingen norsk forhandler selger pakningen) var publisert uten priser og, etter feilen 16. august, uten Product-JSON-LD.
+* Rettelsen 16. august: en tom AggregateOffer med 0-verdier teller ikke som "angitt" hos Google. Å fjerne offers-nøkkelen er ikke nok. Hele Product-blokken må utelates fordi review, aggregateRating eller offers er påkrevd.
+* Utsolgte tilbud kan aldri vinne laveste pris. Tilbud eldre enn 36 timer (feed) eller 60 timer (skrapet) merkes "Pris ikke nylig bekreftet" og vises fortsatt.
+* Dropout-beskyttelse: faller en forhandlers feed under 50 prosent av forrige antall, gjenbrukes forrige runde. Byggesteget stopper utrulling hvis mer enn 30 prosent av produktene har 0 tilbud samtidig.
+* Et produkt som fjernes helt fra katalogen forsvinner fra bygget og fra sitemap og gir da 404. Det er ikke funnet noen mekanisme for 301 eller 410 for fjernede produkter, og det er ikke dokumentert noen beslutning om dette.
+17. Erfaringer fra Search Console
+Bare det som er notert i prosjektloggen. Ingen tall er tilgjengelige.
+* Første visninger og noen få klikk i august 2026, rundt tre uker etter lansering.
+* Kritisk strukturert datafeil 16. august 2026 ("offers, review eller aggregateRating må angis") på 38 sider: private label-sider med about som Product uten tilbud, og to Precision7-produkter med tom AggregateOffer. Rettet og validering forespurt.
+* "Oppdaget, ikke indeksert" er notert for serie-sidene, med tynn intern lenking som antatt årsak. Tiltak gjort 27. september. Effekten er ikke dokumentert.
+* Google viste "kontaktlinser.no" med små bokstaver i resultatlisten selv om og:site_name og WebSite-schema var riktig satt. Antatt indekseringsforsinkelse, ingen kodeendring.
+* Pris i søkeresultat ble antatt hentet fra den synlige sammendragsboksen. Da den viste totalpris inkl. frakt så siden dyrere ut enn konkurrentene. Boksen viser nå produktpris uten frakt.
+* Domenets historikk (aktivt siden 2010) ga fordel ved migreringen, men bare fordi gamle URL-er kunne omdirigeres. Dette er ikke målt.
+* Prosessfunn: flere pastede AI-analyser inneholdt fabrikerte påstander om siden. Praksis er nå å verifisere hvert sitat mot faktisk innhold før noe implementeres.
+18. Ting som ikke bør gjentas på SjekkPris
+* Legacy-redirects som klientside-JavaScript. Dette ga ingen 301.
+* Lenker i brødsmule og guider til sider som ikke ble bygget, og lenker til gamle slugs etter slug-endring.
+* Strukturert data med Product uten offers, review eller aggregateRating, inkludert tom AggregateOffer.
+* Relative og:image- og image-URL-er.
+* Titler og metabeskrivelser skrevet av maler uten lengdekontroll i bygget.
+* Hardkodede tall og påstander i tekst (24 timer, "alle nettbutikker") og statiske AI-dokumenter (llms.txt) som ikke genereres fra samme data som siden.
+* Totalpris som standardvisning i tekst som Google og AI viser som pris.
+* Tidsrelative tekster i statisk HTML.
+* Dype entitetssider med bare én innkommende lenke.
+* Å la Cloudflare-standarder (Managed robots.txt) overstyre egen robots-policy uten å sjekke etter hver sone-endring.
+* Å la sitemap-datoer stå på byggedagen.
+19. Det som fungerte særlig godt
+* Selvrefererende absolutt canonical og nøyaktig én H1 på alle sider.
+* Byggeport (validate_build.py) som stopper utrulling ved manglende sider, ugyldig JSON-LD eller mer enn 30 prosent produkter uten tilbud.
+* Filtre som aldri blir URL-er, med full HTML-verdi uten JavaScript.
+* Sitemap per innholdstype med lastmod fra faktiske endringer.
+* FAQ- og oppsummeringstekst generert fra data med utelatelse når data mangler.
+* Entitetshubber (kategori, merke, serie, produsent) med ItemList og CollectionPage.
+* Verifiseringsdisiplin: en pakningsstørrelse, GTIN eller kobling gjettes aldri. Flere reelle datafeil ble funnet nettopp ved å se på forhandlerens egen side.
+* Konsekvent prisstandard (pris uten frakt som standard, total som bryter) i synlig tekst, metabeskrivelse og JSON-LD.
+* Tillitssider (metodikk, redaksjonelle prinsipper, affiliate og finansiering) lenket fra alle sider.
+Lessons for SjekkPris
+Disse er innspill, ikke krav. SjekkPris sitt faktiske omfang, plattform og katalogstørrelse er ikke kjent for denne revisjonen, så hvert punkt må vurderes mot det.
+1. Keep
+* Selvrefererende absolutte canonicals og nøyaktig én H1 per side som byggekrav.
+* Kjerneinnhold i server-rendret HTML, JavaScript kun som forbedring.
+* Byggeport som feiler utrullingen ved ugyldig JSON-LD, manglende sider eller masseutfall av tilbud.
+* Filtre og sortering som ikke genererer indekserbare URL-er, med mindre en kombinasjon er et bevisst valgt landingsside.
+* Strukturert data bare der påkrevde felt finnes, og utelatt ellers.
+* Sitemap per innholdstype med ærlig lastmod.
+* Én definert prisstandard brukt likt i tekst, meta og strukturert data.
+* FAQ og sammendrag generert fra data, aldri fylt opp.
+* Verifisering av alle koblinger og påstander mot primærkilde.
+2. Improve
+* Lengdekontroll av title og meta description i bygget, med varsel eller feil over grensen.
+* Absolutte URL-er validert for og:image og alle bilder i JSON-LD.
+* Bildepipeline med flere størrelser fra start, og vurdering av bilde-sitemap.
+* Intern lenking planlagt per sidetype, med målt minimum av innkommende lenker før noe publiseres.
+* BreadcrumbList på alle redaksjonelle sider og guider.
+* llms.txt generert fra samme data og tekstregler som siden.
+* Alle bygde sider tas med i sitemap eller utelates med en dokumentert grunn.
+* Måling av AI-sitering og Search Console-dekning per sidetype fra dag én.
+3. Do differently
+* Velg hosting som støtter ekte 301 og 410 fra start, og lag redirect-regler som kode i repoet, ikke kun i et dashbord.
+* Ha en eksplisitt, bygget policy for fjernede produkter (301 til nærmeste erstatter, 410 eller beholde siden som arkiv) og en test som fanger interne lenker til slettede eller omdøpte URL-er.
+* Ikke la slug-regler styres av hvordan en enkelt forhandler navngir. Bestem om pakningsstørrelse og variant er egne URL-er eller velger på én side, før sidene bygges.
+* Definer canonical-policy for alias- og private label-sider før publisering i stedet for å la dem overlappe med eget canonical.
+* Planlegg landingssider for filterkombinasjoner som kan ha søkevolum, i stedet for å utelukke alle.
+* Sjekk CDN-standarder (robots.txt, bot-regler, AI crawl control) som en del av hver sone-endring.
+4. Unknown / needs decision
+* Hvilke sidetyper SjekkPris skal ha, og hvor dyp taksonomien skal være.
+* Om variant (pakning, størrelse, farge) skal ha egen URL eller være en velger på én side, og hvilken canonical som gjelder.
+* Om slug skal inneholde en stabil ID.
+* Hosting og plattform: det finnes ingen data på hvordan GitHub Pages sammenlignes med alternativer for en katalog som vokser kraftig.
+* Om /go/ eller tilsvarende klikkveger skal være disallowed, noindex eller nofollow. Ikke verifisert for Kontaktlinser.no.
+* Hvilke AI-roboter som skal tillates, og om policy er per tjeneste eller konsernomfattende.
+* Om og når hreflang og flere land blir aktuelt (bestpricelenses.com er nevnt som internasjonal retning).
+* Hvilke Search Console-data og logger fra Kontaktlinser.no som kan hentes ut for å validere antakelsene over (indekseringsandel per sidetype, effekt av serie-lenking, duplikatbehandling av private label).
+* Om en felles klikk- og attribusjonstjeneste for alle Chillout Labs-sider skal påvirke URL- og robots-reglene.

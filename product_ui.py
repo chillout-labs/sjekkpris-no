@@ -45,8 +45,8 @@ PRICE_MODE_SCRIPT = r"""
       Number(b.querySelector('[data-item-order]').dataset[key])
     ).forEach(row => rows.appendChild(row));
     status.textContent = toggle.checked
-      ? 'Sortert etter kjent totalpris · ukjent totalpris vises sist. Vinnerboksen viser laveste kjente totalpris når en vinner finnes.'
-      : 'Sortert etter varepris · uten frakt. Vinnerboksen viser laveste varepris når en vinner finnes.';
+      ? 'Sortert etter kjent totalpris · ukjent totalpris vises sist.'
+      : 'Sortert etter varepris · uten frakt.';
   }
   toggle.checked = false;
   toggle.addEventListener('change', renderMode);
@@ -106,7 +106,7 @@ p.sp-tagline { font-size:12px; margin:0; padding-left:20px; border-left:1px soli
 .sp-winner { grid-column:3; grid-row:1; min-width:0 }
 .sp-image { width:100%; aspect-ratio:1.36; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:10px }
 .sp-image img { display:block; width:100%; height:100%; object-fit:contain }
-.sp-image-empty { background:var(--sp-surface); color:var(--sp-muted); flex-direction:column; gap:13px; font-size:14px }
+.sp-image-empty { aspect-ratio:auto; min-height:160px; padding:24px; background:var(--sp-surface); color:var(--sp-muted); flex-direction:column; gap:13px; font-size:14px }
 .sp-image-empty svg { width:40px; height:40px; color:#91a1b5 }
 .sp-product .sp-meta { margin-top:19px; font-size:13px; display:flex; flex-direction:column; gap:10px }
 .sp-meta div { display:flex; flex-wrap:wrap; gap:7px }
@@ -131,7 +131,7 @@ a.sp-cta:hover { background:#004d41; text-decoration:none }
 .sp-tabs { display:flex; gap:28px; overflow-x:auto; white-space:nowrap; border-bottom:1px solid var(--sp-line); margin-bottom:22px }
 .sp-tabs a { display:block; padding:14px 2px; min-height:48px; font-size:13px; color:var(--sp-ink); text-decoration:none }
 .sp-tabs a:first-child { font-weight:700; border-bottom:3px solid var(--sp-ink) }
-.sp-comparison { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:18px; align-items:stretch }
+.sp-comparison { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:18px; align-items:start }
 .sp-panel { min-width:0; border:1px solid var(--sp-line); border-radius:12px; padding:20px }
 .sp-product .sp-subtitle { font-size:12px; margin:7px 0 15px; color:var(--sp-muted) }
 .sp-offers { width:100%; border-collapse:collapse; font-size:12px; table-layout:fixed }
@@ -148,11 +148,11 @@ a.sp-cta:hover { background:#004d41; text-decoration:none }
 .sp-price-note { display:block; font-size:10px; color:var(--sp-green); margin-top:5px }
 .sp-mobile-label { display:none }
 .sp-product .sp-footnote { font-size:12px; margin-top:16px; padding:12px; background:var(--sp-surface); border-radius:8px; color:var(--sp-muted) }
-.sp-history-empty { min-height:280px; display:flex; align-items:center; justify-content:center; flex-direction:column; text-align:center; gap:14px; padding:30px 8px; color:var(--sp-muted) }
-.sp-history-empty>svg { width:58px; height:58px; background:var(--sp-surface); padding:13px; border-radius:14px; color:var(--sp-ink) }
+.sp-history-empty { display:flex; align-items:center; justify-content:center; flex-direction:column; text-align:center; gap:10px; padding:20px 8px 4px; color:var(--sp-muted) }
+.sp-history-empty>svg { width:44px; height:44px; background:var(--sp-surface); padding:10px; border-radius:10px; color:var(--sp-ink) }
 .sp-history-empty h3 { color:var(--sp-ink) }.sp-history-empty p { font-size:13px; max-width:250px }
 .sp-details { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; margin-top:18px }
-.sp-product .sp-empty { color:var(--sp-muted); font-size:14px; padding:20px 0 }
+.sp-product .sp-empty { color:var(--sp-muted); font-size:14px; padding:12px 0 0 }
 .sp-product .sp-specs { margin-top:16px; font-size:13px }
 .sp-specs div { display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:10px 0; border-bottom:1px solid var(--sp-line) }
 .sp-specs dt { color:var(--sp-muted) }.sp-specs dd { margin:0; overflow-wrap:anywhere }
@@ -164,12 +164,12 @@ footer.sp-footer { margin-top:32px; padding:24px 0; background:var(--sp-surface)
 .sp-footer p { margin:5px 0 }.sp-footer strong { color:var(--sp-ink); font-size:18px }
 .sp-product :focus-visible,.sp-header :focus-visible { outline:3px solid #177fc5; outline-offset:3px }
 @media(max-width:1150px) { .sp-tagline { display:none } .sp-topbar { gap:24px } }
-@media(min-width:768px) and (max-width:999px) { .sp-hero { grid-template-columns:minmax(0,1fr) minmax(0,1fr) }.sp-identity { grid-column:1/-1;grid-row:1 }.sp-gallery { grid-column:1;grid-row:2 }.sp-winner { grid-column:2;grid-row:2 }.sp-comparison { grid-template-columns:1fr }.sp-history-empty { min-height:180px } }
+@media(min-width:768px) and (max-width:999px) { .sp-hero { grid-template-columns:minmax(0,1fr) minmax(0,1fr) }.sp-identity { grid-column:1/-1;grid-row:1 }.sp-gallery { grid-column:1;grid-row:2 }.sp-winner { grid-column:2;grid-row:2 }.sp-comparison { grid-template-columns:1fr } }
 @media(max-width:767px) {
 .sp-shell { padding:0 16px }.sp-topbar { min-height:0; padding-top:18px; padding-bottom:16px; flex-wrap:wrap; gap:14px }.sp-brand { order:0 } a.sp-brand { font-size:30px }.sp-tagline { display:none }.sp-menu { order:1; margin-left:auto }.sp-menu summary span { display:none }.sp-search { order:2; flex:0 0 100%; max-width:none; width:100%; margin:0 }.sp-search input { font-size:14px }
-.sp-breadcrumb { font-size:11px; padding:19px 0 }.sp-hero { display:flex; flex-direction:column; gap:18px; margin-bottom:22px }.sp-identity { order:0; width:100%; padding:0 }.sp-gallery { order:1; width:100% }.sp-winner { order:2; width:100% }.sp-product h1 { font-size:29px; letter-spacing:-.8px; line-height:1.2 }.sp-product .sp-meta { margin-top:10px; font-size:12px; gap:5px }.sp-image { aspect-ratio:1.55 }.sp-image-empty { font-size:13px }.sp-price { padding:19px 16px 15px }.sp-product .sp-amount { font-size:38px }.sp-product .sp-breakdown { font-size:12px }.sp-facts { margin-top:18px }.sp-product .sp-price-caveat { font-size:11px }
-.sp-tabs { gap:23px; margin-bottom:18px }.sp-tabs a { font-size:12px; padding:12px 2px }.sp-comparison { display:flex; flex-direction:column; gap:18px }.sp-panel { padding:17px }.sp-offer-panel { padding:0; border:0 }.sp-product h2 { font-size:22px }.sp-product .sp-subtitle { margin-bottom:12px }
-.sp-offers,.sp-offers tbody { display:block; width:100% }.sp-offers thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%) }.sp-offers thead tr { position:static }.sp-offers tbody tr { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px 12px; padding:14px; margin:0 0 12px; border:1px solid var(--sp-line); border-radius:9px; background:white }.sp-offers td { display:block; width:auto; padding:0; margin:0; border:0; text-align:left; position:static; font-size:12px; min-width:0 }.sp-offers td:before { display:none }.sp-offers td:first-child { grid-column:1;grid-row:1; width:auto; padding:0; border:0; font-size:13px }.sp-offers .sp-total { grid-column:2;grid-row:1; padding:0; border:0; text-align:right; font-size:16px }.sp-offers .sp-total .sp-mobile-label { display:block; font-weight:400; font-size:10px; color:var(--sp-muted) }.sp-offers .sp-item { grid-column:1;grid-row:2; display:block; border:0; padding:0; color:var(--sp-muted); font-size:11px }.sp-offers .sp-shipping { grid-column:2;grid-row:2; display:block; padding:0; border:0; color:var(--sp-muted); font-size:11px; text-align:right }.sp-offers .sp-stock { grid-column:1;grid-row:3; align-self:center; padding:0; border:0; font-size:11px; color:var(--sp-muted) }.sp-offers .sp-action { grid-column:2;grid-row:3; padding:0; text-align:right; border:0 }.sp-offers .sp-cta { font-size:11px; gap:4px; padding:9px 6px; min-height:44px }.sp-mobile-label { display:inline }.sp-note { font-size:10px }.sp-price-note { font-size:10px }.sp-history-empty { min-height:225px }.sp-details { grid-template-columns:1fr; gap:18px }.sp-trust { display:flex; flex-direction:column; padding:20px; gap:20px }.sp-trust strong { font-size:13px }.sp-trust span { font-size:12px }
+.sp-breadcrumb { font-size:11px; padding:19px 0 }.sp-hero { display:flex; flex-direction:column; gap:18px; margin-bottom:22px }.sp-identity { order:0; width:100%; padding:0 }.sp-gallery { order:1; width:100% }.sp-winner { order:2; width:100% }.sp-product h1 { font-size:29px; letter-spacing:-.8px; line-height:1.2 }.sp-product .sp-meta { margin-top:10px; font-size:12px; gap:5px }.sp-image { aspect-ratio:1.55 }.sp-image-empty { aspect-ratio:auto; min-height:72px; padding:16px; flex-direction:row; gap:10px; font-size:13px }.sp-image-empty svg { width:24px; height:24px }.sp-price { padding:19px 16px 15px }.sp-product .sp-amount { font-size:38px }.sp-product .sp-breakdown { font-size:12px }.sp-facts { margin-top:18px }.sp-product .sp-price-caveat { font-size:11px }
+.sp-tabs { gap:23px; margin-bottom:18px }.sp-tabs a { font-size:12px; padding:12px 2px }.sp-comparison { display:flex; flex-direction:column; gap:18px; align-items:stretch }.sp-panel { padding:17px }.sp-offer-panel { padding:0; border:0 }.sp-product h2 { font-size:22px }.sp-product .sp-subtitle { margin-bottom:12px }
+.sp-offers,.sp-offers tbody { display:block; width:100% }.sp-offers thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%) }.sp-offers thead tr { position:static }.sp-offers tbody tr { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px 12px; padding:14px; margin:0 0 12px; border:1px solid var(--sp-line); border-radius:9px; background:white }.sp-offers td { display:block; width:auto; padding:0; margin:0; border:0; text-align:left; position:static; font-size:12px; min-width:0 }.sp-offers td:before { display:none }.sp-offers td:first-child { grid-column:1;grid-row:1; width:auto; padding:0; border:0; font-size:13px }.sp-offers .sp-total { grid-column:2;grid-row:1; padding:0; border:0; text-align:right; font-size:16px }.sp-offers .sp-total .sp-mobile-label { display:block; font-weight:400; font-size:10px; color:var(--sp-muted) }.sp-offers .sp-item { grid-column:1;grid-row:2; display:block; border:0; padding:0; color:var(--sp-muted); font-size:11px }.sp-offers .sp-shipping { grid-column:2;grid-row:2; display:block; padding:0; border:0; color:var(--sp-muted); font-size:11px; text-align:right }.sp-offers .sp-stock { grid-column:1;grid-row:3; align-self:center; padding:0; border:0; font-size:11px; color:var(--sp-muted) }.sp-offers .sp-action { grid-column:2;grid-row:3; padding:0; text-align:right; border:0 }.sp-offers .sp-cta { font-size:11px; gap:4px; padding:9px 6px; min-height:44px }.sp-mobile-label { display:inline }.sp-note { font-size:10px }.sp-price-note { font-size:10px }.sp-history-empty { display:grid; grid-template-columns:36px minmax(0,1fr); gap:4px 12px; text-align:left; padding:14px 0 0 }.sp-history-empty>svg { grid-row:1/3; width:36px; height:36px; padding:8px }.sp-history-empty p { max-width:none }.sp-history-empty h3 { font-size:14px }.sp-details { grid-template-columns:1fr; gap:18px }.sp-trust { display:flex; flex-direction:column; padding:20px; gap:20px }.sp-trust strong { font-size:13px }.sp-trust span { font-size:12px }
 }
 /* Match the prototype's five visual columns. Keep stock as a separate
    semantic table cell, positioned under the merchant, not as column six. */
@@ -197,4 +197,14 @@ footer.sp-footer { margin-top:32px; padding:24px 0; background:var(--sp-surface)
  .sp-product[data-price-basis="item"] .sp-switchable-offers .sp-total { grid-column:3 }
  .sp-product[data-price-basis="item"] .sp-switchable-offers .sp-action { grid-column:4 }
 }
+/* Compact item-price cards: the main price is already displayed at the top. */
+@media(max-width:767px) {
+ .sp-product[data-price-basis="item"] .sp-switchable-offers .sp-item { display:none }
+ .sp-product[data-price-basis="item"] .sp-switchable-offers .sp-shipping { grid-column:1 / -1; text-align:left }
+}
+.sp-product #specifications details { margin-top:12px; font-size:13px; color:var(--sp-muted) }
+.sp-product #specifications summary { min-height:44px; display:flex; align-items:center; cursor:pointer; color:var(--sp-green) }
+.sp-product #specifications summary::before { content:'›'; margin-right:8px; font-size:20px }
+.sp-product #specifications details[open] summary::before { transform:rotate(90deg) }
+.sp-home .sp-product-category, .sp-home .sp-product-brand { font-size:12px; color:var(--sp-muted); margin:0 0 8px }
 """

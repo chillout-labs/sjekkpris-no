@@ -1,0 +1,246 @@
+SjekkPris Byggebrief – Claude Code Backoffice Pilot v1.3
+https://docs.google.com/document/d/1asyUpDpZuPeLm6qLdSEeawlXom4aoMJo7gdHAb14GbA/edit?usp=drivesdk
+Endret: 2026-09-14T17:26:21.457Z
+
+﻿Byggebrief til Claude Code
+Første pilot for felles backend og backoffice
+Versjon 1.3  |  14. september 2026  |  Oppdragsgiver Kai
+Lag først en konkret implementeringsplan basert på tilgjengelig repo og kravdokumentet. Piloten skal deretter vise en reell feed fra import til database, kontrollert tilbudsoversikt og lese-API. Leveransen skal kunne demonstreres i et separat testmiljø uten å endre aktive nettsteder.
+Grunnlag og prioritet
+Denne briefen bygger på Krav-felles-backend-og-backoffice.docx versjon 1.8 og det siste pilotforslaget i samtalen. Den er en separat arbeidsbeskrivelse og erstatter ikke kravdokumentet. Ved motstrid skal den konkrete forskjellen synliggjøres før implementering; milepælen skal ikke utvides uten en ny beslutning.
+Utgangspunkt for piloten
+Bruk Shopping4net via Tradedoubler som pilotfeed, med Kontaktlinser.no som registrert nettstedstilknytning, slik kravdokumentet angir. Det siste pilotforslaget åpnet for valg av nettsted og feed, men endret ikke denne eksisterende føringen. Bruk på Sjekkpris.no må avklares separat med riktig tillatelse og sporingsoppsett.
+Kontaktlinser-koden er tidligere kartlagt som en Python-basert generator med JSON-katalog, prishistorikk og GitHub Actions. Kontroller dette mot tilgjengelig kode og noter commit før gjenbruk. Beskriv hvilke adaptere og produktkoblinger som kan brukes, og hvilke deler som må endres.
+Avklar før implementering
+Avklaring
+	Forventet beslutning
+	Repo og eierskap
+	Foreslå privat chillout-platform under chillout-labs. Bekreft plassering og faktisk tilgang. Overføring av eksisterende repo er en egen aktivitet.
+	Teknologi og drift
+	Anbefal database, hosting, rammeverk og importkjøring med begrunnelse, kostnadsforutsetninger og enkel plan for sikkerhetskopi og gjenoppretting. Ingen leverandør er valgt.
+	Innlogging og kilde
+	Avklar Kais administratorinnlogging og serverbasert lagring av feedtilgang. Bruk eksisterende sikre tilgangsoppsett; ikke skriv hemmeligheter i kode, logger eller dokumentasjon.
+	Importomfang og vilkår
+	Avklar avgrenset pilotutvalg eller full feed, oppdateringsfrekvens, fraktvilkår og første API-konsument. Registrer uavklarte vilkår som ukjente.
+	Leveranser og arbeidsrekkefølge
+Datamodell og varig lagring
+Lever migrasjoner og en enkel modell for nettsted, marked, butikk, feedoppsett, importkjøring, produktvariant, identifikator, produktkobling, tilbud, historikk og avvik. Feedoppsettet beholder koblingen til nettsted, butikk, nettverk, marked og avtale. Produktets stabile interne ID skal være uavhengig av butikktilbudet.
+Én butikk kan ha flere feedoppsett for ett eller flere nettsteder. Priser, fraktvilkår og sporingslenker må ikke slås sammen bare fordi butikk og varenummer er like. GTIN og MPN lagres med kilde og kontrollstatus; MPN er valgfritt. Usikre produktkoblinger står uavklart og vises ikke som bekreftede treff.
+Import og kvalitetskontroll
+Bygg én adapter som henter den reelle pilotkilden, bevarer kildegrunnlag uten tilgangsopplysninger og registrerer importutfall. Skill mellom oppgitt feedtotal, hentede poster, behandlede poster og avviste poster. Gjentatt import skal være uten duplikater og bevare rettelser, kilde og historikk.
+Bruk eksisterende kontrollerte koblinger der de passer. Administrator skal kunne rette koblinger og følge opp avvik. En mislykket import skal være synlig og ikke gjøre alle tidligere varer utsolgt. Utdaterte tilbud merkes; kravgrunnlaget beskriver 24 timer som eksisterende ferskhetsgrense.
+En arbeidsflate som kan brukes
+Lever enkel fast venstremeny og stor arbeidsflate. Pilotens relevante valg er Oversikt, Nettsteder, Butikker og partnere, Produkter, Feeder, Avvik og nødvendige Innstillinger. Rapporter og øvrige senere funksjoner trenger ikke bygges som tomme skjermer.
+Administrator skal kunne åpne Kontaktlinser.no, finne feeden, starte import, undersøke kildeposter og tilbud og behandle feil. Objektets navn, type og nettstedskontekst skal vises tydelig. Bytte av fane beholder synlige filtre. Registrer hvem som endrer produktkoblinger eller fraktgrunnlag, hva som endres og når.
+Lese API og frakt
+Lever en dokumentert API-kontrakt med nettsted, produktvariant, pris, valuta, lagerstatus, kilde, tidspunkt og tydelig fraktstatus. Vis samme data i en forhåndsvisning i backoffice. Støtt sortering på produktpris som standard og beregnet totalpris når frakt inkluderes, med valgt antall.
+Bevar importert produktspesifikk frakt og vurder den mot dokumenterte butikkvilkår. Feedverdien 0 er ikke alene bekreftet gratis frakt. Ukjent eller motstridende frakt gir ukjent totalpris og avvik. Slike tilbud sorteres etter kjente totalpriser ved inkludert frakt og kan ikke kåres til billigst inkludert frakt.
+Leveranse til gjennomgang
+Lever kode som kan gjennomgås, oppsett for separat testmiljø, migrasjoner, testgrunnlag, API-eksempler og en kort driftsveiledning. Demonstrer import, kontroll og API-svar med faktisk pilotdata. Marker hva som er testdata, hva som er kontrollert, og hvilke avklaringer som fortsatt er åpne.
+Akseptansekriterier for piloten
+Kontrollene nedenfor konkretiserer kravdokumentets kriterier. Prisbeløp og Lensway-eksemplet er testdata. To syntetiske nettstedstilknytninger kan brukes til å kontrollere dataskillet uten å utvide piloten til to reelle feeder.
+ID
+	Kontroll og forventet resultat
+	A01
+	En reell pilotimport gir varige tilbud, importstatus og API-svar. En identisk ny kjøring gir ingen duplikate produkter eller tilbud.
+	A02
+	Kjent varenummer kobles til riktig variant og pakningsstørrelse. Ukjente eller tvetydige treff går til gjennomgang. En rettet kobling bevares ved ny import.
+	A03
+	Manglende MPN stopper ikke import. Utfylt GTIN eller MPN er ikke automatisk validert. Butikkvarenummer lagres separat.
+	A04
+	300 kr og ukjent frakt gir ukjent totalpris, «Frakt ikke oppgitt» og synlig avvik. Bekreftet gratis frakt gir totalpris 300 kr og en annen fraktstatus.
+	A05
+	A koster 300 kr med ukjent frakt; B koster 320 kr pluss 39 kr. A er først uten frakt; B er først med frakt. A kåres ikke til billigst inkludert frakt.
+	A06
+	300 kr per pakke, 49 kr frakt og fri frakt fra 500 kr gir 349 kr for én pakke og 600 kr for to. Antallsendring beregner frakten på nytt.
+	A07
+	To tilbud fra samme butikk bevarer importert frakt 39 kr og 0 kr. Motstridende vilkår gir ukjent beregning og avvik. Gyldig rettelse oppdaterer tilbud, sortering og avvik.
+	A08
+	Samme testvare fra to Lensway-feedoppsett kan dele produktvariant, men beholder separate priser og lenker per nettsted. API-et leverer riktig tilbud for valgt nettsted.
+	A09
+	Importfeil og utdaterte tilbud er synlige. En feilet kjøring tolkes ikke automatisk som utsolgt. Oppgitt feedtotal og faktisk importert utvalg vises hver for seg.
+	A10
+	Administrator kan starte import, se tilbud og behandle avvik bak innlogging. Endringer logges. Objekt, nettsted og filtre er synlige og bevares ved fanebytte.
+	A11
+	Tilgangsopplysninger er fraværende fra klient, logger, testresultater og leveransedokumenter. Testmiljøet gir ikke uvedkommende administratortilgang.
+	A12
+	Demoen bruker separat miljø og API-forhåndsvisning. Dagens nettsted, publisering, domeneoppsett og aktive sporingsflyt er ikke endret som del av piloten.
+	Dokumenter resultatet
+Oppgi bestått, ikke bestått eller ikke kontrollert per kriterium, med kort belegg og relevante tester. Før milepælen godkjennes skal avvik som påvirker korrekt pris, frakt, produktkobling eller nettstedsskille være løst eller tydelig tilbakeført til avklaring.
+Avgrensning og separat produksjonskontroll
+Dette inngår senere
+Full utrulling til flere butikker og land, avansert AI-matching, komplett søkeløsning, kompatibilitetsdatabase, Mine ting og leadformidling inngår ikke i piloten. Leadnettstedene har mulig oppstart i 2027. Ingen av disse delene skal bygges for å gjøre den første importen ferdig.
+Plattformen skal forbli uavhengig av eksterne nettverk. CartBooster inngår ikke i denne plattformleveransen. Nettverksintegrasjoner og konverteringsrapporter behandles senere etter behov og tilgang.
+Egen beslutning før aktive nettsteder kobles til
+Godkjent pilot er ikke godkjenning av produksjonsovergang. Før aktive nettsteder kobles til, skal Claude Code legge frem en konkret overgangsplan med berørte sider og systemer, datakontroll, overvåking og tilbakeføringsplan. Oppdragsgiver skal godkjenne selve tilkoblingen separat etter gjennomgangen.
+Kontroller på forhånd at riktig produktvariant, pris, frakt, ferskhet og lenke følger riktig nettsted. Sammenlign testresultater med dagens løsning og forklar tilsiktede forskjeller. Kontroller relevante URL-er, videresendinger, sidemetadata og strukturert data dersom overgangen berører dem. Dokumenter hvordan eksisterende publisering og måling påvirkes.
+Før første produksjonsflyt med utgående lenker må plattformens egen click_id opprettes før videresending, og riktig nettstedsspesifikk avtale og sporingslenke velges. Overføring av ID til nettverket og konverteringskobling avhenger av integrasjonen. Manglende konverteringsrapportering er ikke bevis på null salg.
+Feedfunn som må tolkes riktig
+Shopping4net oppga 19 886 produkter 10. september 2026. Bare første side med 100 ble undersøkt: alle 100 hadde utfylt GTIN, et eget MPN-felt ble ikke funnet, 92 oppga frakt 39 kr og 8 oppga 0 kr. Dette er historiske observasjoner av utvalget, ikke validering av hele feeden eller butikkens kasse.
+Den første Adtraction-feeden ble undersøkt i sin helhet med 2 689 poster og 598 utfylte GTIN. MPN-feltet var tomt på alle; eget fraktfelt ble ikke funnet. Ingen GTIN-overlapp ble funnet med Shopping4net-utvalget på 100.
+Apotekfeeden ble undersøkt i sin helhet med 9 431 poster, 4 818 utfylte GTIN og 989 utfylte MPN. Én GTIN-verdi overlappet Shopping4net-utvalget. Identifikatorene er ikke validert; overlapp er ikke en godkjent produktkobling. Disse to feedene er referansefunn, ikke ekstra integrasjoner i piloten.
+Første svar fra Claude Code
+Svar med en kort vurdering av tilgjengelig kode, anbefalte teknologivalg, foreslått datamodell og API-kontrakt, arbeidsrekkefølge og konkrete gjenstående avklaringer. Skill bekreftet tilgang fra antakelser. Gjør rutinemessige implementeringsvalg innenfor avklart omfang; legg frem nye kostnader, eksterne tilganger og produksjonsendringer som egne beslutninger.
+Presiseringer av datagrunnlag og beregninger
+Tillegg i versjon 1.1. Kravene nedenfor konkretiserer A01–A12 uten å endre kriterienes ID-er eller utvide piloten. Åpne valg skal avklares i implementeringsplanen før den berørte delen bygges. Kravdokument versjon 1.8 og separat kontroll før produksjon gjelder fortsatt.
+Penger og fri frakt
+Krav. Lagre beløp med valuta og eksakt representasjon, som desimaltall eller heltall i minste valutaenhet. Vanlig binær flyttallsregning skal ikke styre prisberegninger. Registrer om kildeprisen inkluderer mva, ekskluderer mva eller har ukjent grunnlag; ikke gjett avgiftssats. Ulike prisgrunnlag skal ikke presenteres som direkte sammenlignbare uten avklaring.
+Åpne valg. Bestem pengetype, presisjon og avrundingstidspunkt. Dokumenter grunnlaget for fri-frakt-grensen: valgt antall, hvilke varer og rabatter som teller, mva-grunnlag og hvilken butikk, hvilket marked og feedoppsett vilkårene gjelder for. A06 skal fortsatt gi 349 kr for én pakke og 600 kr for to med testens oppgitte vilkår.
+Stabil tilbudsnøkkel
+Krav. Hvert tilbud skal ha en stabil identitet innenfor sitt feedoppsett, uavhengig av prisendringer. Ny import skal oppdatere riktig tilbud og bevare historikk og kontrollerte produktkoblinger. Samme butikk og varenummer alene er ikke tilstrekkelig på tvers av feedoppsett. Databasen skal håndheve den valgte unikheten.
+Åpne valg. Kontroller om feedens egen post-ID er stabil og unik før den brukes sammen med feedoppsettets ID. Hvis ikke, dokumenter en alternativ nøkkel med nødvendige variant- eller tilbudsfelt, og hvordan manglende ID, kollisjoner og ID-endringer behandles. Vis valget og belegg i datamodellen før A01 og A08 testes.
+Fraktstatus med dokumentert grunnlag
+Krav. Fraktstatus er et eget avgrenset statusfelt, adskilt fra beløpet. Skill minst mellom bekreftet gratis, kjent beløp, ikke oppgitt og motstridende grunnlag. Bevar importert verdi, kildereferanse, tidspunkt og vilkår. Manglende kilde oppgis eksplisitt. Manglende eller motstridende grunnlag gir ukjent beregnet frakt og totalpris.
+Åpne valg. Bestem tekniske enum-navn, kildeprioritet og representasjon av vilkår og uavklarte betingelser. Bekreftet gratis gjelder bare den aktuelle beregningen med antall og andre nødvendige forutsetninger. Verken importert 0 eller et tomt beløp skal alene avgjøre status. Kontroller dette gjennom A04–A07.
+Ferskhet og klokke
+Krav. Skill mellom når data ble hentet, eventuell oppdateringstid oppgitt av kilden og når tilbudet sist ble bekreftet etter definerte kontroller. Mislykket import skal ikke fornye tilbudets bekreftelsestid. Bruk entydige tidspunkter og vis hvilken tidssone som gjelder.
+Åpne valg. Fastsett serverklokke, lagring i UTC og visningstidssone som et konkret forslag i planen. Avklar når et tilbud regnes som bekreftet, hvordan 24-timersgrensen brukes og om utdaterte tilbud utelates eller returneres tydelig merket i API-et. Historikk beholdes; regelen dokumenteres og testes under A09.
+Presiseringer av validering og tilgang
+GTIN har flere kontrollnivåer
+Krav. Bevar GTIN som tekst med kilde, slik at ledende nuller ikke går tapt. Skill mellom manglende verdi, teknisk format og sjekksum, og bekreftet tilknytning til produktvariant. Gyldig sjekksum alene beviser ikke riktig produkt, pakningsstørrelse eller variant. Ugyldige eller uavklarte identifikatorer skal ikke bli sikre produktmatcher.
+Åpne valg. Bestem støttede GTIN-formater, normalisering og egne beregnede kontrollfelt med status som ikke kontrollert, gyldig eller ugyldig. Dokumenter hva som kreves for en bekreftet produktkobling. MPN forblir valgfritt og kildebelagt; A02 og A03 skal fortsatt gjelde.
+Beskyttet lese API i piloten
+Krav. Pilotens API skal ha serverhåndhevet tilgangskontroll og definerte begrensninger på forespørsler og ressursbruk. Innlogging i backoffice alene skal ikke gi et åpent API ved siden av. Test at uvedkommende avvises, at tillatt omfang håndheves og at begrensningene fungerer. Langlivede serverhemmeligheter skal ikke legges i nettleserklienten.
+Åpne valg. Velg sesjonsbasert tilgang for backoffice og eventuelt egen autentisering for maskinelle konsumenter. API-nøkkel er ett alternativ, ikke et låst krav. Avklar konsument, rettigheter, lagring og rotasjon av hemmeligheter, samt terskler for ratebegrensning og paginering. Dokumenter testene som presisering av A10 og A11.
+Rådata og hemmeligheter
+Krav om beskyttelse av tilgangsopplysninger. Rådata, importmetadata, feil og logger skal håndteres slik at hemmeligheter ikke eksponeres. Fjern eller masker tilgangsparametere og autentiseringsopplysninger før de havner i arkiv, logg eller feilrapport. Bevar nødvendig kildeidentitet og sporbarhet med interne referanser. Kontroller også felt i selve feedinnholdet, ikke bare adressen som brukes til å hente feeden.
+Krav om nettstedsspesifikke sporingslenker. Skille mellom hemmelig tilgang til feeden og butikkens utgående sporingslenker må bevares. Ikke fjern alle URL-parametere ukritisk: nødvendige affiliateparametere og nettstedstilknytning skal fortsatt fungere. Sensitive lenker skal ikke eksponeres utenfor sitt tilsiktede formål.
+Åpne valg. Bestem privat lagringssted, hvem som har tilgang, krypteringsoppsett, oppbevaringstid og sletting, inkludert sikkerhetskopier. Arkivet kan inneholde sanerte kildeposter; objektlagring er et mulig valg, ikke et nytt obligatorisk system. Test med syntetiske hemmeligheter at logger, arkiv og klient ikke lekker verdiene, som del av A11.
+Enkelt utviklingsoppsett og belegg
+Start med korte repo-instruksjoner, dokumentene i docs og tester som refererer til A01–A12. Kjør relevante tester automatisk ved pull requests. Én YAML-fil eller issue per kriterium er valgfritt. Hooks, ekstra agenter og database-MCP er mulige hjelpemidler, ikke forutsetninger for å levere piloten.
+Hooks og sandboxing kan redusere risiko, men gir ingen garanti mot lekkasje og erstatter ikke tilgangsstyring eller kontrollert håndtering av hemmeligheter. Regelmessig feedimport skal planlegges som del av plattformens drift. Legg beslutninger og testbelegg under eksisterende kriterier; nye verktøy skal ikke utvide pilotens funksjonsomfang.
+Endringslogg og presiseringer i versjon 1.2
+10. september 2026. Denne versjonen viderefører hele versjon 1.1. Nytt er kontrollert importfullstendighet og bortfall, dokumentert godkjenning av gratis frakt, begrensninger på tilbudsnøkkel og valuta, samt testbare underpunkter. De to kravene om rådata og sporingslenker har fått egne navn. A01–A12, feedfunn, pilotavgrensning og separat produksjonskontroll er bevart.
+Fullstendighet og tilbud som forsvinner
+Krav. Importkjøringen skal lagre feedoppsett, avgrenset omfang, kjørestatus og et eksplisitt felt for kontrollert fullstendighet. Feltet er usant som standard og settes bare av dokumenterte kontroller av forventet omfang, paginering og behandlingsfeil. Vellykket HTTP-svar eller fullført utvalg er ikke bevis på komplett feed.
+Krav. Bortfallshåndtering tillates bare etter en kontrollert, komplett import av samme feedomfang. Utvalg, avbrutt paginering, feil eller uavklart fullstendighet skal aldri deaktivere tilbud på grunn av fravær. Avviste poster må ikke feilaktig behandles som fraværende. Utenfor importens omfang skal tidligere tilbud ikke berøres.
+Krav. Skill «ikke lenger i feeden» fra eksplisitt lagerstatus «utsolgt» og fra «utdatert». Bevar tidligere tilbud, produktkobling og historikk. En separat ferskhetsregel kan fortsatt merke data som utdaterte; dette må ikke fremstilles som bekreftet bortfall.
+Åpne valg. Avklar full feed eller utvalg i piloten, kontrollene som beviser fullstendighet, og når et bekreftet bortfall skal skjules i API-et. Angi eventuell ventetid eller krav om gjentatte komplette kjøringer og håndtering av tilbud som kommer tilbake. Bortfall testes med kontrollerte datasett også dersom piloten bruker utvalg.
+Godkjenning av gratis frakt
+Krav. Bruk mekanismen «Dokumenterte fraktvilkår» i backoffice. Autorisert administrator registrerer og godkjenner kildereferanse, tidspunkt, gyldighet, betingelser og tilknytning til butikk, marked, nettsted og feedoppsett samt eventuelle produkter. Logg hvem som endret eller godkjente hva og når. Bare gjeldende, dokumenterte vilkår som dekker beregningen uten uløst konflikt, kan gi bekreftet gratis frakt.
+Testgrunnlag. Importert 0 alene forblir ubekreftet. Hvis reelle dokumenterte vilkår mangler, testes gratis frakt med administratorregistrerte, tydelig merkede testvilkår i testmiljøet. Dette bekrefter mekanismen, ikke butikkens faktiske frakt.
+Tilbudsnøkkel og sammenlignbar valuta
+Krav. Tilbudsnøkkelen skal bare bruke stabile identitetsfelt. Pris, lagerstatus, frakt, tidsstempler og andre løpende tilbudsverdier skal aldri inngå. Manglende stabil kilde-ID, kollisjoner og endret ID krever den dokumenterte håndteringen fra versjon 1.1.
+Krav. Prissortering krever samme valuta og sammenlignbart mva-grunnlag. Avvikende valuta gir avvik og utelates fra den sammenlignbare prissorteringen. Ingen valutakonvertering inngår i piloten. Forventet valuta fastsettes per nettsted og marked i planen.
+Testbare underpunkter til A01 til A12
+Hovedkriteriene er uendret. Følgende underpunkter skal få egne rader i resultatoversikten med bestått, ikke bestått eller ikke kontrollert, testreferanse og kort belegg. Underpunktene presiserer eksisterende krav; de utvider ikke piloten. Et hovedkriterium kan ikke rapporteres bestått dersom et påkrevd underpunkt feiler eller ikke er kontrollert. Ingen tester erklæres bestått i denne briefen.
+A01.1 Stabil tilbudsidentitet. Endre pris, lagerstatus og frakt, og importer på nytt. Samme tilbuds-ID, historikk og kontrollerte kobling beholdes uten duplikater. Test manglende ID og kollisjon mot valgt regel.
+A03.1 Identifikatorkontroll. Bevar ledende nuller og kilde. Test manglende, formatfeil, ugyldig og gyldig GTIN-sjekksum. Gyldig sjekksum skal ikke alene bekrefte produktvariant. Manglende MPN tillates; utfylt MPN blir ikke automatisk validert. Bruk merkede syntetiske data der pilotfeeden mangler felt.
+A04.1 Fraktstatus. Test de fire tilstandene bekreftet gratis, kjent beløp, ikke oppgitt og motstridende med kilde og beregningsbetingelser. Råverdien 0 uten tilstrekkelig dokumentasjon skal ikke gi bekreftet gratis eller kjent totalpris.
+A04.2 Dokumenterte fraktvilkår. Registrer og godkjenn kildebelagte vilkår i backoffice. Kontroller gratis frakt bare innenfor gyldig omfang. Manglende eller utløpt grunnlag skal ikke gi bekreftet gratis. Merk syntetiske vilkår som testdata.
+A06.1 Penger og avrunding. Test eksakte beløp og valgt avrundingsregel. A06 skal fortsatt gi 349 kr for én pakke og 600 kr for to; dokumenter terskelens vare-, rabatt- og mva-grunnlag.
+A06.2 Valuta og mva. Test avvikende valuta og ukjent eller ulikt mva-grunnlag. Ikke sammenlign uavklarte prisgrunnlag direkte. Annen valuta gir avvik og holdes utenfor sammenlignbar sortering uten konvertering.
+A07.1 Rettelse og revisjonsspor. Endre dokumenterte fraktvilkår. Kontroller berørte tilbud, totalpriser, sortering og avvik samt logg over administrator, før- og etterverdi, kilde og tidspunkt.
+A09.1 Fullstendighetssperre. Test utvalg, avbrutt paginering, behandlingsfeil og endret omfang. Ingen av disse skal gi feilaktig bortfallsdeaktivering. Kontroller eksplisitt fullstendighetsfelt og belegg for feltets verdi.
+A09.2 Bekreftet bortfall. Fjern et tidligere tilbud i et komplett, kontrollert datasett med samme omfang. Kontroller valgt bortfallsregel, separat status fra utsolgt, bevart historikk og håndtering ved gjenkomst.
+A09.3 Ferskhet. Test valgt 24-timersregel ved grensen, med dokumentert klokke og tidssone. Feilet import fornyer ikke bekreftelsestid. API følger valgt regel for merking eller utelatelse.
+A10.1 Ressursbegrensning. Kontroller at dokumenterte grenser for forespørsler og paginering håndheves på serveren, og at overskridelse gir kontrollert respons.
+A11.1 API og rettigheter. Uautorisert API-tilgang avvises. Autoriserte kall begrenses til tillatt omfang. Ingen langlivet serverhemmelighet ligger i nettleserklienten.
+A11.2 Rådata og sporingslenker. Bruk syntetiske hemmeligheter i henteparametere, metadata og feedfelt. Kontroller at arkiv, logger, feilrapporter og klient ikke lekker dem, samtidig som nødvendige nettstedsspesifikke affiliateparametere bevares.
+A11.3 Lagring og sletting. Dokumenter og kontroller valgt privat lagring, tilgang, kryptering og oppbevaring. Test sletting etter valgt regel og dokumenter hvordan sikkerhetskopier omfattes.
+
+
+Endringslogg og arkitekturpresiseringer i versjon 1.3
+14. september 2026. Versjon 1.3 viderefører hele versjon 1.2 og endrer ikke pilotens A01–A12, feedfunn eller produksjonskontroller. Nytt er en eksplisitt målarkitektur for plattformen og et tydelig skille mellom det som skal være låst i datamodellen nå, og det som faktisk skal implementeres i piloten. Målarkitekturen utdypes i SjekkPris Platform Blueprint v1.0.
+Styrende prinsipp: sluttplattform først, implementering trinnvis
+Datamodell, identiteter og relasjoner skal utformes slik at dagens pilot kan utvikles videre til en stor felles plattform uten grunnleggende omskriving. Dette er ikke en instruks om å bygge alle fremtidsfunksjoner nå. Claude Code skal skille mellom LOCKED CORE ARCHITECTURE og PILOT IMPLEMENTATION NOW.
+Område
+	LOCKED CORE ARCHITECTURE
+	PILOT IMPLEMENTATION NOW
+	Master taxonomy
+	L1–L4-hierarki, stabile category/product-type-ID-er og property-spesifikk navigasjon.
+	Kun nødvendig kategori-/produktkobling for pilotdata.
+	Product identity
+	Canonical Product → Variant → Offer. Canonical ID er uavhengig av merchant/feed/property.
+	Implementer nok til korrekt variant- og tilbudsidentitet.
+	Identifiers
+	Eget register for GTIN/EAN, MPN og andre identifikatorer med kilde, status og confidence.
+	GTIN/MPN i samsvar med eksisterende pilotkrav.
+	Attributes & units
+	Product Type → Attribute Definitions → Values, med canonical units og originalverdi.
+	Ikke bygg full attributtmotor hvis piloten ikke trenger den.
+	Provenance
+	Kilde, originalverdi, tidspunkt, confidence og kontrollstatus skal kunne spores.
+	Bevar rågrunnlag og kilde for pilotimporten.
+	Ingestion
+	RAW → NORMALIZED LISTING → MATCHING → CANONICAL → OFFER → QUALITY → PROPERTY/MARKET → PUBLISHED.
+	Én reell feed gjennom hele pilotflyten.
+	Matching
+	MATCHED / PROPOSED / REVIEW / REJECTED / UNMATCHED, confidence og begrunnelse.
+	Enkel kontrollert kobling og manuell korrigering.
+	Merge / split
+	Canonical produkter/varianter skal kunne slås sammen eller splittes uten tap av historikk.
+	Datamodellen skal ikke blokkere dette; UI kan vente.
+	History
+	Pris, frakt, lager, kilde og relevante tilbudsendringer skal kunne historiseres.
+	Eksisterende tilbuds-/prishistorikk beholdes.
+	Commercial
+	Advertiser, Merchant, Feed og Commercial Agreement er separate objekter; CPC/CPA/CPS/CPL/fixed/hybrid/tiered.
+	Ingen full commercial UI i piloten.
+	Markets & properties
+	Market og Property er førsteklasses objekter med språk, valuta, regler og publiseringsvalg.
+	Kontaktlinser.no som pilot-property; modell skal tåle flere.
+	Attribution
+	Plattformens egen click_id opprettes før ekstern videresending og er primær intern attribusjons-ID.
+	Produksjonskravet i v1.2 står; full attribusjonsmodul bygges senere.
+	AI jobs
+	AI Job → Input → Proposal → Evidence/Confidence → Review/Auto-approve → Result.
+	Ingen stor AI-motor i piloten; bare arkitektur-hook.
+	Audit & lifecycle
+	Audit log, soft delete, endringshistorikk og eksplisitte statusoverganger.
+	Minimum audit for kritiske pilotendringer.
+	Master Taxonomy v1 – krav til strukturen
+* Taxonomien skal eksistere uavhengig av hva som til enhver tid er publisert på sjekkpris.no.
+* Støtt minst L1 Department, L2 Category, L3 Product Type og valgfritt L4 Subtype uten å kreve at alle nivåer brukes i alle vertikaler.
+* En category/product type kan være DRAFT, READY, LIVE eller HIDDEN. Tomme eller utilstrekkelig dekkede kategorier skal ikke publiseres.
+* Publiseringsregler skal kunne bruke product_count, offer_count, merchant_count, datakvalitet og manuell godkjenning. Minimumsterskler skal være konfigurerbare per kategori/property.
+* Skill Master Taxonomy fra Navigation Taxonomy og Property Taxonomy. Samme canonical produkt skal kunne presenteres forskjellig på SjekkPris.no og en vertikal som Kontaktlinser.no uten å dupliseres.
+* Feedens merchant_category er kildedata og skal mappes mot plattformens category_id; feeden skal ikke definere masterstrukturen.
+Canonical data model – låste identitetsregler
+* Canonical Product representerer selve produktfamilien/modellen. Variant representerer den konkrete sammenlignbare konfigurasjonen. Offer representerer et merchant-/feedspesifikt tilbud.
+* Variantgrensene må være vertikalbevisste. Pakningsstørrelse, kapasitet, størrelse, farge eller andre egenskaper kan være variantdannende når de påvirker sammenlignbarhet.
+* Identifiers skal ikke behandles som en enkelt sannhetskolonne. Flere GTIN/MPN/andre ID-er kan være knyttet til produkt/variant med kilde, gyldighetsstatus og tidsrom.
+* Eksterne data og AI-forslag skriver aldri direkte til canonical published truth. Endringer går gjennom normalisering, validering og eventuelt review/auto-approval etter dokumenterte regler.
+* Canonical ID-er skal være stabile gjennom kildebytter, prisendringer og feedendringer. Merge/split må bevare redirects/referanser, tilbud, historikk og audit trail.
+Provenance, rådata og reprocessing
+Rådata skal bevares i sanitert form slik at senere forbedringer i matching, normalisering eller AI kan kjøres på nytt. For viktige felter skal systemet kunne svare på hvor verdien kom fra, når den ble observert, hva originalverdien var, hvilken transformasjon som ble brukt, og hvor sikkert systemet vurderer resultatet. Dette gjelder særlig identifiers, kategori, variantdannende attributter, pris/frakt og matchbeslutninger.
+AI-native, men kontrollert
+* AI skal foreslå og prioritere arbeid, ikke omgå datamodellen.
+* AI-jobber skal være reproduserbare nok til at input, modell/versjon eller regelsett, forslag, evidence, confidence og endelig beslutning kan spores.
+* Auto-approval skal styres av dokumenterte terskler, risiko og type endring. Identitet, variantgrenser og kommersielt viktige endringer skal kunne ha strengere regler enn tekst/berikelse.
+* Review skal være exception-based: mennesker prioriterer usikkerhet, konflikt og høy konsekvens fremfor en fast prosentandel av alle produkter.
+Trinnvis roadmap fra pilot til målplattform
+Fase 1 – Foundation / pilot: Stabil datamodell, reell feed, canonical variant/offer, rådata, historikk, kvalitet, enkel backoffice og API.
+Fase 2 – Operational core: Flere advertisers/feeds, bedre matching/review, taxonomy management, markets/properties og robust importdrift.
+Fase 3 – Automation: AI-kategorisering, deduplisering, attribute extraction, anomaly detection, kvalitet og målrettet auto-approval.
+Fase 4 – Publishing platform: Flere properties/markeder, property-spesifikke taxonomier, søk/AI-søk, SEO, filtre og automatisert publisering.
+Fase 5 – Commercial & attribution: Commercial agreements, CPC/CPA/CPS/CPL/fixed/hybrid, direct/network, click_id, conversion reconciliation og rapportering.
+Fase 6 – Scale / autonomous operations: Millioner av produkter, høy grad av automatisk onboarding, self-healing datakvalitet og svært lav manuell andel.
+Pilotens scope skal fortsatt holdes stramt
+Versjon 1.3 autoriserer ikke bygging av fremtidige menypunkter, merchant self-service, full taxonomy UI, avansert AI, full attribusjon, betaling/billing, alle markeder eller automatisert property generation. Fremtidige objekter kan representeres i schema/migrations der dette er nødvendig for å unngå en kjent blindgate, men funksjonalitet bygges bare når pilotbriefen eller en senere godkjent fase eksplisitt krever det.
+Første svar fra Claude Code – tillegg i v1.3
+I tillegg til tidligere krav skal Claude Code eksplisitt beskrive: (1) hvilke deler av Core Data Model som implementeres nå, (2) hvilke fremtidsobjekter som kun reserveres/forberedes, (3) eventuelle punkter der foreslått modell skaper unødvendig kompleksitet i piloten, og (4) hvordan dagens valg unngår å låse plattformen til én property, ett land, én feedprovider eller én kommersiell modell.
+Backoffice UI – locked design decisions
+
+
+The following decisions are authoritative for the pilot UI and override inference from screenshots where they conflict.
+
+
+1. Language
+Backoffice UI is English from the first version. Consumer-facing properties retain their own local languages. UI strings must be stored in language/resource files so additional backoffice languages, including Norwegian, can be added later without restructuring the application.
+
+
+2. Shell and sidebar
+Use the approved Overview screen as the primary visual reference for the application shell. The sidebar width is locked at 232 px. Exact approved design values take precedence over pixel measurements inferred from reference screenshots. Products and the Lensway/Advertiser reference screens govern the content workspace and object-detail patterns.
+
+
+3. Offer presentation
+Offer presentation requires its own approved reference rather than being inferred from generic product screens. The default direction is a compact table with columns: Store, Product price, Shipping, Total, Availability, Updated.
+
+
+Example semantics:
+Store A | NOK 300 | Not provided | Unknown | In stock | 10 min ago
+Store B | NOK 320 | NOK 39 | NOK 359 | In stock | 15 min ago
+
+
+Unknown shipping must not be displayed as free shipping, and unknown total must remain explicit. The visual implementation should be compact, scannable and consistent with the approved backoffice design system.

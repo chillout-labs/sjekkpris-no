@@ -1,0 +1,1 @@
+The TV illustration is extracted from the user-approved SjekkPris-produktside.html design package. It is illustrative preview content, not a verified merchant product photograph. Only tools/preview_design.py copies it into its separate demo output. Do not copy these fixtures into a production catalogue.

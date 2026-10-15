@@ -1,0 +1,224 @@
+Chillout Labs – Architecture Decision Log v1.0
+https://docs.google.com/document/d/19D_mS5zrb8kR2GTlVDkHEKGnc485PfCk_5Snt7wCdlw/edit?usp=drivesdk
+Endret: 2026-09-25T17:18:25.256Z
+
+﻿Chillout Labs – Architecture Decision Log v1.0
+
+
+Purpose
+Maintain a concise record of important platform decisions so future developers, AI agents and reviewers can distinguish agreed architecture from ideas, assumptions and temporary implementation choices.
+
+
+Status vocabulary
+LOCKED = current platform decision.
+ACTIVE = adopted but may evolve with evidence.
+PROPOSED = not yet approved.
+SUPERSEDED = replaced by a later ADR.
+
+
+ADR-001 — Canonical product identity
+Status: LOCKED
+Decision: Core commerce identity is Canonical Product → Variant → Offer. Canonical IDs are platform-owned and independent of merchant, feed, Property and price.
+Reason: prevents merchant/feed naming from becoming product identity and supports reuse across Properties and Markets.
+
+
+ADR-002 — Property and Market are first-class objects
+Status: SUPERSEDED by ADR-030
+Decision: Property and Market remain separate configurable objects. One Property may support multiple Markets, though local domains may be preferred.
+Reason: shared backend must support specialist sites, SjekkPris and international expansion without copying product data.
+
+
+ADR-003 — Shared infrastructure, vertical intelligence, property-specific presentation
+Status: LOCKED
+Decision: Do not force every Property into one generic site template. Share platform services while allowing vertical schemas, content and frontend behavior to differ.
+
+
+ADR-004 — Template system is declarative
+Status: LOCKED
+Decision: Use few template families plus schemas/components/rules instead of a bespoke template per category.
+Reason: normal new categories should be launched primarily through configuration, data and content.
+
+
+ADR-005 — SjekkPris is product-first
+Status: LOCKED
+Decision: SjekkPris.no is fundamentally a product discovery and product comparison Property. Services such as energy, telecom or lead generation belong in specialist Properties/engines if introduced.
+
+
+ADR-006 — Universal Search is a hybrid search layer
+Status: ACTIVE
+Decision: SjekkPris uses one search entry point. Exact/product-like queries use normal search/autocomplete; natural-language needs may invoke AI intent extraction and map back to structured product search.
+Rule: AI understands the request; platform data determines the result.
+
+
+ADR-007 — AI is shared and routed by task
+Status: LOCKED
+Decision: Build a shared AI task/service layer with vertical configuration. Use deterministic search/rules first, low-cost models for simple tasks and stronger models only when justified.
+Reason: quality, cost control and provider replaceability.
+
+
+ADR-008 — AI does not write directly to canonical truth
+Status: LOCKED
+Decision: AI produces proposals with evidence/confidence. Canonical identity and high-impact changes pass validation and, where required, review or documented auto-approval rules.
+
+
+ADR-009 — Platform-owned click_id
+Status: LOCKED
+Decision: Create an internal first-party click_id before monetized outbound handoff. External network/provider IDs map to this ID rather than replacing it.
+Reason: provider-independent attribution and cross-network reporting.
+
+
+ADR-010 — Commercial model is provider-independent
+Status: LOCKED
+Decision: Support CPC, CPA/CPS, CPL, fixed, hybrid and tiered agreements. Affiliate networks are adapters, not the commercial data model.
+
+
+ADR-011 — Provider independence
+Status: LOCKED
+Decision: No external network/provider owns canonical product data, commercial identity, tracking identity or platform architecture.
+Note: TargetCircle and other providers may be integrations. CartBooster is not part of Chillout/SjekkPris platform architecture unless explicitly introduced later.
+
+
+ADR-012 — Provenance is required
+Status: LOCKED
+Decision: Important imported facts retain source, original value, time, transformation/validation and confidence/status where relevant. Sanitized raw data is retained to permit reprocessing.
+
+
+ADR-013 — Unknown is a valid state
+Status: LOCKED
+Decision: Do not infer commercial facts such as shipping, availability, identifiers or total price without sufficient evidence. Conflicts remain explicit and can generate review/quality work.
+
+
+ADR-014 — Shipping is first-class data
+Status: LOCKED
+Decision: Shipping amount and shipping status/evidence are separate. Source value 0 alone does not prove free shipping. Unknown shipping means total price is unknown and the offer cannot be called cheapest including shipping.
+
+
+ADR-015 — English-first backoffice
+Status: LOCKED
+Decision: Backoffice UI is English from the first version. Consumer Properties keep local languages. UI strings should be structured for later localization.
+
+
+ADR-016 — Backoffice sidebar width
+Status: LOCKED
+Decision: Main sidebar width is 232 px. Approved design values take precedence over pixel estimates taken from screenshots.
+
+
+ADR-017 — Backoffice visual references
+Status: LOCKED
+Decision: Overview is the primary shell/layout reference. Products and the Lensway/Advertiser view guide working-area patterns. Offer display requires its own approved compact reference/table.
+
+
+ADR-018 — Minimal pilot navigation
+Status: LOCKED
+Decision: The pilot shows only useful current sections. Future super-admin/navigation concepts do not justify empty screens in the pilot.
+
+
+ADR-019 — Product category activation is explicit
+Status: LOCKED
+Decision: Taxonomy can exist before publication. Categories/Properties activate only when configured readiness thresholds and/or manual approval are met.
+
+
+ADR-020 — Master taxonomy and navigation taxonomy are separate
+Status: LOCKED
+Decision: Canonical category/product-type structure is independent of each Property's navigation/presentation taxonomy. Feed merchant categories map into, but do not define, the master taxonomy.
+
+
+ADR-021 — Architecture first, implementation phased
+Status: LOCKED
+Decision: Preserve end-state identities and relationships now where needed to avoid blind alleys, but do not build future engines/features before the approved phase requires them.
+
+
+ADR-022 — Specialist Property reference implementation
+Status: ACTIVE
+Decision: Kontaktlinser.no is the first specialist reference Property for validating the shared platform model and vertical intelligence.
+
+
+ADR-023 — Exception-based human review
+Status: LOCKED
+Decision: Human review focuses on uncertainty, conflicts and high-impact changes rather than reviewing a fixed percentage of all products.
+
+
+ADR-024 — Stable offer identity
+Status: SUPERSEDED IN PART by ADR-031
+Decision: Offer identity uses stable source/feed-context identifiers. Price, stock, shipping and timestamps never form part of the stable offer key.
+
+
+ADR-025 — Money must be exact and contextual
+Status: LOCKED
+Decision: Store exact monetary values with currency and VAT/tax basis. Do not directly sort/compare incompatible currencies or tax bases without an explicit normalization policy.
+
+
+ADR-026 — Lead/form/chat interfaces share an underlying schema
+Status: ACTIVE
+Decision: Future lead experiences should treat classic form, wizard and smart chat as presentation modes over the same structured question/intent model.
+
+
+ADR-027 — Additional engines remain separate capabilities
+Status: ACTIVE
+Decision: Lead Generation, Service/Hybrid Comparison and Compatibility/Ownership are separate engine families that may reuse shared platform services. They are not reasons to broaden ADR-028 — Advertiser is the only commercial entity
+Status: LOCKED
+Decision: Advertiser is both the contracting party and the seller. A separate Merchant entity is not introduced. Advertiser Group is reserved as a known future extension for group agreements and is added above Advertiser when a real case requires it, never between Advertiser and Offer.
+Reason: External networks use inconsistent vocabulary; their terms are translated in adapters rather than adopted into the canonical model. Adding a second entity between Advertiser and Offer later would disturb every offer relationship and key, while an optional Advertiser Group above Advertiser can be added without disturbing objects below.
+Supersedes: the two-object Advertiser/Merchant model in Merchant, Offers & Feed Architecture v1.0, section 1.
+
+
+ADR-029 — Market is a level between Advertiser and Feed
+Status: LOCKED
+Decision: The model carries an advertiser-market level. The same advertiser in two markets is represented by two advertiser-market rows, each with its own currency, prices, shipping terms and availability.
+Reason: The same advertiser can sell in multiple countries with materially different commercial facts. Market context must therefore be explicit rather than inferred.
+
+
+ADR-030 — A Property serves exactly one Market
+Status: LOCKED
+Decision: Each Property serves one Market. One domain may host several Properties, each with a stored path prefix. Uniqueness is enforced on domain plus path prefix. Property separation is never inferred from host/domain; Property ID is authoritative, and clicks record Property ID.
+Reason: Local content, currency and offers differ by country even when several Properties share a domain. A multi-market Property would make market-specific publishing and attribution ambiguous.
+Supersedes: ADR-002 on the question of one Property supporting multiple Markets. Property and Market remain separate first-class objects.
+
+
+ADR-031 — One Feed per Property, and the Offer hangs off the Feed
+Status: LOCKED
+Decision: Each Property has its own Feed against a given Advertiser in a given Market. The chain is Advertiser → Advertiser Market → Feed → Offer. Price, shipping and availability are properties of the Offer and therefore retain Feed context. The stable Offer key is Feed plus external ID. Property and Market are derived upward and are not part of the key. Mutable observations never enter the key. Offers from different Feeds are never merged merely because Advertiser and article number are identical.
+Reason: Advertisers may expose different channel-specific prices or terms. Two Feed observations can therefore both be valid and must remain separate.
+Supersedes: ADR-024 only on the exact composition of the Offer key. ADR-024's principle that mutable observations never form part of the key remains in force.
+
+
+ADR-032 — Lowest price is a claim about received offers
+Status: LOCKED
+Decision: “Lowest price” means the lowest among Offers the platform has received for the relevant comparison context. It is not a claim that the Advertiser offers no lower price in another channel. Documented shipping terms attach to the Feed context because channel-specific shipping may differ as well.
+Reason: Per-channel pricing means the platform can truthfully rank the data it receives without claiming complete knowledge of every price available in the wider market. Consumer-facing wording remains a separate presentation decision. The existing exact-price tie-break preferring a partnered Offer remains only a tie-break.
+
+
+Implementation note
+Build Brief v1.7 carries ADR-028 through ADR-032 into the executable pilot layer. In particular, the Offer-key requirement is explicitly marked as replacing v1.6: Feed plus external ID replaces Advertiser plus external ID. Offers from two Feeds are never merged.
+
+
+SjekkPris beyond product comparison.
+
+
+ADR process
+- New material decisions receive the next ADR number.
+- A changed decision should normally supersede an older ADR rather than silently rewriting history.
+- Link major ADR changes to the relevant blueprint/architecture/build brief.
+- Temporary implementation details do not require ADRs unless they constrain future architecture.
+
+
+ADR-033 — Search Intelligence is a first-class platform capability
+Status: LOCKED
+Decision: Chillout will maintain a dedicated Search Intelligence module that ingests approved search and AI-discovery sources, detects changes, compares them with the active Chillout Web Standard, maps affected rules and Properties, and produces evidence-backed recommendations, implementation work and learnings.
+Rule: External information never changes production behavior merely because it was published. Evidence tier, impact, confidence, reversibility and approval policy determine the response.
+
+
+ADR-034 — The Chillout Web Standard is central, versioned and inherited
+Status: LOCKED
+Decision: Technical SEO, AEO, structured data, content quality, mobile UX, performance, accessibility, trust and publishing QA are governed by a central versioned rule registry. Rules inherit through Chillout Core → engine → vertical → Property. Lower layers may specialize but may not silently weaken locked core rules.
+Rule: High-impact changes to URLs, canonicalization, crawling, indexing, redirects, hreflang, schema, ranking logic or regulated content require human approval and tested release. Only explicitly permitted, reversible and verified low-risk remediations may be automated.
+
+
+Detailed specification: Chillout Labs – Search Intelligence & Web Standard v1.0, stored under 02_AI & Intelligence.
+ADR-035 — Shared-resource visibility does not grant cross-Property authority
+Status: LOCKED
+Decision: In the authenticated Chillout Backoffice, a scoped operator viewing a Feed Resource may see the identity of every Property genuinely assigned to that shared resource. The disclosed Property identity is limited to the context required to identify the assignment: Property ID, domain and path prefix. This shared-resource context does not grant authority over the co-assigned Property.
+Rule: Authorization for reads that expose protected Property data and for every mutation/action remains enforced by Property scope. Tests for A08/A10 must therefore prove unauthorized access or action is refused; they must not use the mere appearance of another Property's domain/name as evidence of an isolation failure when the Properties are legitimately co-assigned to the same resource.
+Reason: The Feeds view answers which Properties consume a shared Feed Resource. Hiding legitimate co-assignment would make the operational view incomplete, while treating visibility as authority would weaken Property isolation. Identity disclosure and action authorization are separate concerns.
+Evidence/context: Clarified after the first database-configured SjekkPris/Babysjarm feed exposed that the Feeds client had been inventing a hardcoded Property label from an assignment count. The production assignment remained correct; the generic fix made the read model return actual assigned Property identities. A scoped operator still cannot act on a Property outside their authorized scope.
+A08 clarification: A08 continues to require Property isolation of Offers, prices, links, shipping facts and actions. Legitimate co-assigned Property identity on a shared-resource Backoffice screen is not cross-Property data leakage by itself.

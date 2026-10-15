@@ -8,32 +8,41 @@ from product_ui import ui_icon
 from catalogue_media import image_markup, category_markup
 
 
+def card_image(product):
+    """Optional presentation image; catalogue enrichment remains an API concern."""
+    image = image_markup(product.get('image'), product.get('local_name') or 'Produktbilde',
+                         sizes='(max-width: 600px) 45vw, (max-width: 1024px) 30vw, 250px')
+    if image:
+        return f'<div class="sp-card-image sp-card-photo">{image}</div>'
+    return f'<div class="sp-card-image">{ui_icon("image")}<span>Bilde mangler</span></div>'
+
+
+def render_product_card(product, *, base, money, day, segment):
+    slug = segment(product['local_slug'])
+    namespace = segment(product['namespace'])
+    name = product.get('local_name') or product['local_slug']
+    href = escape(f'{base}p/{namespace}/{slug}/', quote=True)
+    price = money(product.get('lowest_item_price'))
+    confirmed = day(product.get('lowest_item_price_confirmed_at'))
+    count = int(product.get('offer_count') or 0)
+    offer_text = '1 tilbud' if count == 1 else f'{count} tilbud'
+    return (
+        f'<li data-result data-name="{escape(name, quote=True)}" data-price="{product.get("lowest_item_price", {}).get("minor", "") if product.get("lowest_item_price") else ""}" data-brand="{escape(product.get("local_brand") or "", quote=True)}"><article class="sp-product-card"><a href="{href}">'
+        f'{card_image(product)}'
+        f'<h3>{escape(name)}</h3>'
+        + category_markup(product.get("categories"))
+        + (f'<p class="sp-product-brand">{escape(product["local_brand"])}</p>' if product.get("local_brand") else "")
+        + (f'<p class="sp-card-price-label">Laveste varepris</p><p class="sp-card-price">{escape(price)}</p><p class="sp-card-shipping">Frakt kan komme i tillegg</p>'
+           if price else '<p class="sp-card-no-price">Ingen pris</p>')
+        + f'<div class="sp-card-bottom"><span>{offer_text}</span>{ui_icon("arrow")}</div>'
+        + (f'<p class="sp-card-confirmed">Pris bekreftet {escape(confirmed)}</p>' if price and confirmed else '')
+        + '</a></article></li>'
+    )
+
+
 def render_home(products, *, base, money, day, segment):
-    cards, examples = [], []
-    for product in products:
-        slug = segment(product['local_slug'])
-        namespace = segment(product['namespace'])
-        name = product.get('local_name') or product['local_slug']
-        href = escape(f'{base}p/{namespace}/{slug}/', quote=True)
-        price = money(product.get('lowest_item_price'))
-        confirmed = day(product.get('lowest_item_price_confirmed_at'))
-        count = int(product.get('offer_count') or 0)
-        offer_text = '1 tilbud' if count == 1 else f'{count} tilbud'
-        media = image_markup(product.get('image'), name, sizes='(max-width: 600px) 45vw, (max-width: 1024px) 30vw, 250px')
-        if not media:
-            media = ui_icon('image') + '<span>Bilde mangler</span>'
-        cards.append(
-            f'<li><article class="sp-product-card"><a href="{href}">'
-            f'<div class="sp-card-image">{media}</div>'
-            f'<h3>{escape(name)}</h3>'
-            + category_markup(product.get('categories'))
-            + (f'<p class="sp-product-brand">Merke: {escape(product["local_brand"])}</p>' if product.get('local_brand') else '')
-            + (f'<p class="sp-card-price-label">Laveste varepris</p><p class="sp-card-price">{escape(price)}</p><p class="sp-card-shipping">Frakt kan komme i tillegg</p>'
-               if price else '<p class="sp-card-no-price">Ingen pris</p>')
-            + f'<div class="sp-card-bottom"><span>{offer_text}</span>{ui_icon("arrow")}</div>'
-            + (f'<p class="sp-card-confirmed">Pris bekreftet {escape(confirmed)}</p>' if price and confirmed else '')
-            + '</a></article></li>'
-        )
+    cards = [render_product_card(p, base=base, money=money, day=day, segment=segment) for p in products]
+    examples = []
     if products:
         indices = list(dict.fromkeys([0, len(products) // 2, len(products) - 1]))
         for i in indices:
@@ -166,7 +175,7 @@ a.sp-example { display:flex; align-items:center; gap:7px; min-height:44px; max-w
 .sp-product-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; list-style:none; margin:0; padding:0 }.sp-product-grid>li { min-width:0 }
 .sp-product-card { height:100%; border:1px solid var(--sp-line); border-radius:12px; background:#fff; overflow:hidden; box-shadow:0 2px 5px #10203b03 }
 .sp-product-card>a { display:flex; flex-direction:column; height:100%; padding:14px; color:var(--sp-ink); text-decoration:none }.sp-product-card:hover { border-color:#9bbeb5 }.sp-product-card>a:focus-visible { outline-offset:-4px }
-.sp-card-image { aspect-ratio:1.45; background:var(--sp-surface); border-radius:8px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; color:var(--sp-muted); font-size:11px; margin-bottom:14px }.sp-card-image img { width:100%; height:100%; min-height:0; object-fit:contain }.sp-card-image svg { width:35px; height:35px; color:#91a1b5 }
+.sp-card-image { aspect-ratio:1.45; background:var(--sp-surface); border-radius:8px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; color:var(--sp-muted); font-size:11px; margin-bottom:14px }.sp-card-image svg { width:35px; height:35px; color:#91a1b5 }
 .sp-product-card h3 { font-size:16px; line-height:1.35; overflow-wrap:anywhere; margin-bottom:auto; padding-bottom:16px }.sp-home .sp-card-price-label { font-size:11px; color:var(--sp-muted) }.sp-home .sp-card-price { font-size:23px; line-height:1.3; font-weight:700; font-variant-numeric:tabular-nums }.sp-home .sp-card-shipping { font-size:11px; color:var(--sp-muted); margin-top:3px }.sp-card-no-price { font-size:18px; color:var(--sp-muted) }
 .sp-card-bottom { display:flex; align-items:center; justify-content:space-between; color:var(--sp-green); font-size:13px; margin-top:15px }.sp-card-bottom svg { width:18px; height:18px }.sp-home .sp-card-confirmed { color:var(--sp-muted); font-size:10px; margin-top:7px }
 .sp-home-empty { border:1px solid var(--sp-line); border-radius:12px; padding:32px; color:var(--sp-muted) }
@@ -184,3 +193,8 @@ a.sp-example { display:flex; align-items:center; gap:7px; min-height:44px; max-w
 }
 """
 
+HOME_STYLE += r"""
+.sp-card-photo { background:white; padding:8px }
+.sp-card-photo img { width:100%; height:100%; min-height:0; object-fit:contain }
+.sp-product-grid>li[hidden] { display:none }
+"""

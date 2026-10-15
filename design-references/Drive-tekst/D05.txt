@@ -1,0 +1,239 @@
+SjekkPris Frontend Design Bible v1.0
+https://docs.google.com/document/d/164JsHlO0TCMix2rRMmrdDXosv214jn_HDOBse5hjOlU/edit?usp=drivesdk
+Endret: 2026-09-25T16:57:10.189Z
+
+﻿SjekkPris Frontend Design Bible v1.0
+Implementasjonskontrakt for AI-designer/frontend
+
+
+STATUS: LOCKED BASELINE
+Mål: Første frontend-build skal være 95 %+ visuelt og funksjonelt lik de godkjente SjekkPris-mockupene. Mockupene er fasit, ikke løs inspirasjon. Ikke «forbedre» eller redesigne låste elementer uten eksplisitt beslutning.
+
+
+1. Produktidé og visuell retning
+SjekkPris er en uavhengig norsk prissammenligning og produktinformasjonstjeneste, ikke en nettbutikk. Designet skal oppleves moderne 2027+, rolig, raskt, tillitsvekkende, søkeførst og datadrevet.
+Tagline: «Smartere valg. Mer for pengene.»
+Visuelt språk: skandinavisk minimalisme, mye hvit/lys flate, mørk marine tekst, dempet grønn/teal som primær aksent, myke blå/grønne støtteflater, moderate avrundinger og svært forsiktige skygger.
+Unngå: SALE-estetikk, røde kampanjeflater som standard, overdreven glassmorphism, store gradienter, gigantiske radius/pills overalt, «AI SaaS»-look, butikkfølelse og kunstig urgency.
+
+
+2. Fidelity-regel
+LOCKED = implementeres så likt mockup som praktisk mulig.
+SYSTEM = gjenbrukbar komponent/regel.
+CONTENT VARIABLE = produkt-/kategori-/datainnhold kan variere, men komponentens visuelle struktur er stabil.
+LATER = ikke bygg full funksjonalitet i v1 selv om ikonet/plassholderen finnes.
+Når tekstspesifikasjon og godkjent mockup virker i konflikt, bruk mockupens visuelle proporsjoner og denne spesifikasjonens funksjonelle regel. Ikke improviser ny retning.
+
+
+3. Responsive grunnregler
+Mobile first. Viktigste mobile bredde: ca. 360–430 px. Desktop: sentrert innholdscontainer, ca. 1180–1280 px maks innholdsbredde, med generøs sidepadding. Tablet er en responsiv overgang, ikke separat identitet.
+Bruk et konsistent 4/8-basert spacing-system. Typiske rom: 4, 8, 12, 16, 20, 24, 32, 40, 48, 64 px.
+Kort: typisk radius 12–16 px. Store hero-/search-containere kan bruke 18–24 px. Touch targets minst 44×44 px.
+Desktop hover må aldri være nødvendig for å forstå eller bruke funksjonen. Bevegelse subtil og funksjonell. Respekter reduced-motion.
+
+
+4. Typografi
+Moderne sans-serif/grotesk med høy lesbarhet og gode norske tegn. Én hovedfamilie i v1.
+Brødtekst desktop/mobil ca. 15–16 px. Sekundær metadata ca. 12–14 px.
+H1 desktop ca. 38–48 px; mobil ca. 28–34 px. H2 desktop ca. 26–32 px; mobil ca. 22–26 px.
+Pris er en egen typografisk prioritet: stor, tydelig, tabular numerals der mulig.
+Prisformat: «14 990 kr». Ikke ALL CAPS som generell stil.
+
+
+5. Farge og semantikk
+Bakgrunn: hvit eller svært lys kjølig grå. Primær tekst: mørk marine/blåsvart. Sekundær tekst: nøytral grå. Primær interaksjon/CTA: SjekkPris-grønn/teal. Støtteflater: svært lys grønn, blå og varm nøytral.
+Grønt skal ikke automatisk bety rabatt; bruk semantiske signaler med tekst. Lagerstatus må alltid ha tekst, ikke bare farge. WCAG AA.
+
+
+6. Global header
+Desktop: logo venstre, stort søkefelt sentralt/dominerende, favoritt/meny/konto høyre når relevant. Sekundær kategorinavigasjon kan ligge under.
+Mobil: kompakt logo/header. Homepage har stort hero-søk. På indre sider skal søk alltid være lett tilgjengelig. Ikke la hamburger/konto konkurrere med søk.
+
+
+7. Søk er hovedgrensesnittet
+Én søkeopplevelse. Ingen «AI-søk / vanlig søk»-bryter.
+Samme felt håndterer eksakt produkt («acuvue oasys»), strukturert naturlig søk («vannkoker under 1000 kroner»), behovssøk («Jeg har en valp på 3 måneder. Hvilke leker passer?») og senere comparison intent.
+Designregel: svar så lite som mulig, men så mye som nødvendig for å hjelpe videre.
+
+
+8. Homepage v1 – LOCKED
+Toppen er låst: logo/header; stor hero «Hva vil du sammenligne?»; undertekst «Søk etter et produkt, eller beskriv hva du trenger.»; ekstra stort søkefelt som sidens hovedperson; placeholder «Søk eller beskriv hva du ser etter …»; «Prøv for eksempel» beholdes med eksempelchips.
+Robotfiguren kan brukes visuelt, men AI-en har ikke eget navn. UI-språk: «Spør SjekkPris».
+Under hero:
+1) Dagens beste priser – mobil to kort side ved side, horisontal fortsettelse, «Se alle».
+2) Fortsett der du slapp – bare når relevant.
+3) Mest søkt akkurat nå – kompakt horisontal produktrekke.
+4) Nytt og aktuelt – guider, produktnyheter, eventuelle tester senere.
+5) Utforsk kategorier – sekundær inngang.
+6) Trust-strip/footer – uavhengig prissammenligning, totalpris, oppdaterte priser.
+Forsiden skal aldri bli en portal med dusinvis av bokser.
+
+
+9. Search autocomplete v1 – LOCKED
+Ved eksakt/kort query: feltet forblir dominant. Gruppér forslag i søkeforslag, kategorier/merker og produkter.
+Produktforslag: lite bilde, navn/modell, variant/størrelse når relevant, fra-/totalpris når tilgjengelig.
+Keyboard-nav og tydelig selected state på desktop. Mobil autocomplete bruker tilgjengelig flate uten modal-kaos.
+Enter på tydelig produkt kan gå direkte til produkt; ellers resultatside.
+
+
+10. Natural Language Search Results v1 – LOCKED
+Prinsipp: «Forstå → fremhev det nyttige → vis alle treff.»
+Query beholdes i søkefeltet. Kort resultatintro: «Vi fant X vannkokere under 1 000 kr.» Vis forståtte kriterier som redigerbare chips.
+Under intro kan SjekkPris vise 1–3 fremhevede produkter.
+Fremhevingskort: samme familie og høyde; badge/signal; produktbilde; navn; stor pris; kort «hvorfor»-tekst; 2–3 relevante attributter.
+Dynamiske signaler: Mest populær, Nyhet, Laveste historiske pris, Pris nær historisk bunn, Prisfall, Kampanjetilbud, Best i test senere, Mest for pengene, Billigste som matcher alt, Best match til behovet, Populært valg i prisklassen, bred tilgjengelighet, rask levering, alternativ som sparer mest.
+Vis bare dokumenterbare/relevante signaler. Ikke fyll tre plasser kunstig.
+Deretter: «Alle …», treffantall, filtre/sortering og ordinært produktgrid.
+
+
+11. Ingen blindvei i søk
+0 treff skal ikke bare si «prøv et annet søkeord». Vis hva som ikke kunne matches, nærmeste relevante resultater eller ett kort oppklarende spørsmål.
+Eksempel: «Ingen produkter matcher alle kriteriene. 17 modeller matcher hvis makspris økes til 1 100 kr.
+12. Category mobile v1 – LOCKED
+Breadcrumb/tilbake; kategoritittel og kort nyttig intro; eventuelle underkategori-chips uten portalvegg; tydelig filter/sortering; kompakt listing; Product, ikke Offer, i kortene; laveste totalpris som hovedpris; kategoriavhengige nøkkelattributter.
+Filter åpnes som full-height sheet/panel. Vis aktive valg og tydelig «Vis X produkter».
+Sortering v1: laveste totalpris sentralt; nyeste/popularitet når definert. Ikke «størst rabatt» som standard.
+Rolig kjøpshjelp nederst kan lede til smartere søk.
+
+
+13. Category desktop v1 – LOCKED
+Header/søk; breadcrumb og kategorihero; sticky venstre filterkolonne; høyre resultatantall, sortering og produktgrid. Filterkolonnen er rolig. Produktgrid typisk 3–4 kolonner. Discovery-/guidekort kan brukes under, men skal ikke overdøve listen.
+
+
+14. Product Card – SYSTEM
+Kortet representerer én canonical Product.
+Innhold: stabilt produktbilde (object-fit contain), brand/model/navn, 2–5 category-specific key attributes, laveste totalpris/«fra», antall butikker når nyttig, eventuelt dokumenterbart signal/badge, hjerteikon som senere funksjon.
+Kortet skal aldri se ut som om SjekkPris selger varen. Ingen stor «Kjøp»-knapp på category cards i v1. Unngå reviews/stjerner som standard før review-strategi er besluttet.
+
+
+15. Product mobile v1 – LOCKED
+Rekkefølge: header/søk; breadcrumb; navn/brand/model; stort bilde/galleri; variant; 4–5 key attributes; prishero «Laveste totalpris»; butikk/antall tilbud; tydelig primær CTA til butikk når konkret beste tilbud vises; ankere/tabs Priser, Om produktet, Spesifikasjoner, Lignende; tilbudsliste; prishistorikk; varianter; produktinnhold; specs; «Passer spesielt godt til»; lignende/relatert; FAQ; trust/rapporter feil.
+Mobil bruker progressive disclosure: rask kjøpsbeslutning øverst, dyp research lenger ned.
+
+
+16. Product desktop v1 – LOCKED
+Hero: venstre stort produktbilde/galleri; midt produktnavn, brand/model, key attributes og variant; høyre pris-/offer-card.
+VIKTIG: Høyre CTA er «Gå til butikken» når konkret tilbud er valgt. Ikke «Sammenlign priser» i denne boksen.
+Under hero: tilbudssammenligning; prishistorikk; varianter; produktinnhold/specs; «Passer spesielt godt til»; «Hva får jeg for pengene?»; relatert/kompatibelt tilbehør; FAQ; rapporter feil.
+Hold layouten luftig.
+
+
+17. Offer Row – SYSTEM
+Et Offer er butikkens konkrete tilbud og skal visuelt skilles fra Product.
+Felter når data finnes: butikk/logo/navn; availability; levering; produktpris; frakt; TOTALPRIS (visuelt viktigst); «Gå til butikk».
+Hvis frakt er ukjent: si det; ikke fabriker total.
+Status støtter på lager, utsolgt, bestillingsvare/backorder, forhåndsbestilling, ukjent.
+
+
+18. Price History – SYSTEM
+Førsteklasses funksjon. Tydelig graf; periodeselector ved behov; nåpris; laveste historiske pris; typisk pris/andre signaler når definert; tooltip/tap. Mobilgraf touch-vennlig. Ingen «god pris»-påstand uten definert grunnlag.
+
+
+19. Product content v1
+Under transaksjonsdelen skal SjekkPris ha unik, nyttig produktkunnskap. Hver seksjon skal hjelpe brukeren å forstå, sammenligne eller bruke produktet.
+Mulige seksjoner: Kort fortalt; Dette bør du vite; Passer spesielt godt til; Hva får jeg for pengene?; alternativer; Passer til dette produktet/kompatibelt tilbehør; Vanlige spørsmål.
+Unngå generisk SEO-fylltekst.
+
+
+20. «Hva får jeg for pengene?» – SYSTEM
+Ikke bruk kunstig universell SjekkPris-score.
+Forklar konkrete trade-offs: «Vil du bruke mindre?», «For omtrent samme pris», «Vil du gå opp?». Vis prisforskjell og hva brukeren beholder/mister/får. Informativt, ikke tvungen vinner.
+
+
+21. «Passer spesielt godt til» – SYSTEM
+Gjør specs forståelige gjennom use cases. TV: Gaming, Film, Sport, Streaming. Andre kategorier får egne use cases. Vis relevante underfakta, f.eks. Gaming → 120 Hz, HDMI 2.1, VRR.
+
+
+22. Relatert/kompatibelt
+Ikke «Andre kjøpte også». Bruk «Passer til dette produktet» / «Tilbehør som passer». Eksempler: TV→veggfeste; printer→toner; støvsuger→poser/filter; verktøy→batterier. Hold separert fra lignende hovedprodukter.
+
+
+23. Trust
+Integrert, ikke gjemt. Mulige elementer: priser oppdatert; antall butikker; totalpris inkluderer frakt når kjent; «Slik rangerer vi»; affiliate-prinsipp; «Rapporter feil». Ingen falsk scarcity/urgency.
+
+
+24. AI-personlighet
+AI-en heter ikke noe separat i v1. SjekkPris er assistenten. Nøytralt, vennlig språk. Unngå unødvendig fornavnspersonalisering. Ikke lange AI-avsnitt før produktresultater. Behovssvar: kort forklaring → relevante chips/kategorier → produkter.
+
+
+25. V1 / LATER-grense
+LATER: full konto og synkroniserte favoritter; prisvarsel; lager-/produktovervåking; klikk & hent/fysisk lager; full Product-vs-Product Comparison; avansert testaggregator.
+Hjerteikon kan beholdes i designsystemet uten at full account-funksjon bygges.
+Senere comparison-prinsipp: foreslå relevante kandidater, men brukeren skal alltid kunne «Velg et annet produkt». Ikke tvungen/random sammenligning.
+
+
+26. Komponentfamilier som skal bygges
+AppShell, Header, MobileBottomNav, SearchHero, SearchField, AutocompletePanel, SuggestionRow, IntentChip, CategoryChip, ProductCard, ProductMiniCard, HighlightProductCard, DealCard, ContinueCard, EditorialCard, CategoryTile, FilterSidebar, FilterSheet, FilterGroup, SortControl, ProductHero, ProductGallery, KeyAttributeRow, PriceHero, OfferTable/OfferRow, AvailabilityBadge, PriceHistoryChart, VariantSelector, ProductContentSection, UseCaseCard, ValueAlternativeCard, CompatibleAccessoryCard, FAQAccordion, TrustStrip, ErrorReportLink, EmptySearchState, Skeleton states, Error states.
+Komponenter skal ha dokumenterte mobile/desktop-varianter, ikke separate tilfeldige designs.
+
+
+27. States som må designes
+Default, hover, focus-visible, pressed, disabled, selected, loading/skeleton, empty, partial data, error, long text, missing image, unknown shipping, unknown availability, one offer, many offers, no historical price, sale/signal present, no signal.
+Ingen state skal bryte layout eller kreve at AI-designer improviserer ny stil.
+
+
+28. Accessibility
+Semantisk HTML. Keyboard for søk/autocomplete/filter. Synlig focus ring. 44 px touch targets. Kontrast AA. Ikoner får labels der betydningen ikke er eksplisitt. Ikke formidle status kun med farge. Charts må ha tekstlig alternativ/oppsummering.
+
+
+29. Ytelse og visuell stabilitet
+Design for rask LCP og lite layout shift. Produktbilder skal ha reserverte dimensjoner/aspect ratio. Ikke last tunge hero-videoer. Lazy-load under fold. Search/autocomplete skal føles umiddelbart. Skeletons skal ligne endelig layout.
+
+
+30. AI-implementeringsregel
+AI som koder frontend skal først bygge tokens/foundation, deretter shell, deretter komponenter og én skjerm av gangen. Etter hver låst skjerm: screenshot og visuell sammenligning mot referansen før neste skjerm.
+Ikke be modellen «lag noe moderne». Be den reprodusere SjekkPris v1.
+Ingen global redesign/refactor som endrer utseende uten eksplisitt godkjenning.
+
+
+31. Foreslått build-rekkefølge
+1) Tokens/foundation
+2) Header + global shell
+3) SearchField + autocomplete
+4) ProductCard-familien
+5) Homepage mobile
+6) Homepage desktop
+7) Category mobile
+8) Category desktop
+9) Product mobile
+10) Product desktop
+11) Natural-language results
+12) alle states/accessibility/responsive QA
+13) pixel/fidelity pass
+
+
+32. Acceptance criteria
+– 95 %+ opplevd visuell fidelity mot godkjente mockups.
+– Samme design-DNA på alle sider.
+– Mobil først og svært god på 360–430 px.
+– Search er tydeligste handling.
+– Totalpris prioriteres.
+– Product og Offer er visuelt/funksjonelt adskilt.
+– Ingen butikkillusjon.
+– Ingen v1-scope creep fra LATER-listen.
+– Ingen generisk AI-estetikk.
+– Alle kjernekomponenter fungerer med varierende produktkategorier.
+– Full keyboard/focus/touch QA.
+– Layout tåler norske tekster og lange produktnavn.
+
+
+33. Visuelle referanser
+De godkjente mockupene i SjekkPris Design-mappen er normative referanser. Behold originale bilder med versjonsnavn. Viktigste referanser:
+– Homepage Mobile v1.0
+– Homepage Desktop v1.0 / overview
+– Product Mobile v1.0
+– Product Desktop v1.0
+– Category Mobile v1.0
+– Category Desktop v1.0
+– Search/autocomplete v1.0
+– Search Results – Natural Language v1.0
+Referansebilder skal brukes aktivt under implementasjon, ikke bare arkiveres.
+
+
+34. Fremtidige vertikaler
+Systemet må kunne gjenbrukes på fremtidige sammenligningssider. Utseendet er låst for SjekkPris, mens category-specific attributes, filtre, use cases, content og signaler er dynamiske. Ikke hardkod TV-logikk i generelle komponenter.
+
+
+SLUTTREGEL
+SjekkPris v1 skal føles som det produktet som allerede er tegnet og godkjent. Implementasjonen skal gjøre mockupene virkelige, ikke bruke dem som utgangspunkt for et nytt design.
+»

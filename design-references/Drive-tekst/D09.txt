@@ -1,0 +1,173 @@
+Chillout Web Standard v1.0 – Reconciliation & Lock Candidates
+https://docs.google.com/document/d/1IrwBPpJjLQw4VPhluloomyi_hzkOj0D0ru6LbwoednE/edit?usp=drivesdk
+Endret: 2026-10-05T23:20:41.533Z
+
+﻿Chillout Web Standard v1.0 – Reconciliation & Lock Candidates
+Global Standard ↔ SjekkPris Profile ↔ Chillout Architecture
+
+
+STATUS
+Final reconciliation before LOCK. This document identifies contradictions, resolves ownership boundaries and separates lockable decisions from implementation-dependent items.
+
+
+1. Architecture compatibility
+NO CONFLICT: Chillout owns canonical Product/Offer/Taxonomy/evidence/commercial truth. SjekkPris owns public rendering/presentation and consumes stable Property Runtime contracts.
+NO CONFLICT: separate SjekkPris repository/deployment can coexist with Chillout as control plane.
+LOCK CANDIDATE: property never reads Chillout internal DB directly; versioned property-facing contracts only.
+
+
+2. Product vs Offer
+NO CONFLICT across architecture/design/web profile.
+LOCK CANDIDATE: Search/Category cards represent canonical Product. Product page aggregates comparable Offers. Merchant price/shipping/availability/clickout are Offer facts.
+
+
+3. Search ownership
+Chillout Architecture says Search Intelligence is shared capability; Design Bible says one unified SjekkPris search experience.
+RESOLUTION: Chillout owns query interpretation/retrieval/ranking capabilities and evidence; property owns UI and presentation.
+LOCK CANDIDATE: no separate AI mode; deterministic/cheap retrieval first; LLM when needed; arbitrary query pages non-indexable.
+
+
+4. Ranking ownership
+Potential gap: architecture has AI/search capability but did not fully specify commercial separation.
+RESOLUTION: Chillout ranking service/config owns ranking truth/version; property renders ranking and explanation.
+LOCK CANDIDATE: organic relevance, user sort, algorithmic/editorial highlight and sponsored placement are distinct. Compensation never silently alters organic order.
+
+
+5. Publishing state
+Potential gap: canonical Product existence could be mistaken for public page existence.
+RESOLUTION: add explicit states/concepts: entity existence → publish eligibility → index eligibility → published snapshot.
+LOCK CANDIDATE: Product Graph scale never automatically equals indexed page scale.
+
+
+6. Temporal data
+Potential gap resolved by snapshot/freshness model.
+LOCK CANDIDATE: price, availability, delivery, promotion and popularity claims carry observation/freshness semantics; rendered HTML/schema derive from coherent published state.
+
+
+7. URL ownership
+Global standard: stable semantic taxonomy-independent Product URL.
+SjekkPris profile: /produkt/{frozen-slug}/ recommended.
+Architecture: canonical Product ID internal/opaque.
+NO CONFLICT.
+LOCK CANDIDATE principle: public URL never exposes provider ID and does not embed mutable taxonomy path.
+IMPLEMENTATION-DEPENDENT: slug-only vs stable public suffix awaits collision simulation.
+
+
+8. Category/taxonomy
+NO CONFLICT: Chillout canonical taxonomy is source of hierarchy; provider taxonomy is evidence.
+LOCK CANDIDATE: public category routes are curated localized entities, not mechanical mirrors of provider or full internal hierarchy.
+
+
+9. Facets
+NO CONFLICT.
+LOCK CANDIDATE: filter/sort/search state non-indexable by default. Durable intent becomes explicit curated landing entity, not whitelisted arbitrary query URL.
+
+
+10. Pagination
+LOCK CANDIDATE: large crawlable listings expose stable paginated URLs and real href discovery even if UX uses load-more/infinite scroll.
+Exact page syntax can be implementation profile but ?page=N is recommended.
+
+
+11. Structured data
+NO CONFLICT.
+LOCK CANDIDATE: schema is derived from visible canonical facts; SjekkPris is comparison aggregator, not merchant of record; no fabricated rating/test/offer data.
+IMPLEMENTATION-DEPENDENT: final AggregateOffer price basis requires representative test pack.
+
+
+12. Clickout
+Architecture already has internal click ID before provider routing.
+Web profile adds /go/ and sponsored link qualification.
+LOCK CANDIDATE: first-party click ID before provider routing; affiliate anchors qualified sponsored; clickout not indexable content; no provider secrets in public URL.
+IMPLEMENTATION-DEPENDENT: exact /go/ route shape.
+
+
+13. Legacy migration
+SjekkPris domain history creates launch dependency.
+LOCK CANDIDATE: old URL inventory + explicit 301/404/410 mapping; never blanket redirect to homepage.
+IMPLEMENTATION REQUIRED before production cutover.
+
+
+14. AI/AEO
+Global standard aligns with current Google guidance: core Search foundations apply; no special AI ranking markup; avoid search-engine-first scaled content.
+LOCK CANDIDATE: useful server-readable facts, grounded summaries, provenance and measurement; no separate AI-only content surface.
+llms.txt optional, never required for Google; if used, generated from source truth.
+
+
+15. Multimodal
+Current Google Search Console includes multimodal reporting.
+LOCK CANDIDATE: image pipeline is discovery infrastructure: high-quality stable image, responsive derivatives, absolute URLs, rights/provenance, alt text, crawl monitoring.
+
+
+16. Preferred sources / emerging Search surfaces
+NEW MONITOR item: Google now supports preferred sources in AI Mode/AI Overviews where available and offers publisher UI/button guidance.
+DECISION: do not add UI merely for SEO. Evaluate later as an EXPERIMENT if SjekkPris builds meaningful editorial/news audience and feature relevance.
+No route/schema dependency.
+
+
+17. Regional/EEA aggregator features
+NEW MONITOR item: Google documents EEA aggregator/supplier units including product queries.
+DECISION: monitor eligibility/opportunity for SjekkPris as Norwegian/EEA comparison service, but do not distort site architecture around an evolving Search feature.
+Chillout Search Intelligence should track this as external opportunity.
+
+
+18. Spam/policy
+NO CONFLICT.
+LOCK CANDIDATE: programmatic page families pass people-first/scaled-content/doorway/thin-affiliate gates before indexation.
+Low search volume is not a failure; independent utility is the criterion.
+
+
+19. Mobile/accessibility/performance
+NO CONFLICT with Design Bible.
+LOCK CANDIDATE: mobile-first; semantic HTML; keyboard/focus/touch; server-readable core; field CWV monitoring; visual fidelity cannot override accessibility.
+SjekkPris reference QA includes intermediate widths due known Kontaktlinser lesson.
+
+
+20. Property inheritance
+Architecture supports shared platform with differentiated properties.
+RESOLUTION: global Web Standard is versioned; property profile declares inherited version + explicit overrides.
+LOCK CANDIDATE: global changes produce impact report, not silent portfolio mutation.
+
+
+21. Change management
+NO CONFLICT.
+LOCK CANDIDATE: detect → verify → impact → propose → test → approve → deploy → measure → rollback.
+High-impact URL/canonical/robots/noindex/redirect/schema changes require human review.
+
+
+22. Security/privacy
+Architecture and blank-sheet review align.
+LOCK CANDIDATE: public property holds no provider secrets; natural-language query retention is explicitly governed; preview protected; clickout prevents open redirect; company owns domains/DNS/repos.
+
+
+23. Remaining true blockers before SjekkPris permanent route LOCK
+A. legacy URL inventory/migration table;
+B. slug collision simulation on representative real catalog;
+C. trailing-slash convention;
+D. reserved namespace collision test;
+E. launch-category variant matrix;
+F. /go/ endpoint contract shape;
+G. AggregateOffer price-basis/schema test pack;
+H. sitemap/indexation matrix final approval;
+I. staging/canonical-origin verification.
+
+
+24. Decisions that should NOT block frontend component work
+Design tokens/components
+Homepage layout
+Search UI/autocomplete UI
+ProductCard family
+Category/Product visual templates
+fixture contracts
+accessibility states
+responsive behavior
+loading/error states.
+These can be built before permanent public routes are locked, provided fixtures/routes are treated as provisional.
+
+
+25. Lock recommendation
+The conceptual/global standard is mature enough to begin marking principles as LOCK CANDIDATE.
+Do not mark SjekkPris public routing fully LOCKED until the nine blockers above are completed.
+After blockers, run one final short contradiction audit, then publish:
+Chillout Web Standard v1.0 – LOCKED
+SjekkPris Web Profile v1.0 – LOCKED
+with machine-readable rule backlog for Chillout enforcement.
