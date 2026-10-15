@@ -44,6 +44,7 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from catalogue_media import image_markup, category_markup
 from product_ui import PRODUCT_STYLE, PRICE_MODE_SCRIPT, ui_icon
 from home_ui import HOME_STYLE, render_home
 
@@ -114,14 +115,14 @@ class Chillout:
 
 
 def catalogue(client: Chillout) -> list[dict]:
-    body = client.get(f"/api/v1/properties/{PROPERTY}/catalogue")
+    body = client.get(f"/api/v1/properties/{PROPERTY}/catalogue?locale=nb")
     return list(body.get("products") or [])
 
 
 def comparison(client: Chillout, namespace: str, slug: str) -> dict:
     ns = urllib.parse.quote(namespace, safe="")
     local = urllib.parse.quote(slug, safe="")
-    return client.get(f"/api/v1/properties/{PROPERTY}/catalogue/{ns}/{local}/offers")
+    return client.get(f"/api/v1/properties/{PROPERTY}/catalogue/{ns}/{local}/offers?locale=nb")
 
 
 # -- formatting ------------------------------------------------------------
@@ -156,7 +157,7 @@ def e(value: object) -> str:
 
 def segment(value: str) -> str:
     if not SAFE_SEGMENT.match(value or ""):
-        raise BuildError(f"unexpected identifier {value!r} from the catalogue")
+        raise BuildError(f"unexpected identifier {value!r} from the catalogue?locale=nb")
     return value
 
 
@@ -349,12 +350,10 @@ def price_display_order(offers: list[dict], *, include_shipping: bool) -> list[i
 
 
 def render_product_image(identity: dict) -> str:
-    image = identity.get("image") or {}
-    url = image.get("url")
-    if isinstance(url, str) and urllib.parse.urlsplit(url).scheme == "https":
-        return (f'<div class="sp-image"><img src="{e(url)}" '
-                f'alt="{e(identity.get("local_name") or "Produktbilde")}" '
-                'width="640" height="480" fetchpriority="high"></div>')
+    image = image_markup(identity.get("image"), identity.get("local_name") or "Produktbilde",
+                         sizes="(max-width: 999px) 90vw, 360px", eager=True)
+    if image:
+        return f'<div class="sp-image">{image}</div>'
     return '<div class="sp-image sp-image-empty">' + ui_icon('image') + '<span>Bilde mangler</span></div>'
 
 
@@ -506,7 +505,9 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
     total_winner = find_lowest_total_price_offer(offers, body.get('lowest_known_total_price'))
     lowest = item_winner.get('offer_id') if item_winner else None
     lowest_total = total_winner.get('offer_id') if total_winner else None
-    metadata = [("Merke", identity.get("local_brand")), ("Kategori", identity.get("local_category")), ("Pakning", identity.get("local_pack_size"))]
+    primary_category = (identity.get("categories") or {}).get("primary") or {}
+    category = (primary_category.get("display_name") or primary_category.get("name")) if primary_category.get("active") is not False else None
+    metadata = [("Merke", identity.get("local_brand")), ("Kategori", category or identity.get("local_category")), ("Pakning", identity.get("local_pack_size"))]
     metadata = [(label, value) for label, value in metadata if value]
     meta = ''.join(f'<div><dt>{e(label)}</dt><dd>{e(value)}</dd></div>' for label, value in metadata)
     price_html = (f'<div data-price-mode="item">{price_mode_hero(offers, body, include_shipping=False)}</div>'
@@ -538,7 +539,7 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
 <nav class="sp-tabs" aria-label="Produktseksjoner"><a href="#prices">Priser ({len(offers)})</a><a href="#history">Prishistorikk</a><a href="#about">Om produktet</a><a href="#specifications">Spesifikasjoner</a></nav>
 <div class="sp-comparison"><section class="sp-panel sp-offer-panel" id="prices"><div class="sp-price-toolbar"><h2>Butikker og priser</h2>{switch}</div><p class="sp-subtitle" id="price-sort-status" role="status" aria-live="polite">Sortert etter varepris · uten frakt.</p><noscript><p class="sp-subtitle">Visning med frakt krever JavaScript. Frakt vises separat ved hvert tilbud.</p></noscript>{table}<p class="sp-footnote">Kontroller endelig pris og levering hos butikken.</p></section>
 <section class="sp-panel" id="history"><h2>Prishistorikk</h2><div class="sp-history-empty">{ui_icon('chart')}<h3>Ingen prishistorikk ennå</h3><p>Vi har ikke prisutvikling å vise for dette produktet.</p></div></section></div>
-<div class="sp-details"><section class="sp-panel" id="about"><h2>Om produktet</h2><p class="sp-empty">Utfyllende produktinformasjon er ikke tilgjengelig.</p></section><section class="sp-panel" id="specifications"><h2>Spesifikasjoner</h2>{specs}</section></div>
+<div class="sp-details"><section class="sp-panel" id="about"><h2>Om produktet</h2><p class="sp-empty">Utfyllende produktinformasjon er ikke tilgjengelig.</p></section><section class="sp-panel" id="specifications"><h2>Spesifikasjoner</h2>{specs}{category_markup(identity.get("categories"), full=True)}</section></div>
 <div class="sp-trust"><div>{ui_icon('shield')}<p><strong>Uavhengig sammenligning</strong><span>Du handler direkte hos butikken.</span></p></div><div>{ui_icon('truck')}<p><strong>Frakt når den er kjent</strong><span>Ukjent frakt vises tydelig.</span></p></div><div>{ui_icon('info')}<p><strong>Åpent om provisjon</strong><span>Vi kan få provisjon via butikklenker.</span></p></div></div>
 </div><script>{PRICE_MODE_SCRIPT}</script>"""
 

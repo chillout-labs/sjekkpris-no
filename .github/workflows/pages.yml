@@ -8,12 +8,13 @@ on:
   push:
     branches: [main]
   workflow_dispatch: {}
+  pull_request: {}
 
 permissions:
   contents: read
 
 concurrency:
-  group: pages
+  group: ${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.event.pull_request.number) || 'pages' }}
   cancel-in-progress: false
 
 jobs:
@@ -28,6 +29,7 @@ jobs:
       - run: python -m unittest discover -s tests -v
 
   build:
+    if: github.event_name != 'pull_request'
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -66,3 +68,4 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+

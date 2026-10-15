@@ -50,7 +50,7 @@ class ProductUITest(unittest.TestCase):
 
     def test_single_heading_precedes_image_in_document(self):
         body = copy.deepcopy(COMPARISONS['fixture-lamp'])
-        body['identity']['image'] = {'url': 'https://fixture.invalid/image.png'}
+        body['identity']['image'] = {'url': 'https://sjekkpris.no/assets/test-product.png'}
         html = build.product_body(INDEX['products'][0], body, base='/beta/')
         self.assertEqual(html.count('<h1'), 1)
         self.assertLess(html.index('<h1'), html.index('<img'))

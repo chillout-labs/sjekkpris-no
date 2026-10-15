@@ -5,13 +5,15 @@ No popularity, deal, editorial, account or AI capabilities are implied.
 from html import escape
 
 from product_ui import ui_icon
+from catalogue_media import image_markup, category_markup
 
 
 def card_image(product):
     """Optional presentation image; catalogue enrichment remains an API concern."""
-    url = (product.get('image') or {}).get('url')
-    if isinstance(url, str) and (url.startswith('https://') or (url.startswith('/') and not url.startswith('//'))) and '\\' not in url:
-        return f'<div class="sp-card-image sp-card-photo"><img src="{escape(url, quote=True)}" alt="" loading="lazy" decoding="async"></div>'
+    image = image_markup(product.get('image'), product.get('local_name') or 'Produktbilde',
+                         sizes='(max-width: 600px) 45vw, (max-width: 1024px) 30vw, 250px')
+    if image:
+        return f'<div class="sp-card-image sp-card-photo">{image}</div>'
     return f'<div class="sp-card-image">{ui_icon("image")}<span>Bilde mangler</span></div>'
 
 
@@ -28,6 +30,8 @@ def render_product_card(product, *, base, money, day, segment):
         f'<li data-result data-name="{escape(name, quote=True)}" data-price="{product.get("lowest_item_price", {}).get("minor", "") if product.get("lowest_item_price") else ""}" data-brand="{escape(product.get("local_brand") or "", quote=True)}"><article class="sp-product-card"><a href="{href}">'
         f'{card_image(product)}'
         f'<h3>{escape(name)}</h3>'
+        + category_markup(product.get("categories"))
+        + (f'<p class="sp-product-brand">{escape(product["local_brand"])}</p>' if product.get("local_brand") else "")
         + (f'<p class="sp-card-price-label">Laveste varepris</p><p class="sp-card-price">{escape(price)}</p><p class="sp-card-shipping">Frakt kan komme i tillegg</p>'
            if price else '<p class="sp-card-no-price">Ingen pris</p>')
         + f'<div class="sp-card-bottom"><span>{offer_text}</span>{ui_icon("arrow")}</div>'
