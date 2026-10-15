@@ -8,4 +8,6 @@ Preview URLs use `/kategori/<norwegian-name>/`. These are noindex and are NOT an
 
 The category preview workflow builds actual API data and captures screenshots without deploying. No fake ratings, popularity, feature attributes or editorial category claims have been added. Existing product design has already been published separately.
 
-Validation: 83 Python tests locally. Browser verification and screenshot review recorded in the PR after CI completes.
+Validation: 83 Python tests and 3 price-switch Node tests pass locally. The real-data preview passed price filtering, reset, sorting, product navigation, keyboard Escape/focus return and overflow checks at 360, 390, 430 and 1280 px. Sixteen real products appear under the supplied Baby og barn and Hjem og hage roots. Screenshots were inspected; desktop image height and price-field layout were tightened afterward. Final screenshot run recorded in PR #4.
+
+Scope compared with the category template: desktop sidebar and mobile horizontal product rows follow the template. Price fields, available brand filtering and the full-height mobile filter panel are implemented. Categories default to lowest item price (the later agreed pricing rule), while search preserves name sorting. Native brand/sort controls are used for this first version. Category hero imagery, attribute-specific filters, ratings, favourites and editorial guides are not represented without supporting content/functionality.

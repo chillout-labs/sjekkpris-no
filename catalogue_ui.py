@@ -20,7 +20,7 @@ def render_listing(products, *, base, money, day, segment, title='Søk etter pro
 <div class="sp-price-range"><label>Min. pris (kr)<input id="listing-min" type="number" min="0" step="1" inputmode="numeric" placeholder="Ingen grense"></label><label>Maks. pris (kr)<input id="listing-max" type="number" min="0" step="1" inputmode="numeric" placeholder="Ingen grense"></label></div>{brand}
 <button id="listing-reset" type="button">Nullstill filtre</button></div></details></div>
 <div class="sp-listing-main"><div class="sp-listing-toolbar"><button id="filter-open" class="sp-filter-open" type="button" hidden>Filter <span id="filter-count"></span></button><p id="result-status" role="status" aria-live="polite">{len(products)} produkter</p>
-<label>Sorter etter<select id="listing-sort"><option value="name">Produktnavn</option><option value="price">Laveste varepris</option><option value="price-desc">Høyeste varepris</option></select></label></div>
+<label>Sorter etter<select id="listing-sort"><option value="name">Produktnavn</option><option value="price" {"selected" if category else ""}>Laveste varepris</option><option value="price-desc">Høyeste varepris</option></select></label></div>
 <div id="active-filters" class="sp-active-filters" aria-label="Valgte filtre"></div>
 <div class="sp-home-empty" id="listing-empty" hidden><h2>Ingen produkter funnet</h2><p>Prøv et kortere produktnavn, fjern merkevalget eller øk maksprisen.</p><button type="button" id="listing-show-all">Vis alle produkter</button></div>
 <ul class="sp-product-grid" id="search-results">{cards}</ul><noscript>Alle produkter vises. Filtrering og sortering krever JavaScript.</noscript>
