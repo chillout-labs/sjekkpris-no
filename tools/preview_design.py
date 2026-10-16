@@ -86,7 +86,7 @@ def main():
     target=out/'behovssok';target.mkdir(exist_ok=True)
     (target/'index.html').write_text(page('Behovssøk – designeksempel',highlights+listing,base='/',noindex=True),encoding='utf-8')
     target=out/'design-states';target.mkdir(exist_ok=True)
-    states='<section class="sp-home"><h1>Komponenttilstander</h1><p>Isolerte designeksempler. Lastetilstanden nedenfor er bevisst statisk.</p>'+loading_state()+error_state('/kategori/tv/')+'<section class="sp-panel"><h2>Manglende data</h2><p><a href="/p/catalogue/demo-tv-6/">Produkt uten bilde, tilbud eller prishistorikk</a></p><p><a href="/search/?q=ingen-treff">Søk uten treff</a></p><p><a href="/p/catalogue/demo-tv-2/">Tilbud med kjent og ukjent frakt</a></p></section></section>'
+    states='<section class="sp-home sp-state-gallery"><h1>Komponenttilstander</h1><p>Isolerte designeksempler. Lastetilstanden nedenfor er bevisst statisk.</p>'+loading_state()+error_state('/kategori/tv/')+'<section class="sp-panel"><h2>Manglende data</h2><p><a href="/p/catalogue/demo-tv-6/">Produkt uten bilde, tilbud eller prishistorikk</a></p><p><a href="/search/?q=ingen-treff">Søk uten treff</a></p><p><a href="/p/catalogue/demo-tv-2/">Tilbud med kjent og ukjent frakt</a></p></section></section>'
     (target/'index.html').write_text(page('Komponenttilstander',states,base='/',noindex=True),encoding='utf-8')
     shop=out/'butikk' ;shop.mkdir(exist_ok=True)
     (shop/'index.html').write_text(page('Butikklenke – forhåndsvisning','<section class="sp-home" style="padding:32px 0"><h1>Her går kunden til butikken</h1><p>Dette er slutten på eksempelreisen. Ingen ekte butikk åpnes.</p><p><a href="/">Til startsiden</a></p></section>',base='/',noindex=True),encoding='utf-8')
