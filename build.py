@@ -48,7 +48,7 @@ from zoneinfo import ZoneInfo
 from category_catalog import category_index, category_navigation, category_links
 from catalogue_media import image_markup, category_markup
 from product_ui import PRODUCT_STYLE, PRICE_MODE_SCRIPT, ui_icon
-from home_ui import render_header_search, HOME_SEARCH_SCRIPT, HOME_STYLE, render_home
+from home_ui import SHELL_SCRIPT, render_header_search, HOME_SEARCH_SCRIPT, HOME_STYLE, render_home
 
 PROPERTY = "sjekkpris-no"
 #: Where `/go/` is served. Clickout links are absolute on this origin even on
@@ -170,7 +170,7 @@ def page(title: str, body: str, *, base: str, noindex: bool, home: bool = False,
     css_name = "style-" + hashlib.sha256((STYLE + PRODUCT_STYLE + HOME_STYLE).encode()).hexdigest()[:12] + ".css"
     robots = '<meta name="robots" content="noindex">' if noindex else ""
     header_search = '' if home else render_header_search(base)
-    search_script = '' if home else '<script>'+HOME_SEARCH_SCRIPT+'</script>'
+    search_script = '<script>'+SHELL_SCRIPT+('' if home else HOME_SEARCH_SCRIPT)+'</script>'
     # Keep homepage's existing search IDs separate from the shared header.
     return f"""<!doctype html>
 <html lang="nb"><head><meta charset="utf-8">
@@ -183,7 +183,7 @@ def page(title: str, body: str, *, base: str, noindex: bool, home: bool = False,
 <p class="sp-tagline">Smartere valg. Mer for pengene.</p>
 {header_search}
 <details class="sp-menu"><summary>{ui_icon('menu')}<span>Meny</span></summary>
-<nav aria-label="Hovedmeny"><a href="{e(base)}">Alle produkter</a><a href="{e(base)}search/">Søk etter produkter</a></nav></details>
+<nav aria-label="Hovedmeny"><a href="{e(base)}">Alle produkter</a><a href="{e(base)}search/">Søk etter produkter</a><a href="{e(base)}kategori/">Utforsk kategorier</a></nav></details>
 </div>{category_nav}</header><main id="main" class="sp-shell">{body}</main>
 <footer class="sp-footer"><div class="sp-shell"><strong>SjekkPris</strong><p>Uavhengig prissammenligning. Du handler hos butikken.</p><p>Vi kan motta provisjon når du handler via lenkene våre. Beta – innholdet er under utvikling.</p></div></footer>
 {search_script}</body></html>"""
