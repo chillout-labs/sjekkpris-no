@@ -4,6 +4,7 @@ No API fields or publication decisions are inferred here. The complete-state
 fixtures live exclusively in tools/preview_design.py until a data adapter exists.
 """
 from html import escape as e
+import json
 from catalogue_media import image_markup
 
 
@@ -48,7 +49,17 @@ def history(points):
 
 
 def _history_html(low,line,dots,points,table):
-    return f'<div class="sp-history-chart"><p>Laveste varepris i perioden</p><strong>{format(low, ',').replace(',', ' ')} kr</strong><svg viewBox="0 0 320 155" role="img" aria-label="Prisutvikling. Verdier finnes i pristabellen."><polyline points="{line}"/>{dots}</svg><div class="sp-chart-dates"><span>{e(points[0][0])}</span><span>{e(points[-1][0])}</span></div><details><summary>Se alle prisobservasjoner</summary><table><caption class="sp-sr">Varepris uten frakt per dato</caption>{table}</table></details></div>'
+    observations=e(json.dumps([[date,format(value, ',').replace(',', ' ')+' kr'] for date,value in points]),quote=True)
+    latest=format(points[-1][1], ',').replace(',', ' ')
+    high=format(max(value for _,value in points), ',').replace(',', ' ')
+    return f'''<div class="sp-history-chart" data-observations="{observations}">
+<div class="sp-history-summary"><div><p>Siste observasjon</p><strong>{latest} kr</strong></div><div><p>Lavest i perioden</p><strong>{format(low, ',').replace(',', ' ')} kr</strong></div></div>
+<p class="sp-history-basis">Varepris uten frakt · {len(points)} observasjoner</p>
+<div class="sp-chart-scale"><span>Høyest: {high} kr</span><span>Lavest: {format(low, ',').replace(',', ' ')} kr</span></div>
+<svg viewBox="0 0 320 155" role="img" aria-label="Prisutvikling. Velg observasjon nedenfor eller åpne pristabellen."><polyline points="{line}"/>{dots}</svg>
+<div class="sp-chart-dates"><span>{e(points[0][0])}</span><span>{e(points[-1][0])}</span></div>
+<div class="sp-history-control" hidden><label>Utforsk prisene<input type="range" min="0" max="{len(points)-1}" value="{len(points)-1}" step="1" aria-label="Velg prisobservasjon"></label><output aria-live="polite">{e(points[-1][0])}: {latest} kr</output></div>
+<details><summary>Se alle prisobservasjoner</summary><table><caption class="sp-sr">Varepris uten frakt per dato</caption>{table}</table></details></div>'''
 
 
 def product_parts(data):
@@ -125,4 +136,17 @@ RICH_STYLE += r"""
 .sp-thumbnails button:focus-visible,.sp-variants a:focus-visible,.sp-faq summary:focus-visible,.sp-history-chart summary:focus-visible,.sp-value-grid a:focus-visible,.sp-editorial a:focus-visible { outline:3px solid #177fc5;outline-offset:3px }
 .sp-thumbnails { padding:4px;margin-left:-4px }.sp-thumbnails button:hover { border-color:var(--sp-green) }.sp-variants a:hover { box-shadow:0 0 0 1px var(--sp-green) }.sp-faq summary:hover { color:var(--sp-green) }
 @media(hover:hover) { .sp-editorial a:hover { border-color:var(--sp-green) } }
+"""
+
+RICH_SCRIPT += r"""
+(()=>{document.querySelectorAll('[data-observations]').forEach(root=>{
+const points=JSON.parse(root.dataset.observations), control=root.querySelector('.sp-history-control'), input=control.querySelector('input'), output=control.querySelector('output'), dots=Array.from(root.querySelectorAll('circle'));
+function select(){const index=Number(input.value),text=points[index][0]+': '+points[index][1];output.textContent=text;input.setAttribute('aria-valuetext',text);dots.forEach((dot,i)=>{dot.classList.toggle('sp-point-selected',i===index);dot.setAttribute('r',i===index?'6':'4');});}
+control.hidden=false;input.addEventListener('input',select);select();
+});})();
+"""
+RICH_STYLE += r"""
+.sp-history-summary { display:grid;grid-template-columns:1fr 1fr;gap:16px }.sp-history-summary p { font-size:12px;color:var(--sp-muted) }.sp-history-summary strong { display:block;margin-top:6px;font-size:23px }.sp-history-basis { font-size:12px;color:var(--sp-muted);margin-top:12px!important }
+.sp-history-chart { position:relative }.sp-chart-scale { display:flex;justify-content:space-between;margin-top:20px;font-size:11px;color:var(--sp-muted) }.sp-history-chart svg { margin-top:4px }.sp-history-chart circle.sp-point-selected { stroke:#fff;stroke-width:3;paint-order:stroke;fill:var(--sp-green) }
+.sp-history-control { background:var(--sp-surface);padding:12px;border-radius:8px;margin-top:16px }.sp-history-control[hidden] { display:none }.sp-history-control label { display:block;font-size:12px;color:var(--sp-muted) }.sp-history-control input { display:block;width:100%;height:44px;margin:0;accent-color:var(--sp-green);cursor:pointer }.sp-history-control input:focus-visible { outline:3px solid #177fc5;outline-offset:2px }.sp-history-control output { display:block;font-weight:700;font-size:14px;min-height:20px }
 """
