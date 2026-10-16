@@ -156,9 +156,9 @@ RICH_SCRIPT += r"""
 (()=>{
  document.querySelectorAll('.sp-tabs').forEach(nav=>{
  const links=Array.from(nav.querySelectorAll('a[href^="#"]'));
- function sync(){const active=links.find(a=>a.hash===location.hash)||links[0];links.forEach(a=>{if(a===active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current');});}
- links.forEach(a=>a.addEventListener('click',()=>{const target=document.getElementById(a.hash.slice(1));if(target){target.setAttribute('tabindex','-1');target.focus({preventScroll:true});}}));
- window.addEventListener('hashchange',sync);sync();
+ function sync(hash=location.hash){const active=links.find(a=>a.hash===hash)||links[0];links.forEach(a=>{if(a===active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current');});}
+ links.forEach(a=>a.addEventListener('click',()=>{sync(a.hash);const target=document.getElementById(a.hash.slice(1));if(target){target.setAttribute('tabindex','-1');target.focus({preventScroll:true});}}));
+ window.addEventListener('hashchange',()=>sync());sync();
  });
  document.querySelectorAll('.sp-gallery').forEach(gallery=>{
  if(!gallery.querySelector('.sp-image img'))return;
