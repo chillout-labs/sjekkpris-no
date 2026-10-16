@@ -244,7 +244,7 @@ class BuildTest(unittest.TestCase):
         # Find table row (not hero section which may also contain the name)
         tbody_idx = self.lamp.find("<tbody>")
         tbody = self.lamp[tbody_idx:] if tbody_idx > 0 else self.lamp
-        return next(r for r in tbody.split("<tr>") if name in r and "<td>" in r)
+        return next(r for r in tbody.split("<tr>") if name in r and "<td>" in r).split("</tr>", 1)[0]
 
     def test_the_eligible_servable_offer_links_to_its_clickout_url_on_sjekkpris(self):
         # Link should appear in table row

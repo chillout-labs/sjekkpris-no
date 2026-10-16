@@ -2,7 +2,7 @@
 from html import escape as e
 import json
 import hashlib
-from home_ui import render_home, HOME_STYLE
+from home_ui import SHELL_SCRIPT, render_header_search, HOME_SEARCH_SCRIPT, render_home, HOME_STYLE
 from product_ui import ui_icon, PRODUCT_STYLE
 from category_catalog import category_navigation, category_href, render_category_index
 from catalogue_ui import render_listing, LISTING_STYLE
@@ -10,10 +10,8 @@ from catalogue_ui import render_listing, LISTING_STYLE
 def page(title: str, body: str, *, base: str, noindex: bool, home: bool = False, category_nav: str = "") -> str:
     css_name = "home-" + hashlib.sha256((PRODUCT_STYLE + HOME_STYLE + LISTING_STYLE).encode()).hexdigest()[:12] + ".css"
     robots = '<meta name="robots" content="noindex">' if noindex else ""
-    header_search = '' if home else (
-        f'<form class="sp-search" role="search" action="{e(base)}search/" method="get">'
-        f'{ui_icon("search")}<input name="q" aria-label="Søk etter produktnavn" placeholder="Søk etter produkter …" required>'
-        f'<button type="submit" aria-label="Søk">{ui_icon("arrow")}</button></form>')
+    header_search = '' if home else render_header_search(base)
+    search_script = '<script>'+SHELL_SCRIPT+('' if home else HOME_SEARCH_SCRIPT)+'</script>'
     # Keep homepage's existing search IDs separate from the shared header.
     return f"""<!doctype html>
 <html lang="nb"><head><meta charset="utf-8">
@@ -26,10 +24,10 @@ def page(title: str, body: str, *, base: str, noindex: bool, home: bool = False,
 <p class="sp-tagline">Smartere valg. Mer for pengene.</p>
 {header_search}
 <details class="sp-menu"><summary>{ui_icon('menu')}<span>Meny</span></summary>
-<nav aria-label="Hovedmeny"><a href="{e(base)}">Alle produkter</a><a href="{e(base)}search/">Søk etter produkter</a></nav></details>
+<nav aria-label="Hovedmeny"><a href="{e(base)}">Alle produkter</a><a href="{e(base)}search/">Søk etter produkter</a><a href="{e(base)}kategori/">Utforsk kategorier</a></nav></details>
 </div>{category_nav}</header><main id="main" class="sp-shell">{body}</main>
 <footer class="sp-footer"><div class="sp-shell"><strong>SjekkPris</strong><p>Uavhengig prissammenligning. Du handler hos butikken.</p><p>Vi kan motta provisjon når du handler via lenkene våre. Beta – innholdet er under utvikling.</p></div></footer>
-</body></html>"""
+{search_script}</body></html>"""
 
 
 def home_money(amount):
