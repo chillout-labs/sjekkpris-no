@@ -87,6 +87,17 @@ def main():
                 page.locator('#listing-max').fill('1')
                 assert page.locator('#listing-empty').is_visible()
                 if width<768:page.locator('#filter-apply').click()
+                page.screenshot(path=str(shots/f'search_no_results_{width}.png'),full_page=True)
+                page.locator('#listing-clear-filters').click()
+                assert page.locator('[data-result]:visible').count()==3
+                assert page.locator('#home-query').input_value()=='OLED'
+                if width<768:page.locator('#filter-open').click()
+                page.locator('#listing-min').fill('20000')
+                page.locator('#listing-max').fill('10000')
+                assert page.locator('#listing-price-help').is_visible()
+                assert page.locator('#listing-max').get_attribute('aria-invalid')=='true'
+                page.screenshot(path=str(shots/f'filter_invalid_range_{width}.png'),full_page=True)
+                if width<768:page.locator('#filter-apply').click()
                 page.locator('#listing-show-all').click()
                 assert page.locator('[data-result]:visible').count()==6
                 page.locator('#listing-sort').select_option('price')

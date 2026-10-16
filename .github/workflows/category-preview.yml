@@ -1,7 +1,7 @@
 name: Category preview (no deploy)
 on:
   push:
-    branches: [design-product-navigation-v1, design-shared-search-v1, category-design-v1]
+    branches: [design-search-states-v1, design-product-navigation-v1, design-shared-search-v1, category-design-v1]
   workflow_dispatch: {}
 permissions:
   contents: read
