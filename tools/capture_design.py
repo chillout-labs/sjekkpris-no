@@ -22,7 +22,7 @@ def main():
             page.route('**/*',lambda route:route.continue_() if route.request.url.startswith(origin+'/') else route.abort())
             for width in [360,390,768,1280]:
                 page.set_viewport_size({'width':width,'height':900})
-                for name,path in [('home','/'),('search','/search/?q=OLED'),('category','/kategori/tv/'),('product','/p/catalogue/demo-tv-2/'),('empty','/p/catalogue/demo-tv-6/')]:
+                for name,path in [('states','/design-states/'),('intent','/behovssok/'),('home','/'),('search','/search/?q=OLED'),('category','/kategori/tv/'),('product','/p/catalogue/demo-tv-2/'),('empty','/p/catalogue/demo-tv-6/')]:
                     page.goto(origin+path,wait_until='networkidle')
                     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(width,path,'overflow')
                     if name in ['home','search','category']:
