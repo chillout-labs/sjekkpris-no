@@ -77,9 +77,20 @@ def main():
         im.crop((im.width//4,im.height//4,im.width*3//4,im.height*3//4)).save(out/'assets/tv-detail.webp')
     guide=out/'guide/velg-tv';guide.mkdir(parents=True,exist_ok=True)
     (guide/'index.html').write_text(page('Eksempelguide – SjekkPris','<article class="sp-home sp-panel"><h1>Slik velger du TV</h1><p>Dette er eksempelinnhold for å kontrollere guidekortets lenke og typografi. Redaksjonelt innhold krever egne kilder og godkjenning.</p><h2>Start med behovet ditt</h2><p>Vurder plass, skjermstørrelse og hva du bruker TV-en til.</p><a href="/kategori/tv/">Sammenlign eksempelprodukter</a></article>',base='/',noindex=True),encoding='utf-8')
+    from rich_ui import search_highlights, loading_state, error_state
+    from home_ui import render_product_card
+    args=dict(base='/',money=home_money,day=build.day,segment=build.segment)
+    cards=[render_product_card(p,**args) for p in products[:3]]
+    highlights=search_highlights('TV til film og serier','Eksempel på behovssøk. Kortene viser oppsettet; utvalget er ikke en beregnet anbefaling.',cards,[('Endre behov','/search/?q=TV'),('Endre pris','/search/?q=OLED')])
+    listing=render_listing(products,**args,title='Alle eksempelprodukter')
+    target=out/'behovssok';target.mkdir(exist_ok=True)
+    (target/'index.html').write_text(page('Behovssøk – designeksempel',highlights+listing,base='/',noindex=True),encoding='utf-8')
+    target=out/'design-states';target.mkdir(exist_ok=True)
+    states='<section class="sp-home"><h1>Komponenttilstander</h1><p>Isolerte designeksempler. Lastetilstanden nedenfor er bevisst statisk.</p>'+loading_state()+error_state('/kategori/tv/')+'<section class="sp-panel"><h2>Manglende data</h2><p><a href="/p/catalogue/demo-tv-6/">Produkt uten bilde, tilbud eller prishistorikk</a></p><p><a href="/search/?q=ingen-treff">Søk uten treff</a></p><p><a href="/p/catalogue/demo-tv-2/">Tilbud med kjent og ukjent frakt</a></p></section></section>'
+    (target/'index.html').write_text(page('Komponenttilstander',states,base='/',noindex=True),encoding='utf-8')
     shop=out/'butikk' ;shop.mkdir(exist_ok=True)
     (shop/'index.html').write_text(page('Butikklenke – forhåndsvisning','<section class="sp-home" style="padding:32px 0"><h1>Her går kunden til butikken</h1><p>Dette er slutten på eksempelreisen. Ingen ekte butikk åpnes.</p><p><a href="/">Til startsiden</a></p></section>',base='/',noindex=True),encoding='utf-8')
-    banner='<aside style="padding:12px 16px;background:#fff3d6;color:#10203b;text-align:center;font:13px Arial,sans-serif">Designforhåndsvisning · eksempelprodukter, illustrasjonsbilde og eksempelpriser. <a href="/">Startside</a> · <a href="/search/?q=OLED">Søk</a> · <a href="/kategori/tv/">TV-kategori</a></aside>'
+    banner='<aside style="padding:12px 16px;background:#fff3d6;color:#10203b;text-align:center;font:13px Arial,sans-serif">Designforhåndsvisning · eksempelprodukter, illustrasjonsbilde og eksempelpriser. <a href="/">Startside</a> · <a href="/search/?q=OLED">Søk</a> · <a href="/kategori/tv/">TV-kategori</a> · <a href="/behovssok/">Behovssøk</a> · <a href="/design-states/">Tilstander</a></aside>'
     for target in out.rglob('*.html'):
         html=target.read_text(encoding='utf-8').replace('<body>','<body>'+banner)
         html=html.replace('https://sjekkpris.no/assets/', '/assets/')
