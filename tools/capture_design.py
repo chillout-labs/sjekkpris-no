@@ -113,7 +113,7 @@ def main():
                 assert page.locator('#home-query').get_attribute('aria-busy') is None
                 page.screenshot(path=str(shots/f'search_error_{width}.png'))
                 page.unroute('**/search-index.json')
-                page.locator('#home-query').fill('Nordlys')
+                page.locator('#home-query').fill('Nord OLED')
                 page.locator('#home-suggestions [role=option]').first.wait_for()
                 assert page.locator('#home-search-status').get_attribute('class')=='sp-sr'
                 page.locator('#home-query').fill('zzzznomatch')
