@@ -130,7 +130,7 @@ a.sp-cta:hover { background:#004d41; text-decoration:none }
 .sp-no-link { font-size:12px; color:var(--sp-muted) }
 .sp-tabs { display:flex; gap:28px; overflow-x:auto; white-space:nowrap; border-bottom:1px solid var(--sp-line); margin-bottom:22px }
 .sp-tabs a { display:block; padding:14px 2px; min-height:48px; font-size:13px; color:var(--sp-ink); text-decoration:none }
-.sp-tabs a:first-child { font-weight:700; border-bottom:3px solid var(--sp-ink) }
+.sp-tabs a[aria-current="location"] { font-weight:700; border-bottom:3px solid var(--sp-ink) }
 .sp-comparison { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:18px; align-items:start }
 .sp-panel { min-width:0; border:1px solid var(--sp-line); border-radius:12px; padding:20px }
 .sp-product .sp-subtitle { font-size:12px; margin:7px 0 15px; color:var(--sp-muted) }
