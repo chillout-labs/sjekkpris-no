@@ -214,3 +214,6 @@ footer.sp-footer { margin-top:32px; padding:24px 0; background:var(--sp-surface)
 .sp-category-nav a:hover { color:var(--sp-green) }.sp-category-nav .sp-all-categories { font-weight:700; padding-right:24px; border-right:1px solid var(--sp-line) }
 @media(max-width:767px) { .sp-category-nav>.sp-shell { gap:18px }.sp-category-nav a { font-size:12px; min-height:44px }.sp-category-nav .sp-all-categories { padding-right:18px } }
 """
+
+from rich_ui import RICH_STYLE
+PRODUCT_STYLE += RICH_STYLE
