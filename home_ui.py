@@ -237,3 +237,14 @@ HOME_STYLE += r"""
 .sp-suggestion-image:empty { display:flex;align-items:center;justify-content:center;color:var(--sp-muted) }.sp-suggestion-image:empty::after { content:'▧';font-size:22px }
 @media(max-width:767px) { .sp-header-search-wrap { order:2;flex:0 0 100%;max-width:none;width:100%;margin:0 }.sp-header-search-wrap .sp-search { flex:auto }.sp-header-search-wrap .sp-suggestions { max-height:55vh }.sp-header-search-wrap input { font-size:16px } }
 """
+
+
+SHELL_SCRIPT=r"""
+(()=>{document.querySelectorAll('.sp-menu').forEach(menu=>{
+const trigger=menu.querySelector('summary');
+menu.addEventListener('keydown',event=>{if(event.key==='Escape'&&menu.open){event.preventDefault();menu.open=false;trigger.focus();}});
+document.addEventListener('click',event=>{if(menu.open&&!menu.contains(event.target))menu.open=false;});
+menu.addEventListener('focusout',()=>{setTimeout(()=>{if(!menu.contains(document.activeElement))menu.open=false;},0);});
+});})();
+"""
+HOME_STYLE += '.sp-menu nav { z-index:40 }.sp-menu summary:focus-visible,.sp-menu nav a:focus-visible { outline:3px solid #177fc5;outline-offset:2px }.sp-menu nav a { text-decoration:none;min-height:44px }'
