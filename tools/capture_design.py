@@ -53,6 +53,12 @@ def main():
                         page.locator('#home-query').fill('')
                     if name=='search':
                         assert page.locator('[data-result]:visible').count()==3
+                    page.locator('.sp-menu summary').click()
+                    assert page.locator('.sp-menu nav').is_visible()
+                    page.locator('.sp-menu nav a').first.focus()
+                    page.keyboard.press('Escape')
+                    assert not page.locator('.sp-menu nav').is_visible()
+                    assert page.locator('.sp-menu summary').evaluate('(e)=>document.activeElement===e')
                     page.screenshot(path=str(shots/f'{name}_{width}.png'),full_page=True)
                 page.goto(origin+'/search/?q=OLED',wait_until='networkidle')
                 if width<768:page.locator('#filter-open').click()
