@@ -14,6 +14,8 @@ import sys
 ROOT = Path(__file__).resolve().parent.parent
 sys.path[:0] = [str(ROOT), str(ROOT / 'tests')]
 import build
+import home_release
+from design_fixtures import product_presentation, homepage_sections
 from home_release import page, home_money
 from catalogue_ui import render_listing
 from test_build import offer, TOKEN_WINNER, TOKEN_OOS
@@ -51,9 +53,31 @@ def main():
         def get(self,path):
             return {'products':products} if path.split('?')[0].endswith('/catalogue') else comparisons[path.split('/')[-2]]
     out=ROOT/'.design-preview'
-    build.build(Fixtures(),out,base='/',noindex=True)
+    original_product=build.product_body
+    original_home=home_release.render_home
+    def full_product(product,body,**kwargs):
+        return original_product(product,body,**kwargs,presentation=product_presentation(product))
+    def full_home(products,**kwargs):
+        result=original_home(products,**kwargs)
+        start=result.index('<section class="sp-catalogue"')
+        end=result.index('</section>',start)+len('</section>')
+        args={k:v for k,v in kwargs.items() if k!='category_links'}
+        return result[:start]+homepage_sections(products,**args)+result[end:]
+    build.product_body=full_product
+    home_release.render_home=full_home
+    try:
+        build.build(Fixtures(),out,base='/',noindex=True)
+    finally:
+        build.product_body=original_product
+        home_release.render_home=original_home
     shutil.copyfile(ROOT/'tools/design_assets/tv-illustration.webp',out/'assets/tv-illustration.webp')
-    shop=out/'butikk';shop.mkdir(exist_ok=True)
+    # A detail crop of the same known illustration, not an invented second product photo.
+    from PIL import Image
+    with Image.open(ROOT/'tools/design_assets/tv-illustration.webp') as im:
+        im.crop((im.width//4,im.height//4,im.width*3//4,im.height*3//4)).save(out/'assets/tv-detail.webp')
+    guide=out/'guide/velg-tv';guide.mkdir(parents=True,exist_ok=True)
+    (guide/'index.html').write_text(page('Eksempelguide – SjekkPris','<article class="sp-home sp-panel"><h1>Slik velger du TV</h1><p>Dette er eksempelinnhold for å kontrollere guidekortets lenke og typografi. Redaksjonelt innhold krever egne kilder og godkjenning.</p><h2>Start med behovet ditt</h2><p>Vurder plass, skjermstørrelse og hva du bruker TV-en til.</p><a href="/kategori/tv/">Sammenlign eksempelprodukter</a></article>',base='/',noindex=True),encoding='utf-8')
+    shop=out/'butikk' ;shop.mkdir(exist_ok=True)
     (shop/'index.html').write_text(page('Butikklenke – forhåndsvisning','<section class="sp-home" style="padding:32px 0"><h1>Her går kunden til butikken</h1><p>Dette er slutten på eksempelreisen. Ingen ekte butikk åpnes.</p><p><a href="/">Til startsiden</a></p></section>',base='/',noindex=True),encoding='utf-8')
     banner='<aside style="padding:12px 16px;background:#fff3d6;color:#10203b;text-align:center;font:13px Arial,sans-serif">Designforhåndsvisning · eksempelprodukter, illustrasjonsbilde og eksempelpriser. <a href="/">Startside</a> · <a href="/search/?q=OLED">Søk</a> · <a href="/kategori/tv/">TV-kategori</a></aside>'
     for target in out.rglob('*.html'):
