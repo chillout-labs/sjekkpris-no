@@ -29,6 +29,17 @@ def main():
                         page.locator('.sp-card-photo img:visible').evaluate_all("async images=>{await Promise.all(images.map(async e=>{e.loading='eager';await e.decode();}));}")
                         assert page.locator('.sp-card-photo img:visible').first.evaluate('(e)=>e.complete&&e.naturalWidth>0')
                     if name=='product':
+                        page.locator('.sp-image-expand').click()
+                        assert page.locator('.sp-image-dialog').is_visible()
+                        assert page.locator('.sp-image-dialog img').evaluate('(e)=>e.complete&&e.naturalWidth>0')
+                        page.screenshot(path=str(shots/f'product_zoom_{width}.png'))
+                        page.keyboard.press('Escape')
+                        assert not page.locator('.sp-image-dialog').is_visible()
+                        assert page.locator('.sp-image-expand').evaluate('(e)=>document.activeElement===e')
+                        page.locator('.sp-tabs a[href="#specifications"]').click()
+                        assert page.locator('.sp-tabs a[aria-current]').get_attribute('href')=='#specifications'
+                        assert page.locator('#specifications').evaluate('(e)=>document.activeElement===e')
+                        page.locator('.sp-tabs a[href="#prices"]').click()
                         assert page.locator('.sp-image img:visible').evaluate('(e)=>e.complete&&e.naturalWidth>0')
                         page.locator('[data-gallery-index="1"]').click()
                         assert page.locator('[data-gallery-slide]:visible').count()==1
