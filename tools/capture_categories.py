@@ -66,6 +66,26 @@ try:
         page.screenshot(path=str(shots/'all-categories_360.png'),full_page=True)
         page.set_viewport_size({'width':1280,'height':900})
         page.screenshot(path=str(shots/'all-categories_1280.png'),full_page=True)
+        for width in (390,1280):
+            page.set_viewport_size({'width':width,'height':900})
+            page.goto(origin+'/',wait_until='networkidle')
+            assert page.locator('.sp-home-categories a').count()>0
+            assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+            page.screenshot(path=str(shots/f'home_{width}.png'),full_page=True)
+            query=page.locator('[data-result]').first.get_attribute('data-name')
+            page.locator('#home-query').fill(query)
+            page.locator('#home-suggestions li').first.wait_for()
+            page.locator('#home-suggestions img').evaluate_all("async images=>{await Promise.all(images.map(img=>img.decode()));}")
+            assert page.locator('#home-suggestions strong').count()>0
+            page.screenshot(path=str(shots/f'autocomplete_{width}.png'))
+            page.locator('#home-query').press('ArrowDown')
+            page.locator('#home-query').press('Enter')
+            page.wait_for_url('**/p/**')
+            assert page.locator('.sp-product').count()==1
+            page.goto(origin+'/search/?q='+query,wait_until='networkidle')
+            assert page.locator('[data-result]:visible').count()>0
+            assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+            page.screenshot(path=str(shots/f'search_{width}.png'),full_page=True)
         assert not errors,errors
         browser.close()
 finally:
