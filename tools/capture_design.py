@@ -29,6 +29,17 @@ def main():
                         page.locator('.sp-card-photo img:visible').evaluate_all("async images=>{await Promise.all(images.map(async e=>{e.loading='eager';await e.decode();}));}")
                         assert page.locator('.sp-card-photo img:visible').first.evaluate('(e)=>e.complete&&e.naturalWidth>0')
                     if name=='product':
+                        page.locator('.sp-image-expand').click()
+                        assert page.locator('.sp-image-dialog').is_visible()
+                        assert page.locator('.sp-image-dialog img').evaluate('(e)=>e.complete&&e.naturalWidth>0')
+                        page.screenshot(path=str(shots/f'product_zoom_{width}.png'))
+                        page.keyboard.press('Escape')
+                        assert not page.locator('.sp-image-dialog').is_visible()
+                        assert page.locator('.sp-image-expand').evaluate('(e)=>document.activeElement===e')
+                        page.locator('.sp-tabs a[href="#specifications"]').click()
+                        assert page.locator('.sp-tabs a[aria-current]').get_attribute('href')=='#specifications'
+                        assert page.locator('#specifications').evaluate('(e)=>document.activeElement===e')
+                        page.locator('.sp-tabs a[href="#prices"]').click()
                         assert page.locator('.sp-image img:visible').evaluate('(e)=>e.complete&&e.naturalWidth>0')
                         page.locator('[data-gallery-index="1"]').click()
                         assert page.locator('[data-gallery-slide]:visible').count()==1
@@ -52,6 +63,8 @@ def main():
                         page.locator('#home-query').press('Escape')
                         assert not page.locator('#home-suggestions').is_visible()
                         page.locator('#home-query').fill('')
+                    if name=='empty':
+                        assert page.locator('.sp-image-expand').count()==0
                     if name=='search':
                         assert page.locator('[data-result]:visible').count()==3
                     page.locator('.sp-menu summary').click()
@@ -61,6 +74,12 @@ def main():
                     assert not page.locator('.sp-menu nav').is_visible()
                     assert page.locator('.sp-menu summary').evaluate('(e)=>document.activeElement===e')
                     page.screenshot(path=str(shots/f'{name}_{width}.png'),full_page=True)
+                page.goto(origin+'/p/catalogue/demo-tv-2/',wait_until='networkidle')
+                page.locator('#product-title').evaluate("e=>e.textContent='Eksempelprodukt med ekstra langt norsk modellnavn og variantbeskrivelse – spesialutgave for store rom'")
+                page.locator('.sp-specs dt').first.evaluate("e=>e.textContent='EkstraordinærtLangtSammenhengendeSpesifikasjonsnavn'")
+                page.locator('.sp-key-attributes dd').first.evaluate("e=>e.textContent='EkstraLangAttributtverdiUtenMellomrom'")
+                assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(width,'long content overflow')
+                page.screenshot(path=str(shots/f'product_long_content_{width}.png'),full_page=True)
                 page.goto(origin+'/search/?q=OLED',wait_until='networkidle')
                 if width<768:page.locator('#filter-open').click()
                 page.locator('#listing-max').fill('10000')

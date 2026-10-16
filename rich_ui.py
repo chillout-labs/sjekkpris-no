@@ -150,3 +150,33 @@ RICH_STYLE += r"""
 .sp-history-chart { position:relative }.sp-chart-scale { display:flex;justify-content:space-between;margin-top:20px;font-size:11px;color:var(--sp-muted) }.sp-history-chart svg { margin-top:4px }.sp-history-chart circle.sp-point-selected { stroke:#fff;stroke-width:3;paint-order:stroke;fill:var(--sp-green) }
 .sp-history-control { background:var(--sp-surface);padding:12px;border-radius:8px;margin-top:16px }.sp-history-control[hidden] { display:none }.sp-history-control label { display:block;font-size:12px;color:var(--sp-muted) }.sp-history-control input { display:block;width:100%;height:44px;margin:0;accent-color:var(--sp-green);cursor:pointer }.sp-history-control input:focus-visible { outline:3px solid #177fc5;outline-offset:2px }.sp-history-control output { display:block;font-weight:700;font-size:14px;min-height:20px }
 """
+
+
+RICH_SCRIPT += r"""
+(()=>{
+ document.querySelectorAll('.sp-tabs').forEach(nav=>{
+ const links=Array.from(nav.querySelectorAll('a[href^="#"]'));
+ function sync(hash=location.hash){const active=links.find(a=>a.hash===hash)||links[0];links.forEach(a=>{if(a===active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current');});}
+ links.forEach(a=>a.addEventListener('click',()=>{sync(a.hash);const target=document.getElementById(a.hash.slice(1));if(target){target.setAttribute('tabindex','-1');target.focus({preventScroll:true});}}));
+ window.addEventListener('hashchange',()=>sync());sync();
+ });
+ document.querySelectorAll('.sp-gallery').forEach(gallery=>{
+ if(!gallery.querySelector('.sp-image img'))return;
+ const button=document.createElement('button');button.type='button';button.className='sp-image-expand';button.textContent='Se større bilde';gallery.append(button);
+ const dialog=document.createElement('dialog');dialog.className='sp-image-dialog';dialog.setAttribute('aria-label','Forstørret produktbilde');
+ const close=document.createElement('button');close.type='button';close.textContent='Lukk bilde';close.className='sp-image-close';
+ const image=document.createElement('img');dialog.append(close,image);document.body.append(dialog);
+ button.addEventListener('click',()=>{const source=Array.from(gallery.querySelectorAll('.sp-image img')).find(img=>!img.closest('[hidden]'));if(!source)return;image.src=source.currentSrc||source.src;image.alt=source.alt;dialog.showModal();});
+ close.addEventListener('click',()=>dialog.close());dialog.addEventListener('click',event=>{if(event.target===dialog){const box=dialog.getBoundingClientRect();if(event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom)dialog.close();}});
+ dialog.addEventListener('close',()=>button.focus());
+ });
+})();
+"""
+RICH_STYLE += r"""
+.sp-product .sp-panel[id] { scroll-margin-top:20px }.sp-product .sp-panel[id]:focus { outline:none }.sp-product .sp-panel[id]:focus-visible { outline:3px solid #177fc5;outline-offset:4px }
+.sp-key-attributes dt,.sp-key-attributes dd,.sp-specs dt,.sp-use-cases h3,.sp-value-grid h3 { overflow-wrap:anywhere;min-width:0 }.sp-specs div { grid-template-columns:minmax(0,1fr) minmax(0,1fr) }
+.sp-image-expand,.sp-image-close { min-height:44px;padding:10px 16px;border:1px solid var(--sp-line);border-radius:8px;background:white;color:var(--sp-green);font:600 13px Arial,Helvetica,sans-serif;cursor:pointer }.sp-image-expand { margin-top:12px }.sp-image-expand:focus-visible,.sp-image-close:focus-visible { outline:3px solid #177fc5;outline-offset:3px }
+.sp-image-dialog { width:min(1000px,calc(100vw - 32px));max-height:calc(100dvh - 32px);padding:16px;border:1px solid var(--sp-line);border-radius:12px;background:white;color:var(--sp-ink) }.sp-image-dialog::backdrop { background:#10203bb3 }.sp-image-dialog img { display:block;width:100%;height:auto;max-height:calc(100dvh - 140px);object-fit:contain }.sp-image-close { display:block;margin-left:auto }.sp-image-expand:hover,.sp-image-close:hover { background:var(--sp-mint) }
+"""
+
+RICH_STYLE += '@media(max-width:767px) { .sp-image-dialog { width:calc(100vw - 8px);max-width:none;padding:0 }.sp-image-close { margin:8px 8px 8px auto }.sp-image-dialog img { padding:0 0 8px } }'
