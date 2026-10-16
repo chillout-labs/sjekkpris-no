@@ -17,7 +17,7 @@ def render_listing(products, *, base, money, day, segment, title='Søk etter pro
 {subcategories}<div class="sp-listing-layout">
 <div id="filter-desktop-slot">
 <details class="sp-listing-filters" open><summary>Filtrer produkter</summary><div>
-<div class="sp-price-range"><label>Min. pris (kr)<input id="listing-min" type="number" min="0" step="1" inputmode="numeric" placeholder="Ingen grense"></label><label>Maks. pris (kr)<input id="listing-max" type="number" min="0" step="1" inputmode="numeric" placeholder="Ingen grense"></label></div>{brand}
+<div class="sp-price-range"><label>Min. pris (kr)<input id="listing-min" type="number" min="0" step="1" inputmode="numeric" placeholder="Valgfri"></label><label>Maks. pris (kr)<input id="listing-max" type="number" min="0" step="1" inputmode="numeric" placeholder="Valgfri"></label></div>{brand}
 <button id="listing-reset" type="button">Nullstill filtre</button></div></details></div>
 <div class="sp-listing-main"><div class="sp-listing-toolbar"><button id="filter-open" class="sp-filter-open" type="button" aria-haspopup="dialog" aria-controls="filter-dialog" hidden>Filter <span id="filter-count"></span></button><p id="result-status" role="status" aria-live="polite">{len(products)} produkter</p>
 <label>Sorter etter<select id="listing-sort"><option value="name">Produktnavn</option><option value="price" {"selected" if category else ""}>Laveste varepris</option><option value="price-desc">Høyeste varepris</option></select></label></div>
