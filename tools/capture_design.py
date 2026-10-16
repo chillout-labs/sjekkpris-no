@@ -63,6 +63,8 @@ def main():
                         page.locator('#home-query').press('Escape')
                         assert not page.locator('#home-suggestions').is_visible()
                         page.locator('#home-query').fill('')
+                    if name=='empty':
+                        assert page.locator('.sp-image-expand').count()==0
                     if name=='search':
                         assert page.locator('[data-result]:visible').count()==3
                     page.locator('.sp-menu summary').click()
@@ -72,6 +74,12 @@ def main():
                     assert not page.locator('.sp-menu nav').is_visible()
                     assert page.locator('.sp-menu summary').evaluate('(e)=>document.activeElement===e')
                     page.screenshot(path=str(shots/f'{name}_{width}.png'),full_page=True)
+                page.goto(origin+'/p/catalogue/demo-tv-2/',wait_until='networkidle')
+                page.locator('#product-title').evaluate("e=>e.textContent='Eksempelprodukt med ekstra langt norsk modellnavn og variantbeskrivelse – spesialutgave for store rom'")
+                page.locator('.sp-specs dt').first.evaluate("e=>e.textContent='EkstraordinærtLangtSammenhengendeSpesifikasjonsnavn'")
+                page.locator('.sp-key-attributes dd').first.evaluate("e=>e.textContent='EkstraLangAttributtverdiUtenMellomrom'")
+                assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(width,'long content overflow')
+                page.screenshot(path=str(shots/f'product_long_content_{width}.png'),full_page=True)
                 page.goto(origin+'/search/?q=OLED',wait_until='networkidle')
                 if width<768:page.locator('#filter-open').click()
                 page.locator('#listing-max').fill('10000')
