@@ -37,6 +37,11 @@ def main():
                         assert page.locator('[data-gallery-index="0"]').evaluate('(e)=>document.activeElement===e')
                         page.locator('.sp-faq summary').first.click()
                         assert page.locator('.sp-faq details').first.get_attribute('open') is not None
+                        history=page.locator('.sp-history-control input')
+                        history.fill('0')
+                        assert '16 990 kr' in page.locator('.sp-history-control output').inner_text()
+                        history.press('End')
+                        assert '14 990 kr' in page.locator('.sp-history-control output').inner_text()
                     if name=='search':
                         assert page.locator('[data-result]:visible').count()==3
                     page.screenshot(path=str(shots/f'{name}_{width}.png'),full_page=True)
