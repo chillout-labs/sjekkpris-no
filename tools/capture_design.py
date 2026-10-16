@@ -103,6 +103,24 @@ def main():
                 page.locator('#listing-sort').select_option('price')
                 assert page.locator('[data-result]').first.get_attribute('data-price')=='649000'
                 assert page.locator('[data-result]').last.get_attribute('data-price')==''
+            for width in [390,1280]:
+                page.set_viewport_size({'width':width,'height':900})
+                page.route('**/search-index.json',lambda route:route.fulfill(status=503,body='Unavailable'))
+                page.goto(origin+'/search/',wait_until='networkidle')
+                page.locator('#home-query').fill('Nord')
+                page.wait_for_function("document.querySelector('#home-search-status').textContent.includes('kunne ikke lastes')")
+                assert page.locator('#home-search-status').get_attribute('class')=='sp-search-feedback'
+                assert page.locator('#home-query').get_attribute('aria-busy') is None
+                page.screenshot(path=str(shots/f'search_error_{width}.png'))
+                page.unroute('**/search-index.json')
+                page.locator('#home-query').fill('Nordlys')
+                page.locator('#home-suggestions [role=option]').first.wait_for()
+                assert page.locator('#home-search-status').get_attribute('class')=='sp-sr'
+                page.locator('#home-query').fill('zzzznomatch')
+                page.wait_for_function("document.querySelector('#home-search-status').textContent.includes('Ingen produktforslag')")
+                page.screenshot(path=str(shots/f'search_no_suggestions_{width}.png'))
+                page.locator('#home-query').press('Escape')
+                assert page.locator('#home-search-status').inner_text()==''
             assert not errors,errors
             browser.close()
     finally:
