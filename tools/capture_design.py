@@ -31,6 +31,7 @@ def main():
                     if name=='product':
                         page.locator('.sp-image-expand').click()
                         assert page.locator('.sp-image-dialog').is_visible()
+                        page.locator('.sp-image-dialog img').evaluate('async e=>{await e.decode();}')
                         assert page.locator('.sp-image-dialog img').evaluate('(e)=>e.complete&&e.naturalWidth>0')
                         page.screenshot(path=str(shots/f'product_zoom_{width}.png'))
                         page.keyboard.press('Escape')
