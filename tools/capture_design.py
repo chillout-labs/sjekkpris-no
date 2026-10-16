@@ -42,6 +42,15 @@ def main():
                         assert '16 990 kr' in page.locator('.sp-history-control output').inner_text()
                         history.press('End')
                         assert '14 990 kr' in page.locator('.sp-history-control output').inner_text()
+                    if name=='product':
+                        page.locator('#home-query').fill('Nord')
+                        page.locator('#home-suggestions [role=option]').first.wait_for()
+                        page.locator('#home-query').press('ArrowDown')
+                        assert page.locator('#home-query').get_attribute('aria-activedescendant')=='home-option-0'
+                        page.screenshot(path=str(shots/f'product_autocomplete_{width}.png'))
+                        page.locator('#home-query').press('Escape')
+                        assert not page.locator('#home-suggestions').is_visible()
+                        page.locator('#home-query').fill('')
                     if name=='search':
                         assert page.locator('[data-result]:visible').count()==3
                     page.screenshot(path=str(shots/f'{name}_{width}.png'),full_page=True)
