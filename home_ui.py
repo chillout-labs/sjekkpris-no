@@ -40,7 +40,8 @@ def render_product_card(product, *, base, money, day, segment):
     )
 
 
-def render_home(products, *, base, money, day, segment):
+def render_home(products, *, base, money, day, segment, category_links=()):
+    category_section = ('<section class="sp-home-categories" aria-labelledby="home-categories-title"><h2 id="home-categories-title">Utforsk kategorier</h2><nav aria-label="Utforsk kategorier">' + ''.join(f'<a href="{escape(url, quote=True)}"><span>{escape(name)}</span>{ui_icon("arrow")}</a>' for name, url in category_links) + '</nav></section>') if category_links else ''
     cards = [render_product_card(p, base=base, money=money, day=day, segment=segment) for p in products]
     examples = []
     if products:
@@ -74,6 +75,7 @@ def render_home(products, *, base, money, day, segment):
 <section class="sp-catalogue" id="products" aria-labelledby="catalogue-title">
 <div class="sp-catalogue-heading"><h2 id="catalogue-title">Produkter</h2><span>{len(products)} {'produkt' if len(products) == 1 else 'produkter'}</span></div>
 {catalogue}</section>
+{category_section}
 <div class="sp-home-signoff">{ui_icon('shield')}<div><strong>Smartere valg. Mer for pengene.</strong><p>Uavhengig prissammenligning. Frakt vises når den er kjent.</p></div></div>
 </div><script>{HOME_SEARCH_SCRIPT}</script>'''
 
@@ -119,7 +121,13 @@ HOME_SEARCH_SCRIPT = r"""
       items.forEach((p, i) => {
         const li = document.createElement('li');
         li.id = 'home-option-' + i; li.role = 'option';
-        li.setAttribute('aria-selected', 'false'); li.textContent = p.name;
+        li.setAttribute('aria-selected', 'false');
+        const picture=document.createElement('span');picture.className='sp-suggestion-image';picture.setAttribute('aria-hidden','true');
+        if(p.image){const img=document.createElement('img');img.src=p.image;img.alt='';img.referrerPolicy='no-referrer';img.addEventListener('error',()=>img.remove());picture.append(img);}
+        const text=document.createElement('span');text.className='sp-suggestion-copy';
+        const name=document.createElement('span');name.textContent=p.name;text.append(name);
+        if(p.price){const price=document.createElement('strong');price.textContent=p.price; text.append(price);}
+        li.append(picture,text);
         li.addEventListener('mousedown', e => e.preventDefault());
         li.addEventListener('click', () => { window.location.href = p.url; });
         list.append(li);
@@ -197,4 +205,19 @@ HOME_STYLE += r"""
 .sp-card-photo { background:white; padding:8px }
 .sp-card-photo img { width:100%; height:100%; min-height:0; object-fit:contain }
 .sp-product-grid>li[hidden] { display:none }
+"""
+
+HOME_STYLE += r"""
+.sp-suggestions li { display:flex; gap:12px; align-items:center }
+.sp-suggestion-image { width:48px; height:48px; flex-shrink:0; border-radius:6px; background:var(--sp-surface) }
+.sp-suggestion-image img { width:100%; height:100%; object-fit:contain; background:white }
+.sp-suggestion-copy { min-width:0; display:grid; gap:4px; font-size:14px; line-height:1.35 }
+.sp-suggestion-copy strong { font-size:13px; color:var(--sp-green) }
+.sp-home-categories { margin:36px 0 }
+.sp-home-categories h2 { font-size:26px; letter-spacing:-.5px; margin-bottom:18px }
+.sp-home-categories nav { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px }
+.sp-home-categories a { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:64px; border:1px solid var(--sp-line); border-radius:10px; padding:16px; text-decoration:none; color:var(--sp-ink) }
+.sp-home-categories a:hover { background:var(--sp-mint); border-color:var(--sp-green) }
+.sp-home-categories svg { width:20px; height:20px; flex-shrink:0; color:var(--sp-green) }
+@media(max-width:767px) { .sp-home-categories nav { grid-template-columns:1fr }.sp-home-categories h2 { font-size:23px } }
 """
