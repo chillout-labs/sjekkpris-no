@@ -1,0 +1,47 @@
+name: SEO readiness
+
+# Narrow branch verification. No production key, provider request or deploy.
+on:
+  push:
+    branches: [codex/seo-readiness-v1]
+  pull_request:
+    paths:
+      - '*.py'
+      - 'tests/**'
+      - 'web-standard/**'
+      - '.github/workflows/seo-readiness.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Test synthetic builds
+        run: python -m unittest discover -s tests -v
+      - name: Retain exact source for reproducible offline review
+        if: always()
+        run: |
+          python - <<'PY'
+          import pathlib, subprocess, zipfile
+          paths = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          with zipfile.ZipFile('seo-review-source.zip', 'w', zipfile.ZIP_DEFLATED) as z:
+              for path in paths:
+                  p = pathlib.Path(path)
+                  if path and (p.suffix in ('.py', '.yml') or path in ('README.md', 'AGENTS.md', 'CLAUDE.md') or path.startswith('web-standard/')) and p.is_file():
+                      z.write(p, path)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: seo-review-source
+          path: seo-review-source.zip
+          retention-days: 1
