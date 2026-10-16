@@ -43,6 +43,7 @@ def main():
                         history.press('End')
                         assert '14 990 kr' in page.locator('.sp-history-control output').inner_text()
                     if name=='product':
+                        page.locator('#home-query').scroll_into_view_if_needed()
                         page.locator('#home-query').fill('Nord')
                         page.locator('#home-suggestions [role=option]').first.wait_for()
                         page.locator('#home-query').press('ArrowDown')
