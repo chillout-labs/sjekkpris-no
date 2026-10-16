@@ -499,7 +499,9 @@ def search_results_body(*, base: str) -> str:
     )
 
 
-def product_body(product: dict, body: dict, *, base: str, breadcrumbs=()) -> str:
+def product_body(product: dict, body: dict, *, base: str, breadcrumbs=(), presentation=None) -> str:
+    from rich_ui import product_parts, RICH_SCRIPT
+    parts=product_parts(presentation or {})
     breadcrumb_html = "".join(f'<a href="{e(url)}">{e(label)}</a><span aria-hidden="true">›</span>' for label, url in breadcrumbs)
     identity = body.get("identity") or {}
     name = identity.get("local_name") or product.get("local_name") or "Produkt"
@@ -537,15 +539,17 @@ def product_body(product: dict, body: dict, *, base: str, breadcrumbs=()) -> str
     return f"""<div class="sp-product" data-price-basis="item">
 <nav class="sp-breadcrumb" aria-label="Brødsmulesti"><a href="{e(base)}">Hjem</a><span aria-hidden="true">›</span>{breadcrumb_html}<span>{e(name)}</span></nav>
 <section class="sp-hero" aria-labelledby="product-title">
-<div class="sp-identity"><h1 id="product-title">{e(name)}</h1><dl class="sp-meta">{meta}</dl></div>
-<div class="sp-gallery">{render_product_image(identity)}</div>
+<div class="sp-product-heading"><div class="sp-identity"><h1 id="product-title">{e(name)}</h1><dl class="sp-meta">{meta}</dl></div>
+<div class="sp-product-options">{parts["summary"]}{parts["variants"]}{parts["attributes"]}</div></div>
+<div class="sp-gallery">{parts["gallery"] or render_product_image(identity)}</div>
 <div class="sp-winner" id="price-winner">{price_html}</div></section>
 <nav class="sp-tabs" aria-label="Produktseksjoner"><a href="#prices">Priser ({len(offers)})</a><a href="#history">Prishistorikk</a><a href="#about">Om produktet</a><a href="#specifications">Spesifikasjoner</a></nav>
 <div class="sp-comparison"><section class="sp-panel sp-offer-panel" id="prices"><div class="sp-price-toolbar"><h2>Butikker og priser</h2>{switch}</div><p class="sp-subtitle" id="price-sort-status" role="status" aria-live="polite">Sortert etter varepris · uten frakt.</p><noscript><p class="sp-subtitle">Visning med frakt krever JavaScript. Frakt vises separat ved hvert tilbud.</p></noscript>{table}<p class="sp-footnote">Kontroller endelig pris og levering hos butikken.</p></section>
-<section class="sp-panel" id="history"><h2>Prishistorikk</h2><div class="sp-history-empty">{ui_icon('chart')}<h3>Ingen prishistorikk ennå</h3><p>Vi har ikke prisutvikling å vise for dette produktet.</p></div></section></div>
-<div class="sp-details"><section class="sp-panel" id="about"><h2>Om produktet</h2><p class="sp-empty">Utfyllende produktinformasjon er ikke tilgjengelig.</p></section><section class="sp-panel" id="specifications"><h2>Spesifikasjoner</h2>{specs}{category_markup(identity.get("categories"), full=True, show_primary=False)}</section></div>
+<section class="sp-panel" id="history"><h2>Prishistorikk</h2>{parts["history"] or ('<div class="sp-history-empty">'+ui_icon('chart')+'<h3>Ingen prishistorikk ennå</h3><p>Vi har ikke prisutvikling å vise for dette produktet.</p></div>')}</section></div>
+<div class="sp-details"><section class="sp-panel" id="about"><h2>Om produktet</h2>{parts["about"] or '<p class="sp-empty">Utfyllende produktinformasjon er ikke tilgjengelig.</p>'}</section><section class="sp-panel" id="specifications"><h2>Spesifikasjoner</h2>{parts["specs"] or specs}{category_markup(identity.get("categories"), full=True, show_primary=False)}</section></div>
+{parts["extra"]}
 <div class="sp-trust"><div>{ui_icon('shield')}<p><strong>Uavhengig sammenligning</strong><span>Du handler direkte hos butikken.</span></p></div><div>{ui_icon('truck')}<p><strong>Frakt når den er kjent</strong><span>Ukjent frakt vises tydelig.</span></p></div><div>{ui_icon('info')}<p><strong>Åpent om provisjon</strong><span>Vi kan få provisjon via butikklenker.</span></p></div></div>
-</div><script>{PRICE_MODE_SCRIPT}</script>"""
+</div><script>{PRICE_MODE_SCRIPT}{RICH_SCRIPT}</script>"""
 
 
 STYLE = """
