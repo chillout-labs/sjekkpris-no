@@ -87,7 +87,13 @@ HOME_SEARCH_SCRIPT = r"""
   const list = document.getElementById('home-suggestions');
   const status = document.getElementById('home-search-status');
   let items = [], selected = -1, index = null, pending = null, version = 0;
+  function feedback(message = '', visible = false) {
+    status.textContent = message;
+    status.className = visible ? 'sp-search-feedback' : 'sp-sr';
+  }
   function close() {
+    feedback();
+    input.removeAttribute('aria-busy');
     list.hidden = true; selected = -1;
     input.setAttribute('aria-expanded', 'false');
     input.removeAttribute('aria-activedescendant');
@@ -104,7 +110,8 @@ HOME_SEARCH_SCRIPT = r"""
   async function suggest() {
     const request = ++version, query = input.value.trim().toLocaleLowerCase('nb');
     close(); list.replaceChildren(); items = [];
-    if (!query) { status.textContent = ''; return; }
+    if (!query) return;
+    if (!index) { feedback('Henter produktforslag …', true); input.setAttribute('aria-busy', 'true'); }
     try {
       if (!pending) pending = fetch(form.dataset.index).then(r => {
         if (!r.ok) throw new Error('Search index unavailable');
@@ -115,6 +122,7 @@ HOME_SEARCH_SCRIPT = r"""
       }).catch(error => { pending = null; throw error; });
       index = index || await pending;
       if (request !== version || document.activeElement !== input) return;
+      input.removeAttribute('aria-busy');
       items = index.filter(p => typeof p.name === 'string' && typeof p.url === 'string' &&
         p.url.startsWith('/') && !p.url.startsWith('//') && !p.url.includes('\\') &&
         p.name.toLocaleLowerCase('nb').includes(query)).slice(0, 8);
@@ -135,9 +143,12 @@ HOME_SEARCH_SCRIPT = r"""
       });
       list.hidden = !items.length;
       input.setAttribute('aria-expanded', String(items.length > 0));
-      status.textContent = items.length ? items.length + ' produktforslag. Bruk piltastene for å velge.' : 'Ingen produktforslag. Søket matcher produktnavn.';
+      feedback(items.length ? items.length + ' produktforslag. Bruk piltastene for å velge.' : 'Ingen produktforslag. Prøv et annet produktnavn, eller trykk Søk.', !items.length);
     } catch (_) {
-      if (request === version) status.textContent = 'Produktforslag kunne ikke lastes. Du kan fortsatt sende søket eller se produktlisten.';
+      if (request === version) {
+        input.removeAttribute('aria-busy');
+        feedback('Produktforslag kunne ikke lastes. Trykk Søk for å se treffene, eller skriv videre for å prøve igjen.', true);
+      }
     }
   }
   input.addEventListener('input', suggest);
@@ -177,6 +188,7 @@ HOME_STYLE = r"""
 a.sp-example { display:flex; align-items:center; gap:7px; min-height:44px; max-width:100%; padding:7px 13px; border:1px solid #dce9ef; border-radius:24px; background:#fff; color:var(--sp-ink); font-size:12px; text-decoration:none }
 .sp-example span { overflow-wrap:anywhere }.sp-example svg { width:15px; height:15px }.sp-example:hover { border-color:var(--sp-green); background:var(--sp-mint) }
 .sp-suggestions { position:absolute; top:calc(100% + 8px); left:0; right:0; z-index:20; max-height:360px; overflow-y:auto; background:#fff; border:1px solid var(--sp-line); border-radius:12px; padding:6px; margin:0; list-style:none; box-shadow:0 10px 30px #10203b14 }
+.sp-search-feedback { margin:10px 0 0; padding:12px 16px; border:1px solid var(--sp-line); border-radius:12px; background:#fff; color:var(--sp-ink); font-size:14px; line-height:1.5; text-align:left; overflow-wrap:anywhere }
 .sp-suggestions[hidden] { display:none }.sp-suggestions li { padding:13px 12px; min-height:44px; border-radius:7px; overflow-wrap:anywhere; cursor:pointer }.sp-suggestions li[aria-selected=true],.sp-suggestions li:hover { background:var(--sp-mint); color:var(--sp-green) }
 .sp-home-trust { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; padding:20px 26px; background:#f0faf8; border-radius:18px; margin:20px 0 32px }
 .sp-home-trust>div { display:flex; align-items:center; gap:14px }.sp-home-trust svg { width:28px; height:28px; color:var(--sp-green) }.sp-home-trust p { font-size:13px }.sp-home-trust span { display:block; color:var(--sp-muted); font-size:12px }
