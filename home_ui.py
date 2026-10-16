@@ -123,7 +123,8 @@ HOME_SEARCH_SCRIPT = r"""
         li.id = 'home-option-' + i; li.role = 'option';
         li.setAttribute('aria-selected', 'false');
         const picture=document.createElement('span');picture.className='sp-suggestion-image';picture.setAttribute('aria-hidden','true');
-        if(p.image){const img=document.createElement('img');img.src=p.image;img.alt='';img.referrerPolicy='no-referrer';img.addEventListener('error',()=>img.remove());picture.append(img);}
+        const source=Array.from(document.querySelectorAll('.sp-product-card>a')).find(a=>a.getAttribute('href')===p.url)?.querySelector('img');
+        if(source){const img=document.createElement('img');img.src=source.currentSrc||source.src;img.alt='';img.referrerPolicy='no-referrer';img.addEventListener('error',()=>img.remove());picture.append(img);}
         const text=document.createElement('span');text.className='sp-suggestion-copy';
         const name=document.createElement('span');name.textContent=p.name;text.append(name);
         if(p.price){const price=document.createElement('strong');price.textContent=p.price; text.append(price);}
