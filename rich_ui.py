@@ -67,7 +67,7 @@ def product_rail(title,cards,href):
 RICH_SCRIPT=r"""
 (()=>{document.querySelectorAll('.sp-gallery-view').forEach(root=>{
  const buttons=Array.from(root.querySelectorAll('[data-gallery-index]')),slides=Array.from(root.querySelectorAll('[data-gallery-slide]'));
- buttons.forEach((button,index)=>button.addEventListener('click',()=>{slides.forEach((s,i)=>s.hidden=i!==index);buttons.forEach((b,i)=>b.setAttribute('aria-pressed',String(i===index)));root.querySelector('[data-gallery-status]').textContent='Bilde '+(index+1)+' av '+slides.length;}));
+ buttons.forEach((button,index)=>{button.addEventListener('keydown',event=>{let next;if(event.key==='ArrowRight')next=(index+1)%buttons.length;else if(event.key==='ArrowLeft')next=(index+buttons.length-1)%buttons.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=buttons.length-1;else return;event.preventDefault();buttons[next].focus();buttons[next].click();});button.addEventListener('click',()=>{slides.forEach((s,i)=>s.hidden=i!==index);buttons.forEach((b,i)=>b.setAttribute('aria-pressed',String(i===index)));root.querySelector('[data-gallery-status]').textContent='Bilde '+(index+1)+' av '+slides.length;});});
 });})();
 """
 RICH_STYLE=r"""
@@ -120,3 +120,9 @@ RICH_STYLE += r'''
 '''
 
 RICH_STYLE += '.sp-state-gallery { padding:28px 0 }.sp-state-gallery>section { margin-top:24px }.sp-state-gallery h1 { overflow-wrap:anywhere }.sp-state-gallery a:not(.sp-cta) { color:var(--sp-green);display:inline-flex;align-items:center;min-height:44px }'
+
+RICH_STYLE += r"""
+.sp-thumbnails button:focus-visible,.sp-variants a:focus-visible,.sp-faq summary:focus-visible,.sp-history-chart summary:focus-visible,.sp-value-grid a:focus-visible,.sp-editorial a:focus-visible { outline:3px solid #177fc5;outline-offset:3px }
+.sp-thumbnails { padding:4px;margin-left:-4px }.sp-thumbnails button:hover { border-color:var(--sp-green) }.sp-variants a:hover { box-shadow:0 0 0 1px var(--sp-green) }.sp-faq summary:hover { color:var(--sp-green) }
+@media(hover:hover) { .sp-editorial a:hover { border-color:var(--sp-green) } }
+"""
