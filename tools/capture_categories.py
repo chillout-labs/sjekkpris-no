@@ -37,6 +37,15 @@ try:
                 if width<768:page.locator('#filter-open').click()
                 page.locator('#listing-min').fill('99999999')
                 assert page.locator('[data-result]:visible').count()==0
+                if width==390:
+                    assert page.locator('#mobile-active-filters button').count()==1
+                    page.screenshot(path=str(shots/f'{target.parent.name}_active-filters_390.png'))
+                    page.locator('#filter-apply').click()
+                    page.screenshot(path=str(shots/f'{target.parent.name}_empty_390.png'),full_page=True)
+                    page.locator('#filter-open').click()
+                    page.locator('#mobile-active-filters button').click()
+                    assert page.locator('[data-result]:visible').count()==count
+                    assert page.locator('#listing-min').evaluate('(el)=>el===document.activeElement')
                 page.locator('#listing-reset').click()
                 assert page.locator('[data-result]:visible').count()==count
                 if width==390:page.screenshot(path=str(shots/f'{target.parent.name}_filters_390.png'),full_page=False)
