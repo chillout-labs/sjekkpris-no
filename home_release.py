@@ -4,6 +4,7 @@ import json
 import hashlib
 from home_ui import render_home, HOME_STYLE
 from product_ui import ui_icon, PRODUCT_STYLE
+from catalogue_media import public_image_url
 from category_catalog import category_navigation, category_href, render_category_index
 from catalogue_ui import render_listing, LISTING_STYLE
 
@@ -48,9 +49,9 @@ def write_home(client_products, out, *, base, noindex, day, segment, categories=
     (out / 'home.css').write_text(css, encoding='utf-8')
     css_name = 'home-' + hashlib.sha256((PRODUCT_STYLE + HOME_STYLE + LISTING_STYLE).encode()).hexdigest()[:12] + '.css'
     (out / css_name).write_text(css, encoding='utf-8')
-    body = render_home(products, base=base, money=home_money, day=day, segment=segment)
+    body = render_home(products, base=base, money=home_money, day=day, segment=segment, category_links=[(n['name'],category_href(n,base)) for n in sorted(categories.values(),key=lambda n:n['name']) if n['parent'] is None])
     (out / 'index.html').write_text(page('SjekkPris – sammenlign priser', body, base=base, noindex=noindex, home=True, category_nav=navigation), encoding='utf-8')
-    index = [{'name':p.get('local_name') or p['local_slug'], 'url':f"{base}p/{segment(p['namespace'])}/{segment(p['local_slug'])}/"} for p in products]
+    index = [{'name':p.get('local_name') or p['local_slug'], 'url':f"{base}p/{segment(p['namespace'])}/{segment(p['local_slug'])}/", 'price':home_money(p.get('lowest_item_price')), 'image':(p.get('image') or {}).get('url') if public_image_url((p.get('image') or {}).get('url')) else None} for p in products]
     (out / 'search-index.json').write_text(json.dumps(index), encoding='utf-8')
     body = render_listing(products, base=base, money=home_money, day=day, segment=segment)
     (out / 'search').mkdir(exist_ok=True)
