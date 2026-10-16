@@ -222,3 +222,18 @@ HOME_STYLE += r"""
 .sp-home-categories svg { width:20px; height:20px; flex-shrink:0; color:var(--sp-green) }
 @media(max-width:767px) { .sp-home-categories nav { grid-template-columns:1fr }.sp-home-categories h2 { font-size:23px } }
 """
+
+
+def render_header_search(base):
+    base=escape(base,quote=True)
+    return f'''<div class="sp-header-search-wrap"><form id="home-search-form" class="sp-search" role="search" action="{base}search/" method="get" data-index="{base}search-index.json">
+{ui_icon('search')}<input id="home-query" name="q" type="search" autocomplete="off" aria-label="Søk etter produktnavn" placeholder="Søk etter produkter …" required role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="home-suggestions">
+<button type="submit" aria-label="Søk">{ui_icon('arrow')}</button></form>
+<ul id="home-suggestions" class="sp-suggestions" role="listbox" aria-label="Produktforslag" hidden></ul><p id="home-search-status" class="sp-sr" role="status" aria-live="polite"></p></div>'''
+
+
+HOME_STYLE += r"""
+.sp-header-search-wrap { position:relative;flex:1;min-width:0;max-width:580px;margin-left:auto }.sp-header-search-wrap .sp-search { max-width:none;margin:0;width:100% }.sp-header-search-wrap .sp-suggestions { font:14px/1.4 Arial,Helvetica,sans-serif;max-height:min(420px,60vh);overscroll-behavior:contain }.sp-header-search-wrap .sp-suggestion-copy strong { color:var(--sp-ink) }
+.sp-suggestion-image:empty { display:flex;align-items:center;justify-content:center;color:var(--sp-muted) }.sp-suggestion-image:empty::after { content:'▧';font-size:22px }
+@media(max-width:767px) { .sp-header-search-wrap { order:2;flex:0 0 100%;max-width:none;width:100%;margin:0 }.sp-header-search-wrap .sp-search { flex:auto }.sp-header-search-wrap .sp-suggestions { max-height:55vh }.sp-header-search-wrap input { font-size:16px } }
+"""
