@@ -32,7 +32,9 @@ def main():
                         assert page.locator('.sp-image img:visible').evaluate('(e)=>e.complete&&e.naturalWidth>0')
                         page.locator('[data-gallery-index="1"]').click()
                         assert page.locator('[data-gallery-slide]:visible').count()==1
-                        page.locator('[data-gallery-index="0"]').click()
+                        page.locator('[data-gallery-index="1"]').press('ArrowLeft')
+                        assert page.locator('[data-gallery-index="0"]').get_attribute('aria-pressed')=='true'
+                        assert page.locator('[data-gallery-index="0"]').evaluate('(e)=>document.activeElement===e')
                         page.locator('.sp-faq summary').first.click()
                         assert page.locator('.sp-faq details').first.get_attribute('open') is not None
                     if name=='search':
