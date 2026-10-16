@@ -12,20 +12,20 @@ def render_listing(products, *, base, money, day, segment, title='Søk etter pro
     options = ''.join(f'<option value="{e(b, quote=True)}">{e(b)}</option>' for b in brands)
     brand = f'<label>Merke<select id="listing-brand"><option value="">Alle merker</option>{options}</select></label>' if brands else ''
     return f'''<section class="sp-home sp-listing" data-category="{str(category).lower()}">
-<nav class="sp-breadcrumb" aria-label="Brødsmulesti"><a href="{e(base)}">Hjem</a><span aria-hidden="true">›</span>{trail}<span>{e(title)}</span></nav>
-<h1>{e(title)}</h1><p class="sp-listing-intro">Sammenlign produkter og finn butikkens laveste varepris. Frakt vises på produktsiden.</p>
+<nav class="sp-breadcrumb" aria-label="Brødsmulesti"><a href="{e(base)}">Hjem</a><span aria-hidden="true">›</span>{trail}<span aria-current="page">{e(title)}</span></nav>
+<h1>{e(title)}</h1><p class="sp-listing-intro">Sammenlign produkter og butikkenes varepriser. Frakt vises på produktsiden.</p>
 {subcategories}<div class="sp-listing-layout">
 <div id="filter-desktop-slot">
 <details class="sp-listing-filters" open><summary>Filtrer produkter</summary><div>
 <div class="sp-price-range"><label>Min. pris (kr)<input id="listing-min" type="number" min="0" step="1" inputmode="numeric" placeholder="Ingen grense"></label><label>Maks. pris (kr)<input id="listing-max" type="number" min="0" step="1" inputmode="numeric" placeholder="Ingen grense"></label></div>{brand}
 <button id="listing-reset" type="button">Nullstill filtre</button></div></details></div>
-<div class="sp-listing-main"><div class="sp-listing-toolbar"><button id="filter-open" class="sp-filter-open" type="button" hidden>Filter <span id="filter-count"></span></button><p id="result-status" role="status" aria-live="polite">{len(products)} produkter</p>
+<div class="sp-listing-main"><div class="sp-listing-toolbar"><button id="filter-open" class="sp-filter-open" type="button" aria-haspopup="dialog" aria-controls="filter-dialog" hidden>Filter <span id="filter-count"></span></button><p id="result-status" role="status" aria-live="polite">{len(products)} produkter</p>
 <label>Sorter etter<select id="listing-sort"><option value="name">Produktnavn</option><option value="price" {"selected" if category else ""}>Laveste varepris</option><option value="price-desc">Høyeste varepris</option></select></label></div>
 <div id="active-filters" class="sp-active-filters" aria-label="Valgte filtre"></div>
-<div class="sp-home-empty" id="listing-empty" hidden><h2>Ingen produkter funnet</h2><p>Prøv et kortere produktnavn, fjern merkevalget eller øk maksprisen.</p><button type="button" id="listing-show-all">Vis alle produkter</button></div>
+<div class="sp-home-empty" id="listing-empty" hidden><h2>Ingen produkter funnet</h2><p id="listing-empty-help">Prøv et annet søk eller fjern et filter.</p><button type="button" id="listing-show-all">Vis alle produkter</button></div>
 <ul class="sp-product-grid" id="search-results">{cards}</ul><noscript>Alle produkter vises. Filtrering og sortering krever JavaScript.</noscript>
 </div></div>
-<dialog id="filter-dialog" aria-labelledby="filter-heading"><div class="sp-filter-heading"><h2 id="filter-heading">Filtre</h2><button id="filter-close" type="button" aria-label="Lukk filtre">✕</button></div><div id="filter-mobile-slot"></div><button id="filter-apply" type="button">Vis produkter</button></dialog>
+<dialog id="filter-dialog" aria-labelledby="filter-heading"><div class="sp-filter-heading"><h2 id="filter-heading">Filtre</h2><button id="filter-close" type="button" aria-label="Lukk filtre">✕</button></div><div class="sp-active-filters" id="mobile-active-filters" aria-label="Valgte filtre"></div><div id="filter-mobile-slot"></div><button id="filter-apply" type="button">Vis produkter</button></dialog>
 </section><script>{LISTING_SCRIPT}</script>'''
 
 
@@ -57,10 +57,16 @@ LISTING_SCRIPT = r"""
    document.getElementById('result-status').textContent=n+' '+(n===1?'produkt':'produkter')+(q?' for «'+input.value.trim()+'»':'');
    document.getElementById('listing-empty').hidden=n!==0;
    document.getElementById('filter-apply').textContent='Vis '+n+' '+(n===1?'produkt':'produkter');
-   const active=document.getElementById('active-filters');active.replaceChildren();
+   const activeAreas=[document.getElementById('active-filters'),document.getElementById('mobile-active-filters')];
+   activeAreas.forEach(area=>area.replaceChildren());
    const selected=[[brand,brand?.value],[min,min.value?'Fra '+min.value+' kr':''],[max,max.value?'Til '+max.value+' kr':'']].filter(([el,label])=>label);
    document.getElementById('filter-count').textContent=selected.length||'';
-   selected.forEach(([el,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label+' ×';b.setAttribute('aria-label','Fjern filter: '+label);b.addEventListener('click',()=>{el.value='';filter();});active.appendChild(b);});
+   activeAreas.forEach(active=>selected.forEach(([el,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label+' ×';b.setAttribute('aria-label','Fjern filter: '+label);b.addEventListener('click',()=>{el.value='';filter();if(dialog.open)el.focus();else document.getElementById('listing-sort').focus();});active.appendChild(b);}));
+   const queryMatches=rows.filter(row=>row.dataset.name.toLocaleLowerCase('nb').includes(q)).length;
+   document.getElementById('listing-empty-help').textContent=queryMatches && selected.length
+     ? queryMatches+' '+(queryMatches===1?'produkt er':'produkter er')+' tilgjengelig uten filtrene. Fjern et valgt filter eller nullstill alle.'
+     : q ? 'Ingen treff for «'+input.value.trim()+'». Prøv et kortere navn, eller se alle produktene.'
+     : 'Ingen produkter tilgjengelig her akkurat nå. Utforsk en annen kategori fra menyen.';
  }
  function reset(){if(brand)brand.value='';max.value='';min.value='';filter();}
  document.getElementById('listing-reset').addEventListener('click',reset);
@@ -106,11 +112,12 @@ LISTING_STYLE = r"""
 .sp-price-range { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px }
 @media(min-width:768px) { .sp-listing .sp-card-image { height:210px; aspect-ratio:auto; flex-shrink:0 }.sp-listing .sp-card-image img { max-height:100% } }
 #filter-desktop-slot { position:sticky; top:20px }
-.sp-listing #filter-dialog { max-width:none; max-height:none; width:100%; height:100dvh; margin:0; padding:20px; border:0; color:var(--sp-ink); background:white }
+.sp-listing #filter-dialog { max-width:none; max-height:none; width:100%; height:100dvh; margin:0; padding:20px; padding-bottom:max(20px,env(safe-area-inset-bottom)); border:0; color:var(--sp-ink); background:white }
 #filter-dialog[open] { display:flex; flex-direction:column }
 #filter-dialog::backdrop { background:#10203b66 }
 .sp-filter-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:14px; border-bottom:1px solid var(--sp-line) }
 .sp-filter-heading h2 { font-size:22px }.sp-filter-heading button { border:0 }
+#mobile-active-filters { margin-top:16px; flex-shrink:0 }
 #filter-mobile-slot { overflow-y:auto; flex:1; padding:8px 0 20px }
 #filter-mobile-slot .sp-listing-filters { border:0; padding:0; margin:0 }
 #filter-mobile-slot summary { display:none }
