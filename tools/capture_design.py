@@ -20,7 +20,7 @@ def main():
             errors=[]
             page.on('pageerror',lambda error:errors.append(str(error)))
             page.route('**/*',lambda route:route.continue_() if route.request.url.startswith(origin+'/') else route.abort())
-            for width in [390,1280]:
+            for width in [360,390,768,1280]:
                 page.set_viewport_size({'width':width,'height':900})
                 for name,path in [('home','/'),('search','/search/?q=OLED'),('category','/kategori/tv/'),('product','/p/catalogue/demo-tv-2/'),('empty','/p/catalogue/demo-tv-6/')]:
                     page.goto(origin+path,wait_until='networkidle')
@@ -29,7 +29,12 @@ def main():
                         page.locator('.sp-card-photo img:visible').evaluate_all("async images=>{await Promise.all(images.map(async e=>{e.loading='eager';await e.decode();}));}")
                         assert page.locator('.sp-card-photo img:visible').first.evaluate('(e)=>e.complete&&e.naturalWidth>0')
                     if name=='product':
-                        assert page.locator('.sp-image img').evaluate('(e)=>e.complete&&e.naturalWidth>0')
+                        assert page.locator('.sp-image img:visible').evaluate('(e)=>e.complete&&e.naturalWidth>0')
+                        page.locator('[data-gallery-index="1"]').click()
+                        assert page.locator('[data-gallery-slide]:visible').count()==1
+                        page.locator('[data-gallery-index="0"]').click()
+                        page.locator('.sp-faq summary').first.click()
+                        assert page.locator('.sp-faq details').first.get_attribute('open') is not None
                     if name=='search':
                         assert page.locator('[data-result]:visible').count()==3
                     page.screenshot(path=str(shots/f'{name}_{width}.png'),full_page=True)
@@ -49,6 +54,6 @@ def main():
             browser.close()
     finally:
         server.shutdown();server.server_close()
-    print('Design journey checks passed; ten screenshots captured.')
+    print('Design journey checks passed; responsive screenshots captured.')
 
 if __name__=='__main__':main()
