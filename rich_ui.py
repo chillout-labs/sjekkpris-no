@@ -97,3 +97,24 @@ RICH_STYLE=r"""
 .sp-product-rail>li { scroll-snap-align:start }.sp-editorial { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px }.sp-editorial a { display:block;padding:24px;border:1px solid var(--sp-line);border-radius:12px;text-decoration:none;color:var(--sp-ink);background:var(--sp-surface) }.sp-editorial p { margin-top:10px!important;color:var(--sp-muted) }
 @media(max-width:767px) { .sp-use-cases,.sp-value-grid,.sp-editorial { grid-template-columns:1fr }.sp-product-rail { grid-auto-columns:calc((100% - 10px)/2) }.sp-key-attributes { grid-template-columns:repeat(3,minmax(0,1fr)) }.sp-discovery .sp-catalogue-heading h2 { font-size:22px }.sp-product-summary { font-size:14px } }
 """
+
+
+def search_highlights(title, explanation, cards, criteria):
+    chips=''.join(f'<a href="{e(url,quote=True)}">{e(label)} <span aria-hidden="true">↗</span></a>' for label,url in criteria)
+    return f'<section class="sp-search-highlights"><div><h1>{e(title)}</h1><p>{e(explanation)}</p></div><ul class="sp-product-grid">'+''.join(cards)+f'</ul><nav class="sp-category-chips" aria-label="Forståtte søkekriterier">{chips}</nav></section>'
+
+
+def loading_state():
+    return '<section class="sp-loading" aria-busy="true" aria-label="Laster produkter"><p role="status">Henter produkter …</p><div class="sp-skeleton-grid" aria-hidden="true">'+''.join('<div class="sp-skeleton"><span></span><i></i><i></i></div>' for _ in range(3))+'</div></section>'
+
+
+def error_state(retry_url):
+    return f'<section class="sp-home-empty"><h2>Vi kunne ikke hente produktene</h2><p>Prøv igjen om litt. Du kan også gå tilbake og utforske kategoriene.</p><a class="sp-cta" href="{e(retry_url,quote=True)}">Prøv igjen</a> <a href="/kategori/">Utforsk kategorier</a></section>'
+
+
+RICH_STYLE += r'''
+.sp-search-highlights { margin:24px 0;padding:28px;background:#f0f8f7;border-radius:16px;display:grid;grid-template-columns:minmax(180px,1fr) 3fr;gap:24px }
+.sp-search-highlights h1 { font-size:30px;line-height:1.2;letter-spacing:-.8px }.sp-search-highlights p { color:var(--sp-muted);line-height:1.6;margin-top:12px }.sp-search-highlights>.sp-product-grid { grid-template-columns:repeat(3,minmax(0,1fr));margin:0 }.sp-search-highlights nav { grid-column:1/-1 }
+.sp-skeleton-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:20px 0 }.sp-skeleton { border:1px solid var(--sp-line);padding:16px;border-radius:12px }.sp-skeleton span,.sp-skeleton i { display:block;background:#e8edf1;border-radius:8px;aspect-ratio:1.4 }.sp-skeleton i { height:16px;aspect-ratio:auto;margin-top:14px;width:85% }.sp-skeleton i:last-child { width:50% }
+@media(max-width:767px) { .sp-search-highlights { display:block;padding:20px 16px }.sp-search-highlights>.sp-product-grid { display:grid;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:80%;overflow-x:auto;margin:20px 0 }.sp-search-highlights h1 { font-size:28px }.sp-skeleton-grid { grid-template-columns:repeat(2,minmax(0,1fr)) }.sp-skeleton:last-child { display:none } }
+'''
