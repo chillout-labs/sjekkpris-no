@@ -45,6 +45,7 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from category_catalog import category_index, category_navigation, category_links
 from catalogue_media import image_markup, category_markup
 from product_ui import PRODUCT_STYLE, PRICE_MODE_SCRIPT, ui_icon
 from home_ui import HOME_STYLE, render_home
@@ -165,7 +166,7 @@ def segment(value: str) -> str:
 # -- rendering -------------------------------------------------------------
 
 
-def page(title: str, body: str, *, base: str, noindex: bool, home: bool = False) -> str:
+def page(title: str, body: str, *, base: str, noindex: bool, home: bool = False, category_nav: str = "") -> str:
     css_name = "style-" + hashlib.sha256((STYLE + PRODUCT_STYLE + HOME_STYLE).encode()).hexdigest()[:12] + ".css"
     robots = '<meta name="robots" content="noindex">' if noindex else ""
     header_search = '' if home else (
@@ -185,7 +186,7 @@ def page(title: str, body: str, *, base: str, noindex: bool, home: bool = False)
 {header_search}
 <details class="sp-menu"><summary>{ui_icon('menu')}<span>Meny</span></summary>
 <nav aria-label="Hovedmeny"><a href="{e(base)}">Alle produkter</a><a href="{e(base)}search/">Søk etter produkter</a></nav></details>
-</div></header><main id="main" class="sp-shell">{body}</main>
+</div>{category_nav}</header><main id="main" class="sp-shell">{body}</main>
 <footer class="sp-footer"><div class="sp-shell"><strong>SjekkPris</strong><p>Uavhengig prissammenligning. Du handler hos butikken.</p><p>Vi kan motta provisjon når du handler via lenkene våre. Beta – innholdet er under utvikling.</p></div></footer>
 </body></html>"""
 
@@ -498,7 +499,10 @@ def search_results_body(*, base: str) -> str:
     )
 
 
-def product_body(product: dict, body: dict, *, base: str) -> str:
+def product_body(product: dict, body: dict, *, base: str, breadcrumbs=(), presentation=None) -> str:
+    from rich_ui import product_parts, RICH_SCRIPT
+    parts=product_parts(presentation or {})
+    breadcrumb_html = "".join(f'<a href="{e(url)}">{e(label)}</a><span aria-hidden="true">›</span>' for label, url in breadcrumbs)
     identity = body.get("identity") or {}
     name = identity.get("local_name") or product.get("local_name") or "Produkt"
     offers, excluded = body.get("offers") or [], body.get("excluded") or []
@@ -533,17 +537,19 @@ def product_body(product: dict, body: dict, *, base: str) -> str:
               '<input id="include-shipping" type="checkbox" role="switch" aria-controls="price-winner price-rows" aria-describedby="price-sort-status">'
               '<span class="sp-switch-track" aria-hidden="true"></span><span>Inkluder frakt</span></label>') if offers else ''
     return f"""<div class="sp-product" data-price-basis="item">
-<nav class="sp-breadcrumb" aria-label="Brødsmulesti"><a href="{e(base)}">Hjem</a><span aria-hidden="true">›</span><span>{e(name)}</span></nav>
+<nav class="sp-breadcrumb" aria-label="Brødsmulesti"><a href="{e(base)}">Hjem</a><span aria-hidden="true">›</span>{breadcrumb_html}<span>{e(name)}</span></nav>
 <section class="sp-hero" aria-labelledby="product-title">
-<div class="sp-identity"><h1 id="product-title">{e(name)}</h1><dl class="sp-meta">{meta}</dl></div>
-<div class="sp-gallery">{render_product_image(identity)}</div>
+<div class="sp-product-heading"><div class="sp-identity"><h1 id="product-title">{e(name)}</h1><dl class="sp-meta">{meta}</dl></div>
+<div class="sp-product-options">{parts["summary"]}{parts["variants"]}{parts["attributes"]}</div></div>
+<div class="sp-gallery">{parts["gallery"] or render_product_image(identity)}</div>
 <div class="sp-winner" id="price-winner">{price_html}</div></section>
 <nav class="sp-tabs" aria-label="Produktseksjoner"><a href="#prices">Priser ({len(offers)})</a><a href="#history">Prishistorikk</a><a href="#about">Om produktet</a><a href="#specifications">Spesifikasjoner</a></nav>
 <div class="sp-comparison"><section class="sp-panel sp-offer-panel" id="prices"><div class="sp-price-toolbar"><h2>Butikker og priser</h2>{switch}</div><p class="sp-subtitle" id="price-sort-status" role="status" aria-live="polite">Sortert etter varepris · uten frakt.</p><noscript><p class="sp-subtitle">Visning med frakt krever JavaScript. Frakt vises separat ved hvert tilbud.</p></noscript>{table}<p class="sp-footnote">Kontroller endelig pris og levering hos butikken.</p></section>
-<section class="sp-panel" id="history"><h2>Prishistorikk</h2><div class="sp-history-empty">{ui_icon('chart')}<h3>Ingen prishistorikk ennå</h3><p>Vi har ikke prisutvikling å vise for dette produktet.</p></div></section></div>
-<div class="sp-details"><section class="sp-panel" id="about"><h2>Om produktet</h2><p class="sp-empty">Utfyllende produktinformasjon er ikke tilgjengelig.</p></section><section class="sp-panel" id="specifications"><h2>Spesifikasjoner</h2>{specs}{category_markup(identity.get("categories"), full=True, show_primary=False)}</section></div>
+<section class="sp-panel" id="history"><h2>Prishistorikk</h2>{parts["history"] or ('<div class="sp-history-empty">'+ui_icon('chart')+'<h3>Ingen prishistorikk ennå</h3><p>Vi har ikke prisutvikling å vise for dette produktet.</p></div>')}</section></div>
+<div class="sp-details"><section class="sp-panel" id="about"><h2>Om produktet</h2>{parts["about"] or '<p class="sp-empty">Utfyllende produktinformasjon er ikke tilgjengelig.</p>'}</section><section class="sp-panel" id="specifications"><h2>Spesifikasjoner</h2>{parts["specs"] or specs}{category_markup(identity.get("categories"), full=True, show_primary=False)}</section></div>
+{parts["extra"]}
 <div class="sp-trust"><div>{ui_icon('shield')}<p><strong>Uavhengig sammenligning</strong><span>Du handler direkte hos butikken.</span></p></div><div>{ui_icon('truck')}<p><strong>Frakt når den er kjent</strong><span>Ukjent frakt vises tydelig.</span></p></div><div>{ui_icon('info')}<p><strong>Åpent om provisjon</strong><span>Vi kan få provisjon via butikklenker.</span></p></div></div>
-</div><script>{PRICE_MODE_SCRIPT}</script>"""
+</div><script>{PRICE_MODE_SCRIPT}{RICH_SCRIPT}</script>"""
 
 
 STYLE = """
@@ -1678,9 +1684,11 @@ def build(client: Chillout, out: Path, *, base: str, noindex: bool) -> int:
     shutil.copyfile(out / "style.css", out / css_name)
 
     products = catalogue(client)
+    categories = category_index(products)
+    navigation = category_navigation(categories, base)
 
     from home_release import write_home
-    write_home(products, out, base=base, noindex=noindex, day=day, segment=segment)
+    write_home(products, out, base=base, noindex=noindex, day=day, segment=segment, categories=categories)
 
     for product in products:
         ns, slug = segment(product["namespace"]), segment(product["local_slug"])
@@ -1689,7 +1697,7 @@ def build(client: Chillout, out: Path, *, base: str, noindex: bool) -> int:
         target.mkdir(parents=True, exist_ok=True)
         title = f"{product.get('local_name') or slug} – SjekkPris.no"
         (target / "index.html").write_text(
-            page(title, product_body(product, body, base=base), base=base, noindex=noindex),
+            page(title, product_body(product, body, base=base, breadcrumbs=category_links(product,categories,base)), base=base, noindex=noindex, category_nav=navigation),
             encoding="utf-8",
         )
     (out / "404.html").write_text(

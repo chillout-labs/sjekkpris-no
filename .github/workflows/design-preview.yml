@@ -1,8 +1,8 @@
 name: Design journey preview (no deploy)
 on:
   push:
-    branches: [frontend-v1-design]
-    paths: ['home_ui.py', 'catalogue_ui.py', 'home_release.py', 'tools/preview_design.py', 'tools/capture_design.py', 'tools/design_assets/**', '.github/workflows/design-preview.yml']
+    branches: [frontend-v1-design, category-design-v1]
+    paths: ['build.py', 'product_ui.py', 'rich_ui.py', 'tools/design_fixtures.py', 'home_ui.py', 'catalogue_ui.py', 'home_release.py', 'tools/preview_design.py', 'tools/capture_design.py', 'tools/design_assets/**', '.github/workflows/design-preview.yml']
   workflow_dispatch: {}
 permissions:
   contents: read
@@ -15,8 +15,8 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m unittest discover -s tests -q
+      - run: python -m pip install playwright==1.58.0 pillow==11.3.0
       - run: python tools/preview_design.py
-      - run: python -m pip install playwright==1.58.0
       - run: python -m playwright install --with-deps chromium
       - run: python tools/capture_design.py
       - if: always()

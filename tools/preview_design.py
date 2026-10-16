@@ -14,6 +14,8 @@ import sys
 ROOT = Path(__file__).resolve().parent.parent
 sys.path[:0] = [str(ROOT), str(ROOT / 'tests')]
 import build
+import home_release
+from design_fixtures import product_presentation, homepage_sections
 from home_release import page, home_money
 from catalogue_ui import render_listing
 from test_build import offer, TOKEN_WINNER, TOKEN_OOS
@@ -33,6 +35,7 @@ def main():
         image={'url':'https://sjekkpris.no/assets/tv-illustration.webp'} if i<5 else None
         product={'namespace':'catalogue','local_slug':slug,'local_name':name,
                  'local_brand':brand,'local_category':'TV', 'image':image,
+                 'categories':{'primary':{'id':'demo-tv','display_name':'TV','active':True,'path':[{'id':'demo-electronics','display_name':'Elektronikk'},{'id':'demo-tv','display_name':'TV'}]}},
                  'lowest_item_price':{'minor':minor,'currency':'NOK'} if minor else None,
                  'offer_count':3 if minor else 0,'lowest_item_price_confirmed_at':None}
         products.append(product)
@@ -50,14 +53,44 @@ def main():
         def get(self,path):
             return {'products':products} if path.split('?')[0].endswith('/catalogue') else comparisons[path.split('/')[-2]]
     out=ROOT/'.design-preview'
-    build.build(Fixtures(),out,base='/',noindex=True)
+    original_product=build.product_body
+    original_home=home_release.render_home
+    def full_product(product,body,**kwargs):
+        return original_product(product,body,**kwargs,presentation=product_presentation(product))
+    def full_home(products,**kwargs):
+        result=original_home(products,**kwargs)
+        start=result.index('<section class="sp-catalogue"')
+        end=result.index('</section>',start)+len('</section>')
+        args={k:v for k,v in kwargs.items() if k!='category_links'}
+        return result[:start]+homepage_sections(products,**args)+result[end:]
+    build.product_body=full_product
+    home_release.render_home=full_home
+    try:
+        build.build(Fixtures(),out,base='/',noindex=True)
+    finally:
+        build.product_body=original_product
+        home_release.render_home=original_home
     shutil.copyfile(ROOT/'tools/design_assets/tv-illustration.webp',out/'assets/tv-illustration.webp')
-    category=out/'kategori'/'tv';category.mkdir(parents=True,exist_ok=True)
-    content=render_listing(products,base='/',money=home_money,day=build.day,segment=build.segment,title='TV',category=True)
-    (category/'index.html').write_text(page('TV – designforhåndsvisning',content,base='/',noindex=True),encoding='utf-8')
-    shop=out/'butikk';shop.mkdir(exist_ok=True)
+    # A detail crop of the same known illustration, not an invented second product photo.
+    from PIL import Image
+    with Image.open(ROOT/'tools/design_assets/tv-illustration.webp') as im:
+        im.crop((im.width//4,im.height//4,im.width*3//4,im.height*3//4)).save(out/'assets/tv-detail.webp')
+    guide=out/'guide/velg-tv';guide.mkdir(parents=True,exist_ok=True)
+    (guide/'index.html').write_text(page('Eksempelguide – SjekkPris','<article class="sp-home sp-panel"><h1>Slik velger du TV</h1><p>Dette er eksempelinnhold for å kontrollere guidekortets lenke og typografi. Redaksjonelt innhold krever egne kilder og godkjenning.</p><h2>Start med behovet ditt</h2><p>Vurder plass, skjermstørrelse og hva du bruker TV-en til.</p><a href="/kategori/tv/">Sammenlign eksempelprodukter</a></article>',base='/',noindex=True),encoding='utf-8')
+    from rich_ui import search_highlights, loading_state, error_state
+    from home_ui import render_product_card
+    args=dict(base='/',money=home_money,day=build.day,segment=build.segment)
+    cards=[render_product_card(p,**args) for p in products[:3]]
+    highlights=search_highlights('TV til film og serier','Eksempel på behovssøk. Kortene viser oppsettet; utvalget er ikke en beregnet anbefaling.',cards,[('Endre behov','/search/?q=TV'),('Endre pris','/search/?q=OLED')])
+    listing=render_listing(products,**args,title='Alle eksempelprodukter')
+    target=out/'behovssok';target.mkdir(exist_ok=True)
+    (target/'index.html').write_text(page('Behovssøk – designeksempel',highlights+listing,base='/',noindex=True),encoding='utf-8')
+    target=out/'design-states';target.mkdir(exist_ok=True)
+    states='<section class="sp-home sp-state-gallery"><h1>Komponenttilstander</h1><p>Isolerte designeksempler. Lastetilstanden nedenfor er bevisst statisk.</p>'+loading_state()+error_state('/kategori/tv/')+'<section class="sp-panel"><h2>Manglende data</h2><p><a href="/p/catalogue/demo-tv-6/">Produkt uten bilde, tilbud eller prishistorikk</a></p><p><a href="/search/?q=ingen-treff">Søk uten treff</a></p><p><a href="/p/catalogue/demo-tv-2/">Tilbud med kjent og ukjent frakt</a></p></section></section>'
+    (target/'index.html').write_text(page('Komponenttilstander',states,base='/',noindex=True),encoding='utf-8')
+    shop=out/'butikk' ;shop.mkdir(exist_ok=True)
     (shop/'index.html').write_text(page('Butikklenke – forhåndsvisning','<section class="sp-home" style="padding:32px 0"><h1>Her går kunden til butikken</h1><p>Dette er slutten på eksempelreisen. Ingen ekte butikk åpnes.</p><p><a href="/">Til startsiden</a></p></section>',base='/',noindex=True),encoding='utf-8')
-    banner='<aside style="padding:12px 16px;background:#fff3d6;color:#10203b;text-align:center;font:13px Arial,sans-serif">Designforhåndsvisning · eksempelprodukter, illustrasjonsbilde og eksempelpriser. <a href="/">Startside</a> · <a href="/search/?q=OLED">Søk</a> · <a href="/kategori/tv/">TV-kategori</a></aside>'
+    banner='<aside style="padding:12px 16px;background:#fff3d6;color:#10203b;text-align:center;font:13px Arial,sans-serif">Designforhåndsvisning · eksempelprodukter, illustrasjonsbilde og eksempelpriser. <a href="/">Startside</a> · <a href="/search/?q=OLED">Søk</a> · <a href="/kategori/tv/">TV-kategori</a> · <a href="/behovssok/">Behovssøk</a> · <a href="/design-states/">Tilstander</a></aside>'
     for target in out.rglob('*.html'):
         html=target.read_text(encoding='utf-8').replace('<body>','<body>'+banner)
         html=html.replace('https://sjekkpris.no/assets/', '/assets/')
