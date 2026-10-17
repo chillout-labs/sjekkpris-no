@@ -217,3 +217,23 @@ footer.sp-footer { margin-top:32px; padding:24px 0; background:var(--sp-surface)
 
 from rich_ui import RICH_STYLE
 PRODUCT_STYLE += RICH_STYLE
+
+PRODUCT_STYLE += r"""
+/* Product mobile header: compact default, existing search revealed on demand. */
+.sp-mobile-search-toggle { display:none }
+@media(max-width:767px) {
+ .sp-product-page .sp-topbar { padding-top:8px; padding-bottom:8px; gap:8px }
+ .sp-product-page .sp-mobile-search-toggle { display:flex; align-items:center; justify-content:center; width:44px; height:44px; margin-left:auto; order:1; color:var(--sp-ink); border-radius:8px }
+ .sp-product-page .sp-menu { order:2; margin-left:0 }
+ .sp-product-page .sp-header-search-wrap { display:none; order:3 }
+ .sp-product-page.sp-search-open .sp-header-search-wrap { display:block }
+ .sp-product-page .sp-category-nav { display:none }
+ .sp-product-page .sp-breadcrumb { padding:4px 0; min-height:44px; font-size:12px }
+ .sp-product-page .sp-breadcrumb>* { display:none }
+ .sp-product-page .sp-breadcrumb .sp-current-category,
+ .sp-product-page .sp-breadcrumb:not(:has(.sp-current-category))>a:first-child { display:inline-flex; align-items:center; gap:8px; min-height:44px; color:var(--sp-muted); text-decoration:none }
+ .sp-product-page .sp-breadcrumb .sp-current-category::before,
+ .sp-product-page .sp-breadcrumb:not(:has(.sp-current-category))>a:first-child::before { content:'←'; font-size:20px; flex-shrink:0 }
+ .sp-product-page .sp-meta [data-product-meta="category"] { display:none }
+}
+"""
