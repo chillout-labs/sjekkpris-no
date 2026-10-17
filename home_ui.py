@@ -52,7 +52,7 @@ def render_home(products, *, base, money, day, segment, category_links=()):
             examples.append(f'<a class="sp-example" href="{href}">{ui_icon("search")}<span>{escape(p.get("local_name") or p["local_slug"])}</span></a>')
     examples_html = ('<div class="sp-examples"><p>Prøv for eksempel</p><div>' + ''.join(examples) + '</div></div>') if examples else ''
     catalogue = ('<ul class="sp-product-grid">' + ''.join(cards) + '</ul>') if cards else '<p class="sp-home-empty">Ingen produkter er publisert ennå.</p>'
-    return f'''<div class="sp-home">
+    return f'''<div class="sp-home sp-home-front">
 <section class="sp-home-hero" aria-labelledby="home-title">
 <img class="sp-home-art" src="{escape(base)}assets/sjekkpris-startside.webp" alt="" width="1774" height="887" fetchpriority="high">
 <div class="sp-home-hero-content">
@@ -73,7 +73,7 @@ def render_home(products, *, base, money, day, segment, category_links=()):
 <div>{ui_icon('shield')}<p>Uavhengig sammenligning<span>Du handler hos butikken</span></p></div>
 </section>
 <section class="sp-catalogue" id="products" aria-labelledby="catalogue-title">
-<div class="sp-catalogue-heading"><h2 id="catalogue-title">Produkter</h2><span>{len(products)} {'produkt' if len(products) == 1 else 'produkter'}</span></div>
+<div class="sp-catalogue-heading"><h2 id="catalogue-title">Produkter</h2><a class="sp-see-all" href="{escape(base)}search/">Se alle <span class="sp-sr">{len(products)} {'produkt' if len(products) == 1 else 'produkter'}</span>{ui_icon('arrow')}</a></div>
 {catalogue}</section>
 {category_section}
 <div class="sp-home-signoff">{ui_icon('shield')}<div><strong>Smartere valg. Mer for pengene.</strong><p>Uavhengig prissammenligning. Frakt vises når den er kjent.</p></div></div>
@@ -275,4 +275,34 @@ SHELL_SCRIPT += r"""
  });
  panel.addEventListener('keydown',event=>{if(event.key==='Escape'){closeSearch();}});
 })();
+"""
+
+HOME_STYLE += r"""
+/* Homepage discovery follows the compact horizontal rows in reference B002. */
+.sp-home-front .sp-catalogue>.sp-product-grid,
+.sp-home-front .sp-product-rail { display:grid; grid-auto-flow:column; grid-template-columns:none; grid-auto-columns:calc((100% - 48px)/4); gap:16px; overflow-x:auto; scroll-snap-type:x proximity; padding:4px 4px 12px; margin:0 -4px; scroll-padding:4px }
+.sp-home-front .sp-product-grid>li { scroll-snap-align:start }
+.sp-home-front .sp-product-card>a { padding:12px }
+.sp-home-front .sp-card-image { height:140px; aspect-ratio:auto; flex-shrink:0; margin-bottom:12px }
+.sp-home-front .sp-product-card h3 { font-size:14px; padding-bottom:8px; line-height:1.35 }
+.sp-home-front .sp-product-category { display:none }
+.sp-home-front .sp-product-brand { font-size:11px; margin-bottom:8px }
+.sp-home-front .sp-card-price { font-size:21px }
+.sp-home-front .sp-card-bottom { margin-top:10px }
+.sp-home-front .sp-catalogue-heading a { display:inline-flex; align-items:center; justify-content:flex-end; gap:6px; min-height:44px; flex-shrink:0; font-size:13px; color:var(--sp-green); text-decoration:none }
+.sp-home-front .sp-catalogue-heading a:hover { text-decoration:underline }
+.sp-home-front .sp-catalogue-heading a svg { width:18px; height:18px }
+.sp-home-front .sp-home-categories { margin-top:32px }
+@media(max-width:767px) {
+ .sp-home-front .sp-catalogue>.sp-product-grid,
+ .sp-home-front .sp-product-rail { grid-auto-columns:calc((100% - 10px)/2); gap:10px }
+ .sp-home-front .sp-card-image { height:110px; margin-bottom:10px }
+ .sp-home-front .sp-product-card>a { padding:10px }
+ .sp-home-front .sp-product-card h3 { font-size:13px; padding-bottom:6px }
+ .sp-home-front .sp-card-price { font-size:20px }
+ .sp-home-front .sp-product-brand { font-size:11px; margin-bottom:6px }
+ .sp-home-front .sp-catalogue-heading { gap:10px; margin-bottom:10px }
+ .sp-home-front .sp-catalogue-heading h2 { font-size:22px }
+ .sp-home-front .sp-home-categories { margin-top:24px }
+}
 """

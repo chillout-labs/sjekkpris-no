@@ -22,9 +22,16 @@ def main():
             page.route('**/*',lambda route:route.continue_() if route.request.url.startswith(origin+'/') else route.abort())
             for width in [360,390,768,1280]:
                 page.set_viewport_size({'width':width,'height':900})
-                for name,path in [('states','/design-states/'),('intent','/behovssok/'),('home','/'),('search','/search/?q=OLED'),('category','/kategori/tv/'),('product','/p/catalogue/demo-tv-2/'),('empty','/p/catalogue/demo-tv-6/')]:
+                for name,path in [('home_catalogue','/home-catalogue.html'),('states','/design-states/'),('intent','/behovssok/'),('home','/'),('search','/search/?q=OLED'),('category','/kategori/tv/'),('product','/p/catalogue/demo-tv-2/'),('empty','/p/catalogue/demo-tv-6/')]:
                     page.goto(origin+path,wait_until='networkidle')
                     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(width,path,'overflow')
+                    if name=='home_catalogue':
+                        rail=page.locator('.sp-catalogue .sp-product-grid')
+                        assert rail.evaluate('(e)=>e.scrollWidth>e.clientWidth')
+                        assert page.locator('.sp-see-all').get_attribute('href')=='/search/'
+                        page.locator('.sp-catalogue .sp-product-card a').last.focus()
+                        assert rail.evaluate('(e)=>e.scrollLeft>0')
+                        page.locator('.sp-catalogue .sp-product-card a').first.focus()
                     if name in ['home','search','category']:
                         page.locator('.sp-card-photo img:visible').evaluate_all("async images=>{await Promise.all(images.map(async e=>{e.loading='eager';await e.decode();}));}")
                         assert page.locator('.sp-card-photo img:visible').first.evaluate('(e)=>e.complete&&e.naturalWidth>0')
