@@ -82,6 +82,12 @@ def render_home(products, *, base, money, day, segment, category_links=()):
 
 HOME_SEARCH_SCRIPT = r"""
 (() => {
+  document.querySelectorAll('.sp-home-categories nav, .sp-home-hero .sp-examples>div').forEach(row => {
+    row.addEventListener('focusin', event => {
+      const link = event.target.closest('a');
+      if (link) link.scrollIntoView({block:'nearest', inline:'nearest', behavior:'instant'});
+    });
+  });
   const form = document.getElementById('home-search-form');
   const input = document.getElementById('home-query');
   const list = document.getElementById('home-suggestions');
