@@ -93,6 +93,8 @@ def main():
     from rich_ui import search_highlights, loading_state, error_state
     from home_ui import render_product_card
     args=dict(base='/',money=home_money,day=build.day,segment=build.segment)
+    from category_insights import build_category_insights
+    build_category_insights(out, products, render_listing, page, args)
     cards=[render_product_card(p,**args) for p in products[:3]]
     highlights=search_highlights('TV til film og serier','Eksempel på behovssøk. Kortene viser oppsettet; utvalget er ikke en beregnet anbefaling.',cards,[('Endre behov','/search/?q=TV'),('Endre pris','/search/?q=OLED')])
     listing=render_listing(products,**args,title='Alle eksempelprodukter').replace('<h1>Alle eksempelprodukter</h1>','<h2>Alle eksempelprodukter</h2>',1)
