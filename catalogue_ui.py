@@ -17,7 +17,10 @@ def render_listing(products, *, base, money, day, segment, title='Søk etter pro
             html = html.replace('<li ', '<li '+data, 1)
         return html
     cards = ''.join(card(product) for product in products)
-    facet_controls = ''.join(f'<label>{e(label)}<select aria-label="{e(label,quote=True)}" data-facet="{i}" data-label="{e(label,quote=True)}"><option value="">Alle</option>'+''.join(f'<option value="{e(value,quote=True)}">{e(text)}</option>' for value,text in choices)+'</select></label>' for i,(key,label,choices) in enumerate(facets))
+    facet_controls = ''.join(
+        f'<fieldset class="sp-facet-group"><legend>{e(label)}</legend><p>Velg ett eller flere</p>'
+        + ''.join(f'<label class="sp-facet-choice"><input type="checkbox" aria-label="{e(label+": "+text,quote=True)}" data-facet="{i}" data-label="{e(label,quote=True)}" data-option-label="{e(text,quote=True)}" value="{e(value,quote=True)}"><span>{e(text)}</span></label>' for value,text in choices)
+        + '</fieldset>' for i,(key,label,choices) in enumerate(facets))
     brands = sorted({p.get('local_brand') for p in products if p.get('local_brand')})
     options = ''.join(f'<option value="{e(b, quote=True)}">{e(b)}</option>' for b in brands)
     brand = f'<label>Merke<select id="listing-brand"><option value="">Alle merker</option>{options}</select></label>' if brands else ''
@@ -45,7 +48,8 @@ LISTING_SCRIPT = r"""
  const form=document.querySelector('.sp-search'), input=form.querySelector('input');
  const grid=document.getElementById('search-results'), rows=Array.from(grid.children);
  const brand=document.getElementById('listing-brand'), max=document.getElementById('listing-max'), min=document.getElementById('listing-min'), sort=document.getElementById('listing-sort');
- const facets=Array.from(root.querySelectorAll('select[data-facet]'));
+ const facets=Array.from(root.querySelectorAll('input[data-facet]'));
+ const facetGroups=[...new Set(facets.map(el=>el.dataset.facet))].map(key=>facets.filter(el=>el.dataset.facet===key));
  const category=root.dataset.category==='true';
  input.value=category?'':new URLSearchParams(location.search).get('q')||'';
  function filter(){
@@ -58,7 +62,7 @@ LISTING_SCRIPT = r"""
    [min,max].forEach(el=>el.setAttribute('aria-invalid',String(invalid)));
    rows.forEach(row=>{
      const price=row.dataset.price===''?Infinity:Number(row.dataset.price);
-     row.hidden=facets.some(el=>el.value&&row.getAttribute('data-facet-'+el.dataset.facet)!==el.value)||!row.dataset.name.toLocaleLowerCase('nb').includes(q)||(brand&&brand.value&&row.dataset.brand!==brand.value)||(Number.isFinite(limit)&&price>limit)||price<minimum||(minimum>0&&!Number.isFinite(price));
+     row.hidden=facetGroups.some(group=>{const selected=group.filter(el=>el.checked);return selected.length&&!selected.some(el=>row.getAttribute('data-facet-'+el.dataset.facet)===el.value);})||!row.dataset.name.toLocaleLowerCase('nb').includes(q)||(brand&&brand.value&&row.dataset.brand!==brand.value)||(Number.isFinite(limit)&&price>limit)||price<minimum||(minimum>0&&!Number.isFinite(price));
      if(!row.hidden)n++;
    });
    [...rows].sort((a,b)=>{
@@ -74,9 +78,9 @@ LISTING_SCRIPT = r"""
    document.getElementById('filter-apply').textContent='Vis '+n+' '+(n===1?'produkt':'produkter');
    const activeAreas=[document.getElementById('active-filters'),document.getElementById('mobile-active-filters')];
    activeAreas.forEach(area=>area.replaceChildren());
-   const selected=[[brand,brand?.value],[min,min.value?'Fra '+min.value+' kr':''],[max,max.value?'Til '+max.value+' kr':''],...facets.map(el=>[el,el.value?el.dataset.label+': '+el.selectedOptions[0].textContent:''])].filter(([el,label])=>label);
+   const selected=[[brand,brand?.value],[min,min.value?'Fra '+min.value+' kr':''],[max,max.value?'Til '+max.value+' kr':''],...facets.map(el=>[el,el.checked?el.dataset.label+': '+el.dataset.optionLabel:''])].filter(([el,label])=>label);
    document.getElementById('filter-count').textContent=selected.length||'';
-   activeAreas.forEach(active=>selected.forEach(([el,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label+' ×';b.setAttribute('aria-label','Fjern filter: '+label);b.addEventListener('click',()=>{el.value='';filter();if(dialog.open)el.focus();else document.getElementById('listing-sort').focus();});active.appendChild(b);}));
+   activeAreas.forEach(active=>selected.forEach(([el,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label+' ×';b.setAttribute('aria-label','Fjern filter: '+label);b.addEventListener('click',()=>{if(el.type==='checkbox')el.checked=false;else el.value='';filter();if(dialog.open)el.focus();else document.getElementById('listing-sort').focus();});active.appendChild(b);}));
    const queryMatches=rows.filter(row=>row.dataset.name.toLocaleLowerCase('nb').includes(q)).length;
    const clearFilters=document.getElementById('listing-clear-filters');
    clearFilters.hidden=!(queryMatches&&selected.length);
@@ -86,7 +90,7 @@ LISTING_SCRIPT = r"""
      : q ? 'Ingen treff for «'+input.value.trim()+'». Prøv et kortere navn, eller se alle produktene.'
      : 'Ingen produkter tilgjengelig her akkurat nå. Utforsk en annen kategori fra menyen.';
  }
- function reset(){facets.forEach(el=>el.value='');if(brand)brand.value='';max.value='';min.value='';filter();}
+ function reset(){facets.forEach(el=>el.checked=false);if(brand)brand.value='';max.value='';min.value='';filter();}
  document.getElementById('listing-reset').addEventListener('click',reset);
  document.getElementById('listing-clear-filters').addEventListener('click',()=>{reset();document.getElementById('listing-sort').focus();});
  document.getElementById('listing-show-all').addEventListener('click',()=>{if(!category)input.value='';reset();});
@@ -213,4 +217,15 @@ LISTING_STYLE += r"""
 .sp-category-tree a:focus-visible { outline:3px solid #177fc5;outline-offset:3px }
 .sp-category-tree ul ul { margin:0 0 4px 4px }
 @media(max-width:767px) { .sp-category-tree { gap:14px;margin-top:24px }.sp-category-tree>li { padding:10px 16px 14px }.sp-category-tree>li>a { font-size:18px } }
+"""
+
+LISTING_STYLE += r"""
+.sp-listing .sp-facet-group { border:0;padding:0;margin:0;min-width:0 }
+.sp-listing .sp-facet-group legend { padding:0;font-size:14px;font-weight:700;color:var(--sp-ink) }
+.sp-listing .sp-facet-group>p { margin:4px 0 8px;font-size:12px;line-height:1.4;color:var(--sp-muted) }
+.sp-listing .sp-facet-choice { display:flex;align-items:center;gap:10px;min-height:44px;font-size:14px;line-height:1.4;color:var(--sp-ink);cursor:pointer;border-radius:6px }
+.sp-listing .sp-facet-choice:hover { background:var(--sp-surface) }
+.sp-listing .sp-facet-choice input { width:20px;height:20px;min-height:20px;flex:0 0 20px;padding:0;margin:0;accent-color:var(--sp-green) }
+.sp-listing .sp-facet-choice span { min-width:0;overflow-wrap:anywhere }
+.sp-listing .sp-active-filters button { max-width:100%;overflow-wrap:anywhere;text-align:left }
 """
