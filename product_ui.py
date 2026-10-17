@@ -257,3 +257,11 @@ PRODUCT_STYLE += r"""
  .sp-tabs a { font-size:13px }
 }
 """
+
+PRODUCT_STYLE += r"""
+/* Unbroken feed text must fit the price panel and variant controls. */
+.sp-product .sp-merchant,.sp-product .sp-amount { overflow-wrap:anywhere }
+.sp-variants a { max-width:100%;min-width:0;overflow-wrap:anywhere;line-height:1.45 }
+.sp-offers tbody tr:last-child { border-bottom-color:transparent }
+@media(max-width:767px) { .sp-offers tbody tr:last-child { border-bottom-color:var(--sp-line) } }
+"""
