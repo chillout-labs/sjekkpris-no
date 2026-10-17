@@ -169,19 +169,24 @@ def segment(value: str) -> str:
 def page(title: str, body: str, *, base: str, noindex: bool, home: bool = False, category_nav: str = "") -> str:
     css_name = "style-" + hashlib.sha256((STYLE + PRODUCT_STYLE + HOME_STYLE).encode()).hexdigest()[:12] + ".css"
     robots = '<meta name="robots" content="noindex">' if noindex else ""
+    product_page = '<div class="sp-product"' in body
+    body_class = 'sp-product-page' if product_page else ''
+    search_toggle = (f'<a class="sp-mobile-search-toggle" href="{e(base)}search/" aria-label="Åpne søk" aria-expanded="false" aria-controls="product-header-search">{ui_icon("search")}</a>') if product_page else ''
     header_search = '' if home else render_header_search(base)
+    if product_page:
+        header_search = header_search.replace('class="sp-header-search-wrap"', 'class="sp-header-search-wrap" id="product-header-search"')
     search_script = '<script>'+SHELL_SCRIPT+('' if home else HOME_SEARCH_SCRIPT)+'</script>'
     # Keep homepage's existing search IDs separate from the shared header.
     return f"""<!doctype html>
 <html lang="nb"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">{robots}<title>{e(title)}</title>
-<link rel="stylesheet" href="{e(base)}{css_name}"></head><body>
+<link rel="stylesheet" href="{e(base)}{css_name}"></head><body class="{body_class}">
 <a class="sp-skip" href="#main">Hopp til innhold</a>
 <header class="sp-header"><div class="sp-shell sp-topbar">
 <a class="sp-brand" href="{e(base)}" aria-label="SjekkPris – forsiden"><span>S</span>jekkPris</a>
 <p class="sp-tagline">Smartere valg. Mer for pengene.</p>
-{header_search}
+{search_toggle}{header_search}
 <details class="sp-menu"><summary>{ui_icon('menu')}<span>Meny</span></summary>
 <nav aria-label="Hovedmeny"><a href="{e(base)}">Alle produkter</a><a href="{e(base)}search/">Søk etter produkter</a><a href="{e(base)}kategori/">Utforsk kategorier</a></nav></details>
 </div>{category_nav}</header><main id="main" class="sp-shell">{body}</main>
@@ -500,7 +505,7 @@ def search_results_body(*, base: str) -> str:
 def product_body(product: dict, body: dict, *, base: str, breadcrumbs=(), presentation=None) -> str:
     from rich_ui import product_parts, RICH_SCRIPT
     parts=product_parts(presentation or {})
-    breadcrumb_html = "".join(f'<a href="{e(url)}">{e(label)}</a><span aria-hidden="true">›</span>' for label, url in breadcrumbs)
+    breadcrumb_html = "".join(f'<a class="{"sp-current-category" if i == len(breadcrumbs)-1 else ""}" href="{e(url)}">{e(label)}</a><span aria-hidden="true">›</span>' for i, (label, url) in enumerate(breadcrumbs))
     identity = body.get("identity") or {}
     name = identity.get("local_name") or product.get("local_name") or "Produkt"
     offers, excluded = body.get("offers") or [], body.get("excluded") or []
@@ -513,7 +518,7 @@ def product_body(product: dict, body: dict, *, base: str, breadcrumbs=(), presen
     category = (primary_category.get("display_name") or primary_category.get("name")) if primary_category.get("active") is not False else None
     metadata = [("Merke", identity.get("local_brand")), ("Kategori", category or identity.get("local_category")), ("Pakning", identity.get("local_pack_size"))]
     metadata = [(label, value) for label, value in metadata if value]
-    meta = ''.join(f'<div><dt>{e(label)}</dt><dd>{e(value)}</dd></div>' for label, value in metadata)
+    meta = ''.join(f'<div data-product-meta="{"category" if label == "Kategori" else "other"}"><dt>{e(label)}</dt><dd>{e(value)}</dd></div>' for label, value in metadata)
     price_html = (f'<div data-price-mode="item">{price_mode_hero(offers, body, include_shipping=False)}</div>'
                   f'<div data-price-mode="total" hidden>{price_mode_hero(offers, body, include_shipping=True)}</div>')
     unknown = any(total_text(o) == "Totalpris ukjent" for o in offers)
