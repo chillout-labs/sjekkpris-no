@@ -39,3 +39,7 @@ Before each round read current main and open PRs. Local older branches may omit 
 ## PR #9 follow-up – 16 October, 23:41 Oslo
 
 Implemented the autocomplete feedback candidate above: visible loading, empty-suggestion and failure messages, retry by typing, Escape/blur cleanup and aria-busy. PR #9 merged as `ee671989726f9016700e3d1ececb592bc200b19e`. 83 Python tests pass; browser workflow 38970729896 passed at exact head eb49faa597e5bcef998bca4437cc7df5bc234c33. Error mobile and empty-suggestion desktop screenshots inspected. Existing image-zoom test now waits for image decode before checking dimensions. Deployment verification is pending at checkpoint creation; check main Actions and live HTML first. Next round should not repeat this implementation. Continue responsive/reference review, including homepage feedback and slow-request behavior.
+
+## Manual continuation – 17 October
+
+Improved filter-panel behavior for short viewports and mobile-to-desktop transitions: visible keyboard focus returns to the desktop filter summary, header controls do not shrink, and the field area scrolls independently with room for focus outlines. Desktop filter summary meets the 44 px target from D05. Added browser coverage for a 667 × 375 viewport, reset, rotation and Escape focus return. Local 83 unit tests pass; browser and publication verification pending.
