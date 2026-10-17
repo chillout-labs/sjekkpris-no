@@ -1,7 +1,7 @@
 name: Design journey preview (no deploy)
 on:
   push:
-    branches: [design/product-layout-finish, design/listing-spacing, design/home-header-categories, design/home-discovery-finish, design/mobile-product-top, design/manual-oct17, design-search-feedback-v1, design-search-states-v1, design-product-navigation-v1, design-shared-search-v1, frontend-v1-design, category-design-v1, design-history-v1]
+    branches: [design/beta-content, design/product-layout-finish, design/listing-spacing, design/home-header-categories, design/home-discovery-finish, design/mobile-product-top, design/manual-oct17, design-search-feedback-v1, design-search-states-v1, design-product-navigation-v1, design-shared-search-v1, frontend-v1-design, category-design-v1, design-history-v1]
     paths: ['build.py', 'product_ui.py', 'rich_ui.py', 'tools/design_fixtures.py', 'home_ui.py', 'catalogue_ui.py', 'home_release.py', 'tools/preview_design.py', 'tools/capture_design.py', 'tools/design_assets/**', '.github/workflows/design-preview.yml']
   workflow_dispatch: {}
 permissions:
