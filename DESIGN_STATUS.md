@@ -58,3 +58,8 @@ Compared B002 against current mobile/desktop screenshots. PR #12 uses compact ho
 ## Homepage category navigation – 17 October
 
 PR #13 merged as 3f935605388d274ffebb1b23d6269eed02fc3a8f. Compact horizontal category links replace the tall mobile stack, with Se alle pointing to the existing /kategori/ index. Mobile hero example links also use a compact scrollable row with full labels. Focus handling reveals the complete link, including when the browser would otherwise leave it partially clipped. Category names, links, search capability and noindex preserved. 83 tests and browser run 39025689048 passed at 752034aeb68ed25474cb1e11cd0d3c2163b299d9. Mobile and desktop screenshots reviewed; final mobile screenshot reviewed after aligning Se alle styling. Live home verified with flex/overflow-auto category row and /kategori/ link. Deploy run 39025831036. Remaining design and real-data integration acceptance still apply; no claim of full fidelity completion.
+
+
+## Listing density refinement – 17 October
+
+PR #14 merged as 7d7fa6ef0faa1a1741dd471ef3c0b36b4f710cc8. Category/search cards use tighter spacing; desktop image area is 180 px. Category metadata remains in HTML but is hidden on category listings. Mobile sorting uses an explicit accessible label and no separate visible label row. Active filter count gets a clear badge. Compared against B008 and inspected 390/1280 screenshots. 83 unit tests and browser run 39026513045 passed at 857f7bb275d1518c1419105634003b68d94815d3; checks include accessible sorting name and 44 px mobile controls. Deploy 39026655221 succeeded. Live /search/ verified with listing-sort-label and 180 px image area. Existing data, URLs and noindex unchanged. Broader fidelity and data integration remain unfinished.
