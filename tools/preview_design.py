@@ -96,7 +96,7 @@ def main():
     (target/'index.html').write_text(page('Beta – designoversikt',overview,base='/',noindex=True),encoding='utf-8')
     banner='<aside style="padding:12px 16px;background:#fff3d6;color:#10203b;text-align:center;font:13px Arial,sans-serif"><a href="/designoversikt/">Beta / designoversikt</a> · eksempelprodukter, illustrasjonsbilde og eksempelpriser. <a href="/">Startside</a> · <a href="/search/?q=OLED">Søk</a> · <a href="/kategori/tv/">TV-kategori</a> · <a href="/behovssok/">Behovssøk</a> · <a href="/design-states/">Tilstander</a></aside>'
     for target in out.rglob('*.html'):
-        html=target.read_text(encoding='utf-8').replace('<body>','<body>'+banner)
+        html=re.sub(r'(<body\b[^>]*>)', lambda match: match.group(1)+banner, target.read_text(encoding='utf-8'), count=1)
         html=html.replace('https://sjekkpris.no/assets/', '/assets/')
         html=re.sub(r'https://[^"\s]+/go/tgt_[A-Z0-9]+','/butikk/',html)
         target.write_text(html,encoding='utf-8')
