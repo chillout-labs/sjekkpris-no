@@ -20,7 +20,7 @@ def render_listing(products, *, base, money, day, segment, title='Søk etter pro
 <div class="sp-price-range"><label>Min. pris (kr)<input id="listing-min" aria-describedby="listing-price-help" type="number" min="0" step="1" inputmode="numeric" placeholder="Valgfri"></label><label>Maks. pris (kr)<input id="listing-max" aria-describedby="listing-price-help" type="number" min="0" step="1" inputmode="numeric" placeholder="Valgfri"></label></div><p id="listing-price-help" class="sp-filter-help" role="status" hidden></p>{brand}
 <button id="listing-reset" type="button">Nullstill filtre</button></div></details></div>
 <div class="sp-listing-main"><div class="sp-listing-toolbar"><button id="filter-open" class="sp-filter-open" type="button" aria-haspopup="dialog" aria-controls="filter-dialog" hidden>Filter <span id="filter-count"></span></button><p id="result-status" role="status" aria-live="polite">{len(products)} produkter</p>
-<label>Sorter etter<select id="listing-sort"><option value="name">Produktnavn</option><option value="price" {"selected" if category else ""}>Laveste varepris</option><option value="price-desc">Høyeste varepris</option></select></label></div>
+<label><span>Sorter etter</span><select id="listing-sort"><option value="name">Produktnavn</option><option value="price" {"selected" if category else ""}>Laveste varepris</option><option value="price-desc">Høyeste varepris</option></select></label></div>
 <div id="active-filters" class="sp-active-filters" aria-label="Valgte filtre"></div>
 <div class="sp-home-empty" id="listing-empty" hidden><h2>Ingen produkter funnet</h2><p id="listing-empty-help">Prøv et annet søk eller fjern et filter.</p><div class="sp-empty-actions"><button type="button" id="listing-clear-filters" hidden>Fjern filtrene</button><button type="button" id="listing-show-all">Vis alle produkter</button><a href="{e(base)}kategori/">Utforsk kategorier</a></div></div>
 <ul class="sp-product-grid" id="search-results">{cards}</ul><noscript>Alle produkter vises. Filtrering og sortering krever JavaScript.</noscript>
@@ -163,4 +163,27 @@ LISTING_STYLE += r"""
 .sp-listing .sp-filter-help { font-size:13px;line-height:1.5;color:#8c321d;background:#fff4ee;border-left:3px solid #b14b2d;padding:12px;border-radius:4px;margin:0 }
 .sp-listing input[aria-invalid=true] { border-color:#b14b2d }.sp-empty-actions { display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px }.sp-listing .sp-empty-actions button { margin-top:0 }.sp-empty-actions a { min-height:44px;display:inline-flex;align-items:center;color:var(--sp-green);font-size:14px }.sp-listing #listing-clear-filters { background:var(--sp-green);color:white }.sp-listing #listing-clear-filters:hover { background:#004c40 }
 @media(max-width:767px) { .sp-listing .sp-home-empty { padding:22px 18px }.sp-empty-actions { align-items:stretch;flex-direction:column }.sp-empty-actions button { width:100% }.sp-empty-actions a { justify-content:center }.sp-listing input,.sp-listing select { font-size:16px } }
+"""
+
+
+LISTING_STYLE += r"""
+/* Keep comparison controls compact while preserving their accessible labels. */
+.sp-listing[data-category=true] .sp-product-category { display:none }
+.sp-listing #filter-count:not(:empty) { display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; margin-left:5px; padding:0 5px; border-radius:50%; background:var(--sp-green); color:white; font-size:12px; font-variant-numeric:tabular-nums }
+@media(min-width:768px) {
+ .sp-listing .sp-card-image { height:180px; margin-bottom:12px }
+ .sp-listing .sp-product-card h3 { padding-bottom:12px; font-size:15px }
+ .sp-listing .sp-card-bottom { margin-top:12px }
+}
+@media(max-width:767px) {
+ .sp-listing-toolbar { gap:12px; margin-bottom:16px; align-items:center }
+ .sp-listing-toolbar label>span { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0 }
+ .sp-listing-toolbar label { display:block }
+ .sp-listing-toolbar select { padding-block:10px }
+ .sp-listing .sp-filter-open { align-self:center; min-width:88px }
+ .sp-listing .sp-product-card>a { padding:12px; gap:3px 12px }
+ .sp-listing .sp-product-card h3 { line-height:1.35 }
+ .sp-listing .sp-card-image { width:108px; max-width:100% }
+ .sp-listing .sp-card-price { line-height:1.25 }
+}
 """
