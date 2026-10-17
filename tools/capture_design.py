@@ -246,6 +246,22 @@ def main():
             page.locator('#filter-open').click()
             page.keyboard.press('Escape')
             assert page.locator('#filter-open').evaluate('(e)=>document.activeElement===e')
+            page.set_viewport_size({'width':667,'height':375})
+            page.goto(origin+'/kategori/tv/',wait_until='networkidle')
+            page.locator('#filter-open').click()
+            for choice in page.locator('[data-facet]').all():choice.check()
+            assert page.locator('#mobile-active-filters button').count()==7
+            for control in ['#filter-close','#filter-apply']:
+                assert page.locator(control).evaluate('(e)=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}')
+            page.screenshot(path=str(shots/'facets_short_viewport.png'))
+            page.locator('#listing-reset').scroll_into_view_if_needed()
+            page.locator('#listing-reset').click()
+            assert page.locator('#mobile-active-filters button').count()==0
+            page.keyboard.press('Escape')
+            page.set_viewport_size({'width':1024,'height':600})
+            page.goto(origin+'/kategori/tv/',wait_until='networkidle')
+            page.locator('#listing-reset').scroll_into_view_if_needed()
+            assert page.locator('#listing-reset').evaluate('(e)=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}')
             for width in [390,1280]:
                 page.set_viewport_size({'width':width,'height':900})
                 page.route('**/search-index.json',lambda route:route.fulfill(status=503,body='Unavailable'))
