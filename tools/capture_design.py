@@ -29,6 +29,15 @@ def main():
                         page.locator('.sp-card-photo img:visible').evaluate_all("async images=>{await Promise.all(images.map(async e=>{e.loading='eager';await e.decode();}));}")
                         assert page.locator('.sp-card-photo img:visible').first.evaluate('(e)=>e.complete&&e.naturalWidth>0')
                     if name=='product':
+                        if width<768:
+                            assert not page.locator('#home-query').is_visible()
+                            assert not page.locator('.sp-category-nav').is_visible()
+                            assert page.locator('.sp-breadcrumb a:visible').count()==1
+                            assert not page.locator('.sp-meta [data-product-meta=category]').is_visible()
+                            assert page.locator('.sp-topbar').bounding_box()['height']<=64
+                        else:
+                            assert page.locator('#home-query').is_visible()
+                        page.screenshot(path=str(shots/f'product_compact_top_{width}.png'))
                         page.locator('.sp-image-expand').click()
                         assert page.locator('.sp-image-dialog').is_visible()
                         page.locator('.sp-image-dialog img').evaluate('async e=>{await e.decode();}')
@@ -55,6 +64,9 @@ def main():
                         history.press('End')
                         assert '14 990 kr' in page.locator('.sp-history-control output').inner_text()
                     if name=='product':
+                        if width<768:
+                            page.locator('.sp-mobile-search-toggle').click()
+                            assert page.locator('#home-query').evaluate('(e)=>document.activeElement===e')
                         page.locator('#home-query').scroll_into_view_if_needed()
                         page.locator('#home-query').fill('Nord')
                         page.locator('#home-suggestions [role=option]').first.wait_for()
@@ -63,7 +75,11 @@ def main():
                         page.screenshot(path=str(shots/f'product_autocomplete_{width}.png'))
                         page.locator('#home-query').press('Escape')
                         assert not page.locator('#home-suggestions').is_visible()
-                        page.locator('#home-query').fill('')
+                        if width<768:
+                            assert not page.locator('#home-query').is_visible()
+                            assert page.locator('.sp-mobile-search-toggle').evaluate('(e)=>document.activeElement===e')
+                        else:
+                            page.locator('#home-query').fill('')
                     if name=='empty':
                         assert page.locator('.sp-image-expand').count()==0
                     if name=='search':
