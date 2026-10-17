@@ -25,6 +25,11 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
+      - run: pip install Pillow==11.3.0
+      - name: Validate beta preview packaging
+        run: |
+          python tools/preview_design.py
+          python tools/package_beta.py _beta_test
       # FIXTURE data against a localhost stub. No secret, no network.
       - run: python -m unittest discover -s tests -v
 
@@ -44,6 +49,12 @@ jobs:
           CHILLOUT_READ_KEY: ${{ secrets.CHILLOUT_READ_KEY }}
           BASE_PATH: ${{ vars.BASE_PATH }}
         run: python build.py --out _site
+
+      - name: Build isolated beta design preview
+        run: |
+          pip install Pillow==11.3.0
+          python tools/preview_design.py
+          python tools/package_beta.py _site
 
       - name: Refuse output that carries the key, the origin, a platform id or /go/
         env:
