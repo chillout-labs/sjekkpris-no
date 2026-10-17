@@ -3,11 +3,15 @@ from html import escape as e
 from home_ui import render_product_card
 
 
-def render_listing(products, *, base, money, day, segment, title='Søk etter produkter', category=False, breadcrumbs=(), children=()):
+def render_listing(products, *, base, money, day, segment, title='Søk etter produkter', category=False, breadcrumbs=(), children=(), facets=(), facet_values=None):
     trail = ''.join(f'<a href="{e(url)}">{e(label)}</a><span aria-hidden="true">›</span>' for label,url in breadcrumbs)
     chips = ''.join(f'<a href="{e(url)}">{e(label)}<span>{count}</span></a>' for label,url,count in children)
     subcategories = f'<nav class="sp-category-chips" aria-label="Underkategorier">{chips}</nav>' if chips else ''
     cards = ''.join(render_product_card(p, base=base, money=money, day=day, segment=segment) for p in products)
+    facet_values = facet_values or {}
+    if facets:
+        cards = ''.join(render_product_card(p, base=base, money=money, day=day, segment=segment).replace('<li ', '<li '+''.join(f'data-facet-{i}="{e(str(facet_values.get(p["local_slug"], {}).get(key, "")), quote=True)}" ' for i,(key,label,choices) in enumerate(facets)), 1) for p in products)
+    facet_controls = ''.join(f'<label>{e(label)}<select aria-label="{e(label,quote=True)}" data-facet="{i}" data-label="{e(label,quote=True)}"><option value="">Alle</option>'+''.join(f'<option value="{e(value,quote=True)}">{e(text)}</option>' for value,text in choices)+'</select></label>' for i,(key,label,choices) in enumerate(facets))
     brands = sorted({p.get('local_brand') for p in products if p.get('local_brand')})
     options = ''.join(f'<option value="{e(b, quote=True)}">{e(b)}</option>' for b in brands)
     brand = f'<label>Merke<select id="listing-brand"><option value="">Alle merker</option>{options}</select></label>' if brands else ''
@@ -17,7 +21,7 @@ def render_listing(products, *, base, money, day, segment, title='Søk etter pro
 {subcategories}<div class="sp-listing-layout">
 <div id="filter-desktop-slot">
 <details class="sp-listing-filters" open><summary>Filtrer produkter</summary><div>
-<div class="sp-price-range"><label>Min. pris (kr)<input id="listing-min" aria-describedby="listing-price-help" type="number" min="0" step="1" inputmode="numeric" placeholder="Valgfri"></label><label>Maks. pris (kr)<input id="listing-max" aria-describedby="listing-price-help" type="number" min="0" step="1" inputmode="numeric" placeholder="Valgfri"></label></div><p id="listing-price-help" class="sp-filter-help" role="status" hidden></p>{brand}
+<div class="sp-price-range"><label>Min. pris (kr)<input id="listing-min" aria-describedby="listing-price-help" type="number" min="0" step="1" inputmode="numeric" placeholder="Valgfri"></label><label>Maks. pris (kr)<input id="listing-max" aria-describedby="listing-price-help" type="number" min="0" step="1" inputmode="numeric" placeholder="Valgfri"></label></div><p id="listing-price-help" class="sp-filter-help" role="status" hidden></p>{brand}{facet_controls}
 <button id="listing-reset" type="button">Nullstill filtre</button></div></details></div>
 <div class="sp-listing-main"><div class="sp-listing-toolbar"><button id="filter-open" class="sp-filter-open" type="button" aria-haspopup="dialog" aria-controls="filter-dialog" hidden>Filter <span id="filter-count"></span></button><p id="result-status" role="status" aria-live="polite">{len(products)} produkter</p>
 <label><span id="listing-sort-label">Sorter etter</span><select id="listing-sort" aria-labelledby="listing-sort-label"><option value="name">Produktnavn</option><option value="price" {"selected" if category else ""}>Laveste varepris</option><option value="price-desc">Høyeste varepris</option></select></label></div>
@@ -35,6 +39,7 @@ LISTING_SCRIPT = r"""
  const form=document.querySelector('.sp-search'), input=form.querySelector('input');
  const grid=document.getElementById('search-results'), rows=Array.from(grid.children);
  const brand=document.getElementById('listing-brand'), max=document.getElementById('listing-max'), min=document.getElementById('listing-min'), sort=document.getElementById('listing-sort');
+ const facets=Array.from(root.querySelectorAll('select[data-facet]'));
  const category=root.dataset.category==='true';
  input.value=category?'':new URLSearchParams(location.search).get('q')||'';
  function filter(){
@@ -47,7 +52,7 @@ LISTING_SCRIPT = r"""
    [min,max].forEach(el=>el.setAttribute('aria-invalid',String(invalid)));
    rows.forEach(row=>{
      const price=row.dataset.price===''?Infinity:Number(row.dataset.price);
-     row.hidden=!row.dataset.name.toLocaleLowerCase('nb').includes(q)||(brand&&brand.value&&row.dataset.brand!==brand.value)||(Number.isFinite(limit)&&price>limit)||price<minimum||(minimum>0&&!Number.isFinite(price));
+     row.hidden=facets.some(el=>el.value&&row.getAttribute('data-facet-'+el.dataset.facet)!==el.value)||!row.dataset.name.toLocaleLowerCase('nb').includes(q)||(brand&&brand.value&&row.dataset.brand!==brand.value)||(Number.isFinite(limit)&&price>limit)||price<minimum||(minimum>0&&!Number.isFinite(price));
      if(!row.hidden)n++;
    });
    [...rows].sort((a,b)=>{
@@ -63,7 +68,7 @@ LISTING_SCRIPT = r"""
    document.getElementById('filter-apply').textContent='Vis '+n+' '+(n===1?'produkt':'produkter');
    const activeAreas=[document.getElementById('active-filters'),document.getElementById('mobile-active-filters')];
    activeAreas.forEach(area=>area.replaceChildren());
-   const selected=[[brand,brand?.value],[min,min.value?'Fra '+min.value+' kr':''],[max,max.value?'Til '+max.value+' kr':'']].filter(([el,label])=>label);
+   const selected=[[brand,brand?.value],[min,min.value?'Fra '+min.value+' kr':''],[max,max.value?'Til '+max.value+' kr':''],...facets.map(el=>[el,el.value?el.dataset.label+': '+el.selectedOptions[0].textContent:''])].filter(([el,label])=>label);
    document.getElementById('filter-count').textContent=selected.length||'';
    activeAreas.forEach(active=>selected.forEach(([el,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label+' ×';b.setAttribute('aria-label','Fjern filter: '+label);b.addEventListener('click',()=>{el.value='';filter();if(dialog.open)el.focus();else document.getElementById('listing-sort').focus();});active.appendChild(b);}));
    const queryMatches=rows.filter(row=>row.dataset.name.toLocaleLowerCase('nb').includes(q)).length;
@@ -75,11 +80,11 @@ LISTING_SCRIPT = r"""
      : q ? 'Ingen treff for «'+input.value.trim()+'». Prøv et kortere navn, eller se alle produktene.'
      : 'Ingen produkter tilgjengelig her akkurat nå. Utforsk en annen kategori fra menyen.';
  }
- function reset(){if(brand)brand.value='';max.value='';min.value='';filter();}
+ function reset(){facets.forEach(el=>el.value='');if(brand)brand.value='';max.value='';min.value='';filter();}
  document.getElementById('listing-reset').addEventListener('click',reset);
  document.getElementById('listing-clear-filters').addEventListener('click',()=>{reset();document.getElementById('listing-sort').focus();});
  document.getElementById('listing-show-all').addEventListener('click',()=>{if(!category)input.value='';reset();});
- [brand,min,max,sort].filter(Boolean).forEach(el=>el.addEventListener('input',filter));
+ [brand,min,max,sort,...facets].filter(Boolean).forEach(el=>el.addEventListener('input',filter));
  if(!category){
    input.addEventListener('input',filter);
    form.addEventListener('submit',e=>{e.preventDefault();const url=new URL(location.href);url.searchParams.set('q',input.value.trim());history.pushState({},'',url);filter();});

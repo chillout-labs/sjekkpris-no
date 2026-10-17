@@ -55,6 +55,12 @@ def main():
     out=ROOT/'.design-preview'
     original_product=build.product_body
     original_home=home_release.render_home
+    original_listing=home_release.render_listing
+    def fixture_listing(items, **kwargs):
+        if kwargs.get('category') and kwargs.get('title')=='TV':
+            kwargs['facets']=[('size','Skjermstørrelse',[(str(n),str(n)+' tommer') for n in [43,50,55,65,77]]),('panel','Paneltype',[('OLED','OLED'),('LED','LED')])]
+            kwargs['facet_values']={p['local_slug']:{'size':p['local_name'].split(' tommer')[0].split()[-1],'panel':'OLED' if 'OLED' in p['local_name'] else 'LED'} for p in products}
+        return original_listing(items,**kwargs)
     def full_product(product,body,**kwargs):
         return original_product(product,body,**kwargs,presentation=product_presentation(product))
     def full_home(products,**kwargs):
@@ -64,11 +70,13 @@ def main():
         args={k:v for k,v in kwargs.items() if k!='category_links'}
         (out/'home-catalogue.html').write_text(page('Forside med katalogdata',result,base='/',noindex=True,home=True),encoding='utf-8')
         return result[:start]+homepage_sections(products,**args)+result[end:]
+    home_release.render_listing=fixture_listing
     build.product_body=full_product
     home_release.render_home=full_home
     try:
         build.build(Fixtures(),out,base='/',noindex=True)
     finally:
+        home_release.render_listing=original_listing
         build.product_body=original_product
         home_release.render_home=original_home
     shutil.copyfile(ROOT/'tools/design_assets/tv-illustration.webp',out/'assets/tv-illustration.webp')
