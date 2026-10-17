@@ -26,10 +26,13 @@ def gallery(images):
     return f'<div class="sp-gallery-view">{slides}<div class="sp-thumbnails">{controls}</div><p class="sp-sr" role="status" data-gallery-status>Bilde 1 av {len(valid)}</p></div>'
 
 
+def use_cases(items):
+    if not items:return ''
+    return '<section class="sp-panel sp-use-case-panel"><h2>Passer spesielt godt til</h2><div class="sp-use-cases">'+''.join(f'<article><h3>{e(title)}</h3><p>{e(text)}</p></article>' for title,text in items)+'</div></section>'
+
+
 def knowledge(data):
     sections=[]
-    if data.get('use_cases'):
-        sections.append('<section class="sp-panel"><h2>Passer spesielt godt til</h2><div class="sp-use-cases">'+''.join(f'<article><h3>{e(title)}</h3><p>{e(text)}</p></article>' for title,text in data['use_cases'])+'</div></section>')
     for key,title in [('alternatives','Hva får jeg for pengene?'),('accessories','Passer til dette produktet')]:
         if data.get(key):
             sections.append(f'<section class="sp-panel" id="{key}"><h2>{title}</h2><div class="sp-value-grid">'+''.join(f'<article><h3>{e(label)}</h3><p>{e(text)}</p><a href="{e(url,quote=True)}">{e(link)} <span aria-hidden="true">→</span></a></article>' for label,text,link,url in data[key])+'</div></section>')
@@ -68,7 +71,7 @@ def product_parts(data):
             'gallery':gallery(data.get('gallery',[])), 'history':history(data.get('history',[])),
             'about':f'<p>{e(data["about"])}</p>' if data.get('about') else '',
             'specs': '<dl class="sp-specs">'+''.join(f'<div><dt>{e(k)}</dt><dd>{e(v)}</dd></div>' for k,v in data['specs'])+'</dl>' if data.get('specs') else '',
-            'extra':knowledge(data)}
+            'use_cases':use_cases(data.get('use_cases',[])), 'extra':knowledge(data)}
 
 
 def product_rail(title,cards,href):
@@ -165,8 +168,18 @@ RICH_SCRIPT += r"""
  const button=document.createElement('button');button.type='button';button.className='sp-image-expand';button.textContent='Se større bilde';gallery.append(button);
  const dialog=document.createElement('dialog');dialog.className='sp-image-dialog';dialog.setAttribute('aria-label','Forstørret produktbilde');
  const close=document.createElement('button');close.type='button';close.textContent='Lukk bilde';close.className='sp-image-close';
- const image=document.createElement('img');dialog.append(close,image);document.body.append(dialog);
- button.addEventListener('click',()=>{const source=Array.from(gallery.querySelectorAll('.sp-image img')).find(img=>!img.closest('[hidden]'));if(!source)return;image.src=source.currentSrc||source.src;image.alt=source.alt;dialog.showModal();});
+ const image=document.createElement('img'), sources=Array.from(gallery.querySelectorAll('.sp-image img'));
+ const controls=document.createElement('div');controls.className='sp-image-controls';
+ const previous=document.createElement('button'),next=document.createElement('button'),status=document.createElement('p');
+ previous.type=next.type='button';previous.textContent='Forrige';next.textContent='Neste';previous.setAttribute('aria-label','Forrige bilde');next.setAttribute('aria-label','Neste bilde');
+ status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+ controls.append(previous,status,next);controls.hidden=sources.length<2;
+ let index=0;
+ function show(nextIndex){index=(nextIndex+sources.length)%sources.length;const source=sources[index];image.src=source.currentSrc||source.src;image.alt=source.alt;status.textContent='Bilde '+(index+1)+' av '+sources.length;const thumb=gallery.querySelector('[data-gallery-index="'+index+'"]');if(thumb)thumb.click();}
+ previous.addEventListener('click',()=>show(index-1));next.addEventListener('click',()=>show(index+1));
+ dialog.addEventListener('keydown',event=>{if(sources.length<2)return;if(event.key==='ArrowLeft'){event.preventDefault();show(index-1);}else if(event.key==='ArrowRight'){event.preventDefault();show(index+1);}});
+ dialog.append(close,image,controls);document.body.append(dialog);
+ button.addEventListener('click',()=>{const active=sources.findIndex(img=>!img.closest('[hidden]'));show(Math.max(0,active));dialog.showModal();});
  close.addEventListener('click',()=>dialog.close());dialog.addEventListener('click',event=>{if(event.target===dialog){const box=dialog.getBoundingClientRect();if(event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom)dialog.close();}});
  dialog.addEventListener('close',()=>button.focus());
  });
@@ -180,3 +193,21 @@ RICH_STYLE += r"""
 """
 
 RICH_STYLE += '@media(max-width:767px) { .sp-image-dialog { width:calc(100vw - 8px);max-width:none;padding:0 }.sp-image-close { margin:8px 8px 8px auto }.sp-image-dialog img { padding:0 0 8px } }'
+
+
+RICH_STYLE += r"""
+.sp-image-controls { display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0 0 }
+.sp-image-controls[hidden] { display:none }
+.sp-image-controls button { min-height:44px;min-width:80px;padding:10px 16px;border:1px solid var(--sp-line);border-radius:8px;background:white;color:var(--sp-green);font:600 14px Arial,sans-serif;cursor:pointer }
+.sp-image-controls button:hover { background:var(--sp-mint) }.sp-image-controls button:focus-visible { outline:3px solid #177fc5;outline-offset:2px }
+.sp-image-controls p { margin:0;font:14px Arial,sans-serif;color:var(--sp-muted) }
+.sp-image-dialog img { max-height:calc(100dvh - 204px) }
+.sp-use-case-panel .sp-use-cases { grid-template-columns:1fr;gap:12px;margin-top:16px }
+.sp-use-case-panel .sp-use-cases article { padding:14px }
+.sp-value-grid { grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)) }
+.sp-value-grid p,.sp-use-cases p { overflow-wrap:anywhere }
+.sp-value-grid article { display:flex;flex-direction:column }.sp-value-grid a { margin-top:auto;padding-top:12px }
+@media(min-width:1100px) { .sp-details:has(.sp-use-case-panel) { grid-template-columns:repeat(3,minmax(0,1fr)) } }
+@media(min-width:768px) and (max-width:1099px) { .sp-details>.sp-use-case-panel { grid-column:1/-1 }.sp-use-case-panel .sp-use-cases { grid-template-columns:repeat(3,minmax(0,1fr)) } }
+@media(max-width:767px) { .sp-image-controls { padding:8px 12px 12px }.sp-use-case-panel .sp-use-cases { margin-top:14px }.sp-value-grid { gap:12px;margin-top:16px } }
+"""
