@@ -32,6 +32,8 @@ def main():
                             links=row.locator('a')
                             if links.count():
                                 links.last.focus()
+                                page.screenshot(path=str(shots/f'nav_debug_{width}_{len(selector)}.png'),full_page=True)
+                                print('NAV', width, selector, links.last.evaluate('(e)=>({rect:e.getBoundingClientRect().toJSON(),viewport:innerWidth,parent:e.parentElement.getBoundingClientRect().toJSON(),scroll:e.parentElement.scrollLeft})'),flush=True)
                                 page.wait_for_function('(selector)=>{const e=document.querySelector(selector).querySelector("a:last-child");const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth}',arg=selector)
                                 links.first.focus()
                         rail=page.locator('.sp-catalogue .sp-product-grid')
