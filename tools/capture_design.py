@@ -64,6 +64,12 @@ def main():
                         assert page.locator('.sp-image-dialog').is_visible()
                         page.locator('.sp-image-dialog img').evaluate('async e=>{await e.decode();}')
                         assert page.locator('.sp-image-dialog img').evaluate('(e)=>e.complete&&e.naturalWidth>0')
+                        first_source=page.locator('.sp-image-dialog img').get_attribute('src')
+                        page.get_by_role('button',name='Neste bilde',exact=True).click()
+                        assert page.locator('.sp-image-dialog img').get_attribute('src')!=first_source
+                        assert page.locator('.sp-image-controls [role=status]').inner_text()=='Bilde 2 av 2'
+                        page.keyboard.press('ArrowLeft')
+                        assert page.locator('.sp-image-dialog img').get_attribute('src')==first_source
                         page.screenshot(path=str(shots/f'product_zoom_{width}.png'))
                         page.keyboard.press('Escape')
                         assert not page.locator('.sp-image-dialog').is_visible()
