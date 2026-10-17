@@ -28,6 +28,7 @@ def main():
                     if name=='not_found':
                         assert page.get_by_role('heading',level=1).inner_text()=='La oss finne veien videre'
                         assert page.locator('.sp-recovery-actions a').count()==2
+                        assert page.locator('.sp-recovery-actions .sp-cta').evaluate('(e)=>getComputedStyle(e).color!==getComputedStyle(e).backgroundColor')
                         assert all(page.locator('.sp-recovery-actions a').evaluate_all('(es)=>es.map(e=>e.getBoundingClientRect().height>=44)'))
                     if name=='directory':
                         assert page.locator('.sp-category-tree a').count()>=2
