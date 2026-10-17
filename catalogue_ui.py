@@ -11,7 +11,7 @@ def render_listing(products, *, base, money, day, segment, title='Søk etter pro
     facet_values = facet_values or {}
     if facets:
         cards = ''.join(render_product_card(p, base=base, money=money, day=day, segment=segment).replace('<li ', '<li '+''.join(f'data-facet-{i}="{e(str(facet_values.get(p["local_slug"], {}).get(key, "")), quote=True)}" ' for i,(key,label,choices) in enumerate(facets)), 1) for p in products)
-    facet_controls = ''.join(f'<label>{e(label)}<select data-facet="{i}" data-label="{e(label,quote=True)}"><option value="">Alle</option>'+''.join(f'<option value="{e(value,quote=True)}">{e(text)}</option>' for value,text in choices)+'</select></label>' for i,(key,label,choices) in enumerate(facets))
+    facet_controls = ''.join(f'<label>{e(label)}<select aria-label="{e(label,quote=True)}" data-facet="{i}" data-label="{e(label,quote=True)}"><option value="">Alle</option>'+''.join(f'<option value="{e(value,quote=True)}">{e(text)}</option>' for value,text in choices)+'</select></label>' for i,(key,label,choices) in enumerate(facets))
     brands = sorted({p.get('local_brand') for p in products if p.get('local_brand')})
     options = ''.join(f'<option value="{e(b, quote=True)}">{e(b)}</option>' for b in brands)
     brand = f'<label>Merke<select id="listing-brand"><option value="">Alle merker</option>{options}</select></label>' if brands else ''
