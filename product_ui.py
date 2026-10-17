@@ -33,6 +33,8 @@ PRICE_MODE_SCRIPT = r"""
   const rows = document.getElementById('price-rows');
   const status = document.getElementById('price-sort-status');
   if (!root || !toggle || !rows || !control || !status) return;
+  const more = document.getElementById('offer-more');
+  let expanded = false;
   function renderMode() {
     const mode = toggle.checked ? 'total' : 'item';
     root.dataset.priceBasis = mode;
@@ -44,10 +46,17 @@ PRICE_MODE_SCRIPT = r"""
       Number(a.querySelector('[data-item-order]').dataset[key]) -
       Number(b.querySelector('[data-item-order]').dataset[key])
     ).forEach(row => rows.appendChild(row));
+    if (more) {
+      Array.from(rows.children).forEach((row,index)=>{row.hidden=!expanded && index>=6;});
+      more.hidden=false;
+      more.textContent=expanded?'Vis færre tilbud':'Vis alle '+rows.children.length+' tilbud';
+      more.setAttribute('aria-expanded',String(expanded));
+    }
     status.textContent = toggle.checked
       ? 'Sortert etter kjent totalpris · ukjent totalpris vises sist.'
       : 'Sortert etter varepris · uten frakt.';
   }
+  if(more)more.addEventListener('click',()=>{expanded=!expanded;renderMode();if(!expanded)more.scrollIntoView({block:'nearest'});});
   toggle.checked = false;
   toggle.addEventListener('change', renderMode);
   renderMode();
@@ -276,4 +285,9 @@ PRODUCT_STYLE += r"""
  .sp-excluded-offers .sp-action { grid-column:4 }
 }
 @media(max-width:767px) { .sp-excluded-offers .sp-shipping { grid-column:1/-1;text-align:left } }
+"""
+
+PRODUCT_STYLE += r"""
+.sp-offer-more { width:100%;min-height:48px;margin-top:16px;padding:12px 16px;border:1px solid var(--sp-line);border-radius:8px;background:white;color:var(--sp-green);font:700 14px/1.4 Arial,sans-serif;cursor:pointer }
+.sp-offer-more:hover { background:var(--sp-mint) }
 """

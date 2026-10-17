@@ -3,14 +3,20 @@ from html import escape as e
 from home_ui import render_product_card
 
 
-def render_listing(products, *, base, money, day, segment, title='Søk etter produkter', category=False, breadcrumbs=(), children=(), facets=(), facet_values=None):
+def render_listing(products, *, base, money, day, segment, title='Søk etter produkter', category=False, breadcrumbs=(), children=(), facets=(), facet_values=None, card_attributes=None):
     trail = ''.join(f'<a href="{e(url)}">{e(label)}</a><span aria-hidden="true">›</span>' for label,url in breadcrumbs)
     chips = ''.join(f'<a href="{e(url)}">{e(label)}<span>{count}</span></a>' for label,url,count in children)
     subcategories = f'<nav class="sp-category-chips" aria-label="Underkategorier">{chips}</nav>' if chips else ''
-    cards = ''.join(render_product_card(p, base=base, money=money, day=day, segment=segment) for p in products)
     facet_values = facet_values or {}
-    if facets:
-        cards = ''.join(render_product_card(p, base=base, money=money, day=day, segment=segment).replace('<li ', '<li '+''.join(f'data-facet-{i}="{e(str(facet_values.get(p["local_slug"], {}).get(key, "")), quote=True)}" ' for i,(key,label,choices) in enumerate(facets)), 1) for p in products)
+    card_attributes = card_attributes or {}
+    def card(product):
+        html = render_product_card(product, base=base, money=money, day=day, segment=segment,
+                                   attributes=card_attributes.get(product['local_slug'], ()))
+        if facets:
+            data = ''.join(f'data-facet-{i}="{e(str(facet_values.get(product["local_slug"], {}).get(key, "")), quote=True)}" ' for i,(key,label,choices) in enumerate(facets))
+            html = html.replace('<li ', '<li '+data, 1)
+        return html
+    cards = ''.join(card(product) for product in products)
     facet_controls = ''.join(f'<label>{e(label)}<select aria-label="{e(label,quote=True)}" data-facet="{i}" data-label="{e(label,quote=True)}"><option value="">Alle</option>'+''.join(f'<option value="{e(value,quote=True)}">{e(text)}</option>' for value,text in choices)+'</select></label>' for i,(key,label,choices) in enumerate(facets))
     brands = sorted({p.get('local_brand') for p in products if p.get('local_brand')})
     options = ''.join(f'<option value="{e(b, quote=True)}">{e(b)}</option>' for b in brands)

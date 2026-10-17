@@ -531,6 +531,8 @@ def product_body(product: dict, body: dict, *, base: str, breadcrumbs=(), presen
                             excluded=False, item_order=rank, total_order=total_order[i],
                             switchable=True) for rank, i in enumerate(item_order))
     table = f'<table class="sp-offers sp-switchable-offers"><caption class="sp-sr">Sammenlign butikkenes priser og frakt</caption><thead>{head}</thead><tbody id="price-rows">{rows}</tbody></table>' if offers else '<p class="sp-empty">Ingen tilbud akkurat nå.</p>'
+    if len(offers)>6:
+        table += '<button class="sp-offer-more" id="offer-more" type="button" aria-controls="price-rows" aria-expanded="false" hidden>Vis alle tilbud</button>'
     if excluded:
         other_rows = ''.join(offer_row(o, lowest=None, excluded=True) for o in excluded)
         excluded_head = head.replace('<span data-price-mode="item">Varepris</span><span data-price-mode="total" hidden>Totalpris</span>', 'Varepris')

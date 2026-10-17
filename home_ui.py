@@ -17,7 +17,7 @@ def card_image(product):
     return f'<div class="sp-card-image">{ui_icon("image")}<span>Bilde mangler</span></div>'
 
 
-def render_product_card(product, *, base, money, day, segment):
+def render_product_card(product, *, base, money, day, segment, attributes=()):
     slug = segment(product['local_slug'])
     namespace = segment(product['namespace'])
     name = product.get('local_name') or product['local_slug']
@@ -25,6 +25,8 @@ def render_product_card(product, *, base, money, day, segment):
     price = money(product.get('lowest_item_price'))
     confirmed = day(product.get('lowest_item_price_confirmed_at'))
     count = int(product.get('offer_count') or 0)
+    attribute_html = ''.join(f'<div><dt class="sp-sr">{escape(label)}</dt><dd>{escape(value)}</dd></div>' for label,value in attributes if label and value)
+    attribute_html = f'<dl class="sp-card-attributes">{attribute_html}</dl>' if attribute_html else ''
     offer_text = ('1 tilbud' if count == 1 else f'{count} tilbud') if count else 'Se produkt'
     return (
         f'<li data-result data-name="{escape(name, quote=True)}" data-price="{product.get("lowest_item_price", {}).get("minor", "") if product.get("lowest_item_price") else ""}" data-brand="{escape(product.get("local_brand") or "", quote=True)}"><article class="sp-product-card"><a href="{href}">'
@@ -32,6 +34,7 @@ def render_product_card(product, *, base, money, day, segment):
         f'<h3>{escape(name)}</h3>'
         + category_markup(product.get("categories"))
         + (f'<p class="sp-product-brand">{escape(product["local_brand"])}</p>' if product.get("local_brand") else "")
+        + attribute_html
         + (f'<p class="sp-card-price-label">Laveste varepris</p><p class="sp-card-price">{escape(price)}</p><p class="sp-card-shipping">Frakt kan komme i tillegg</p>'
            if price else '<p class="sp-card-no-price">Ingen pris tilgjengelig</p>')
         + f'<div class="sp-card-bottom"><span>{offer_text}</span>{ui_icon("arrow")}</div>'
@@ -366,4 +369,13 @@ HOME_STYLE += """
 .sp-recovery-actions a.sp-cta { color:white;font-size:15px;padding:12px 18px }.sp-recovery-home { margin-top:20px }
 .sp-not-found a:focus-visible { outline:3px solid #177fc5;outline-offset:3px }
 @media(max-width:767px) { .sp-not-found { padding:24px;margin:28px auto 40px }.sp-not-found h1 { font-size:29px }.sp-recovery-actions { align-items:stretch;flex-direction:column;gap:8px }.sp-recovery-actions>a { justify-content:center } }
+"""
+
+HOME_STYLE += r"""
+/* Optional, caller-supplied key facts. No facts are inferred from product names. */
+.sp-card-attributes { display:flex;flex-wrap:wrap;gap:4px 12px;margin:0 0 12px;font-size:12px;line-height:1.5;color:var(--sp-muted) }
+.sp-card-attributes>div { display:flex;min-width:0;max-width:100% }
+.sp-card-attributes>div+div { border-left:1px solid var(--sp-line);padding-left:12px }
+.sp-card-attributes dd { margin:0;overflow-wrap:anywhere }
+@media(max-width:767px) { .sp-listing .sp-card-attributes { grid-column:2;margin:0 0 4px;gap:3px 8px }.sp-listing .sp-card-attributes>div+div { padding-left:8px } }
 """

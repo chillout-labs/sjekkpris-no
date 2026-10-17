@@ -25,6 +25,7 @@ def main():
                 for name,path in [('not_found','/404.html'),('directory','/kategori/'),('types','/produkttyper/'),('portrait','/p/catalogue/demo-hoy/'),('square','/p/catalogue/demo-pakning/'),('wide','/p/catalogue/demo-bred/'),('many','/p/catalogue/demo-mange-tilbud/'),('cards','/korteksempler/'),('guide','/guide/velg-tv/'),('home_catalogue','/home-catalogue.html'),('states','/design-states/'),('intent','/behovssok/'),('home','/'),('search','/search/?q=OLED'),('category','/kategori/tv/'),('product','/p/catalogue/demo-tv-2/'),('empty','/p/catalogue/demo-tv-6/')]:
                     page.goto(origin+path,wait_until='networkidle')
                     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(width,path,'overflow')
+                    assert page.get_by_role('heading',level=1).count()==1,(width,path,'primary heading')
                     if name=='not_found':
                         assert page.get_by_role('heading',level=1).inner_text()=='La oss finne veien videre'
                         assert page.locator('.sp-recovery-actions a').count()==2
@@ -47,12 +48,21 @@ def main():
                         page.keyboard.press('Escape')
                     if name=='many':
                         assert page.locator('#price-rows tr').count()==12
+                        assert page.locator('#price-rows tr:visible').count()==6
+                        page.get_by_role('button',name='Vis alle 12 tilbud',exact=True).click()
+                        assert page.locator('#price-rows tr:visible').count()==12
                         assert page.locator('#price-rows .sp-cta').count()==9
                         assert page.locator('.sp-excluded-title + table .sp-cta').count()==0
                         page.locator('#include-shipping').check()
                         assert page.locator('.sp-product').get_attribute('data-price-basis')=='total'
                         assert 'Totalpris ukjent' in page.locator('#price-rows tr').last.inner_text()
                         page.locator('#prices').screenshot(path=str(shots/f'many_total_{width}.png'))
+                        page.locator('#include-shipping').uncheck()
+                        page.get_by_role('button',name='Vis færre tilbud',exact=True).click()
+                        assert page.locator('#price-rows tr:visible').count()==6
+                        assert page.locator('#offer-more').get_attribute('aria-expanded')=='false'
+                        page.locator('#include-shipping').check()
+                        assert page.locator('#price-rows tr:visible [data-total-order]').evaluate_all('(es)=>es.map(e=>Number(e.dataset.totalOrder))')==list(range(6))
                         page.locator('#include-shipping').uncheck()
                         assert all(page.locator('.sp-variants a').evaluate_all('(es)=>es.map(e=>e.scrollWidth<=e.clientWidth)'))
                     if name=='cards':
@@ -86,6 +96,8 @@ def main():
                             assert page.locator('#listing-sort').bounding_box()['height']>=44
                         if name=='category':
                             assert page.locator('.sp-product-category:visible').count()==0
+                            assert page.locator('.sp-card-attributes').count()==5
+                            assert all(page.locator('.sp-card-attributes').evaluate_all('(es)=>es.map(e=>e.scrollWidth<=e.clientWidth)'))
                             if width<768:page.locator('#filter-open').click()
                             page.get_by_label('Skjermstørrelse',exact=True).select_option('65')
                             assert page.locator('#result-status').inner_text()=='2 produkter'
@@ -201,10 +213,13 @@ def main():
                 page.screenshot(path=str(shots/f'filter_invalid_range_{width}.png'),full_page=True)
                 if width<768:page.locator('#filter-apply').click()
                 page.locator('#listing-show-all').click()
-                assert page.locator('[data-result]:visible').count()==6
+                assert page.locator('[data-result]:visible').count()==9
                 page.locator('#listing-sort').select_option('price')
-                assert page.locator('[data-result]').first.get_attribute('data-price')=='649000'
+                assert page.locator('[data-result]').first.get_attribute('data-price')=='24900'
                 assert page.locator('[data-result]').last.get_attribute('data-price')==''
+            page.goto(origin+'/search/?q=kontaktlinse',wait_until='networkidle')
+            assert page.locator('[data-result]:visible').count()==1
+            assert page.locator('[data-result]:visible a').get_attribute('href')=='/p/catalogue/demo-pakning/'
             # A short viewport must retain the close/apply controls, allow the
             # fields to scroll, and restore focus when rotating to desktop.
             page.set_viewport_size({'width':667,'height':375})
@@ -242,6 +257,12 @@ def main():
                 page.screenshot(path=str(shots/f'search_no_suggestions_{width}.png'))
                 page.locator('#home-query').press('Escape')
                 assert page.locator('#home-search-status').inner_text()==''
+            nojs=browser.new_page(java_script_enabled=False)
+            nojs.route('**/*',lambda route:route.continue_() if route.request.url.startswith(origin+'/') else route.abort())
+            nojs.goto(origin+'/p/catalogue/demo-mange-tilbud/',wait_until='networkidle')
+            assert nojs.locator('#price-rows tr:visible').count()==12
+            assert not nojs.locator('#offer-more').is_visible()
+            nojs.close()
             assert not errors,errors
             browser.close()
     finally:
