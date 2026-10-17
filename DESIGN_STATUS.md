@@ -82,3 +82,8 @@ PR #16 merged as `dd4c28cd295a35447c0cb87f683ec246cce5b600`. User requested illu
 PR #17 publishes the separate illustrative design journey under `/beta/`, including `/beta/designoversikt/`. Build/deploy 39034700737 succeeded; live overview, product imagery and autocomplete verified. Packaging rebases links/assets/search JSON and excludes fixture sitemap/robots/CNAME; every preview page retains noindex and beta notice.
 
 PR #18 adds a scoped editorial reading template at `/beta/guide/velg-tv/`: desktop contents sidebar, mobile stacked contents, reading column, comparison table, FAQ and onward product-category link. Content remains explicitly illustrative; no invented authors, sources or review dates. Merge `e4f1d043911c7366b0d349e9950e6af5d32e9f59`. 83 unit tests passed; browser run 39035087784 passed at head ea3f4e6ca53bf59d9b6fe0a4eea3439ba8221ec0 across 360/390/768/1280. Desktop and mobile guide screenshots visually inspected. Deployment 39035256954 and live guide verified. Real editorial content and adapters still pending; no fidelity/WCAG certification implied.
+
+
+## Category buying help – 17 October
+
+PR #19 merged as `bf4560650ad48ceaa327fdc7ca89dc595467a7cb`. Preview TV category now has quiet buying-help cards below the listing, linking to the guide and checklist, plus expandable explanations of price basis and missing data. Scope is beta fixtures only. User accepted the guide as a good first version before this continuation. 83 unit tests passed; browser workflow 39035558935 succeeded at exact head 09baa431bad043d2bf8064eb042da920c24c56a3, covering 360/390/768/1280. Category-help mobile/desktop screenshots inspected. Deployment 39035714713 succeeded; live `/beta/kategori/tv/` verified. Real editorial data remains pending.
