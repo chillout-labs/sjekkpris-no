@@ -48,7 +48,7 @@ from zoneinfo import ZoneInfo
 from category_catalog import category_index, category_navigation, category_links
 from catalogue_media import image_markup, category_markup
 from product_ui import PRODUCT_STYLE, PRICE_MODE_SCRIPT, ui_icon
-from home_ui import SHELL_SCRIPT, render_header_search, HOME_SEARCH_SCRIPT, HOME_STYLE, render_home
+from home_ui import SHELL_SCRIPT, render_header_search, HOME_SEARCH_SCRIPT, HOME_STYLE, render_home, render_not_found
 
 PROPERTY = "sjekkpris-no"
 #: Where `/go/` is served. Clickout links are absolute on this origin even on
@@ -534,7 +534,7 @@ def product_body(product: dict, body: dict, *, base: str, breadcrumbs=(), presen
     if excluded:
         other_rows = ''.join(offer_row(o, lowest=None, excluded=True) for o in excluded)
         excluded_head = head.replace('<span data-price-mode="item">Varepris</span><span data-price-mode="total" hidden>Totalpris</span>', 'Varepris')
-        table += f'<h3 class="sp-excluded-title">Ikke sammenlignbare tilbud</h3><table class="sp-offers"><thead>{excluded_head}</thead><tbody>{other_rows}</tbody></table>'
+        table += f'<h3 class="sp-excluded-title">Ikke sammenlignbare tilbud</h3><table class="sp-offers sp-excluded-offers"><thead>{excluded_head}</thead><tbody>{other_rows}</tbody></table>'
     specs = f'<dl class="sp-specs">{meta}</dl>' if meta else '<p class="sp-empty">Ingen produktspesifikasjoner tilgjengelig.</p>'
     switch = ('<label class="sp-shipping-switch" id="shipping-switch-control" hidden>'
               '<input id="include-shipping" type="checkbox" role="switch" aria-controls="price-winner price-rows" aria-describedby="price-sort-status">'
@@ -1704,7 +1704,7 @@ def build(client: Chillout, out: Path, *, base: str, noindex: bool) -> int:
             encoding="utf-8",
         )
     (out / "404.html").write_text(
-        page("Fant ikke siden – SjekkPris.no", "<h1>Fant ikke siden</h1>", base=base,
+        page("Fant ikke siden – SjekkPris.no", render_not_found(base), base=base,
              noindex=True),
         encoding="utf-8",
     )
