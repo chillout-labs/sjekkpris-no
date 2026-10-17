@@ -131,3 +131,10 @@ Merged 509a0c31566ffb48bf7e9bc62d8afd7833870823. Beta TV listing now includes a 
 Verification: 83 unit tests; browser run 39050115699 passed across 360/390/430/768/1024/1280 widths; screenshots manually inspected for mobile and desktop. Deploy 39050381328 succeeded. Live OLED → LED → TV navigation and insight headings verified in browser.
 
 Accepted direction for future integration: products remain first; optional useful category knowledge and statistics below products. Assistant answers should link discussed concepts to validated existing category/product destinations (both sides of a comparison where available), never invent URLs. Shared approved knowledge must include sources and freshness; synthetic beta content must not be used as real AI evidence. Production integration remains pending.
+
+
+## 2026-10-17: Category navigation polish (PR #27)
+
+Merged 7a6136e832d09c1a11136936bc8a1a563bd1e2ba. Beta TV/OLED/LED pages now have quick category links above products, model counts, current-page indication, shared TV breadcrumb, and a visible +/- methodology disclosure. Beta overview links to the category examples. Group membership uses explicit synthetic IDs; no production taxonomy changes.
+
+83 tests passed; browser run 39051919476 passed all six widths, including placement, 44px targets, keyboard focus, counts and current state. Mobile OLED page and desktop insight screenshots manually reviewed. Live quick-link navigation to OLED, current selection and breadcrumb return verified. Deployment run 39052216064. Real-data adapters, richer approved knowledge and AI integration remain pending.
