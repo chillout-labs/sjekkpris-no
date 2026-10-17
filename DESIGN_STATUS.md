@@ -92,3 +92,8 @@ PR #19 merged as `bf4560650ad48ceaa327fdc7ca89dc595467a7cb`. Preview TV category
 ## Optional category facets – 17 October
 
 PR #20 adds explicitly supplied display facets and values to render_listing; beta TV category demonstrates size and panel. Production callers provide none. Single selection per facet combines with price/brand; counts, removable chips, zero state and reset share the existing mobile sheet. No API schema assumed. Merge d5a9eb953fd856fd35d8c677f5946f165fa1d04d. 83 unit tests passed. Browser workflow 39036445154 passed at final head 4404c7da886ceb6d02131e2ea9be2f182b31f229 after fixing explicit accessible names. Mobile/desktop screenshots inspected. Deploy 39036615892 succeeded; live 65-inch + OLED gives one product, removing OLED gives two. Multi-select, counts per option and real Chillout facet adapter remain future work.
+
+
+## Variable product cards – 17 October
+
+PR #21 merged as 36f861d6a7fdf3b242c6aa71dd068f54bde97f1b. Product-card metadata and prices wrap within available width; arrows do not shrink. Missing-price copy clarified; zero-offer cards show Se produkt. Added beta `/korteksempler/` with long name/brand, high price, missing image/price and one/many offers. Examples link to existing demo products and explicitly describe that distinction. 83 tests pass. Browser run 39036913140 passed at 07d0be5e4c70202cd0d951cbf0f489e720363fba, including card overflow at four widths. Mobile/desktop screenshots inspected. Deploy 39037094845 succeeded; live beta page verified. Further diverse image proportions and broader real-category coverage remain to test when new products arrive.
