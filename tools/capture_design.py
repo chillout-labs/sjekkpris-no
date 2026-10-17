@@ -53,6 +53,17 @@ def main():
                             assert page.locator('#listing-sort').bounding_box()['height']>=44
                         if name=='category':
                             assert page.locator('.sp-product-category:visible').count()==0
+                            if width<768:page.locator('#filter-open').click()
+                            page.get_by_label('Skjermstørrelse',exact=True).select_option('65')
+                            assert page.locator('#result-status').inner_text()=='2 produkter'
+                            page.get_by_label('Paneltype',exact=True).select_option('OLED')
+                            assert page.locator('#result-status').inner_text()=='1 produkt'
+                            page.screenshot(path=str(shots/f'category_facets_{width}.png'))
+                            page.get_by_label('Skjermstørrelse',exact=True).select_option('43')
+                            assert page.locator('#result-status').inner_text()=='0 produkter'
+                            page.locator('#listing-reset').click()
+                            assert page.locator('#result-status').inner_text()=='6 produkter'
+                            if width<768:page.locator('#filter-apply').click()
                             help=page.locator('.sp-category-help')
                             assert help.is_visible()
                             page.get_by_text('Er frakt med i prisen på produktkortene?',exact=True).click()
