@@ -27,10 +27,19 @@ def main():
                     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(width,path,'overflow')
                     assert page.get_by_role('heading',level=1).count()==1,(width,path,'primary heading')
                     if name in ['category','oled','led']:
+                        nav=page.get_by_role('navigation',name='TV-utvalg',exact=True)
+                        assert nav.locator('a').count()==3
+                        assert nav.locator('a[aria-current="page"]').count()==1
+                        assert nav.locator('span').all_text_contents()==['6','3','3']
+                        assert all(nav.locator('a').evaluate_all('(es)=>es.map(e=>e.getBoundingClientRect().height>=44)'))
+                        nav.locator('a').last.focus()
+                        assert nav.locator('a').last.evaluate('(e)=>e===document.activeElement')
+                        assert nav.bounding_box()['y'] < page.locator('#search-results').bounding_box()['y']
                         insight=page.locator('.sp-insights')
                         assert insight.count()==1
                         assert insight.bounding_box()['y']>=page.locator('.sp-listing').bounding_box()['y']+page.locator('.sp-listing').bounding_box()['height']
                         assert insight.locator('nav a').count()==3
+                        assert insight.locator('a[aria-current="page"]').count()==1
                         insight.locator('summary').click()
                         assert insight.locator('details[open]').count()==1
                         insight.screenshot(path=str(shots/f'insights_{name}_{width}.png'))
