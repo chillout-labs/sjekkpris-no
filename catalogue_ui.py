@@ -95,7 +95,11 @@ LISTING_SCRIPT = r"""
  opener.addEventListener('click',()=>dialog.showModal());
  document.getElementById('filter-close').addEventListener('click',()=>dialog.close());
  document.getElementById('filter-apply').addEventListener('click',()=>dialog.close());
- dialog.addEventListener('close',()=>opener.focus());
+ dialog.addEventListener('close',()=>{
+   // The mobile trigger disappears when the layout changes to desktop.
+   // Keep keyboard focus on a visible control in the same filter group.
+   (mq.matches?opener:panel.querySelector('summary')).focus();
+ });
  mq.addEventListener('change',placeFilters);placeFilters();
  filter();
 })();
@@ -104,7 +108,7 @@ LISTING_SCRIPT = r"""
 LISTING_STYLE = r"""
 .sp-listing { padding-bottom:32px }.sp-listing h1 { font-size:36px; letter-spacing:-1px }.sp-listing-intro { color:var(--sp-muted); max-width:680px; margin-top:12px!important }
 .sp-listing-layout { display:grid; grid-template-columns:220px minmax(0,1fr); gap:28px; margin-top:28px; align-items:start }.sp-listing-main { min-width:0 }
-.sp-listing-filters { border:1px solid var(--sp-line); border-radius:12px; padding:18px; position:sticky; top:20px }.sp-listing-filters summary { cursor:pointer; font-weight:700; min-height:28px }.sp-listing-filters>div { display:grid; gap:20px; margin-top:20px }
+.sp-listing-filters { border:1px solid var(--sp-line); border-radius:12px; padding:18px; position:sticky; top:20px }.sp-listing-filters summary { cursor:pointer; font-weight:700; min-height:44px; display:flex; align-items:center }.sp-listing-filters>div { display:grid; gap:20px; margin-top:20px }
 .sp-listing label { display:grid; gap:7px; font-size:12px; color:var(--sp-muted) }.sp-listing input,.sp-listing select { min-width:0; width:100%; border:1px solid var(--sp-line); background:white; color:var(--sp-ink); border-radius:8px; min-height:44px; padding:10px; font:14px Arial,sans-serif }
 .sp-listing button { border:1px solid var(--sp-line); background:white; color:var(--sp-green); border-radius:8px; padding:10px 14px; min-height:44px; cursor:pointer; font-weight:700 }.sp-listing button:hover { background:var(--sp-mint) }
 .sp-listing-toolbar { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:20px }.sp-listing-toolbar>p { font-size:14px }.sp-listing-toolbar label { min-width:160px }
@@ -123,10 +127,10 @@ LISTING_STYLE = r"""
 .sp-listing #filter-dialog { max-width:none; max-height:none; width:100%; height:100dvh; margin:0; padding:20px; padding-bottom:max(20px,env(safe-area-inset-bottom)); border:0; color:var(--sp-ink); background:white }
 #filter-dialog[open] { display:flex; flex-direction:column }
 #filter-dialog::backdrop { background:#10203b66 }
-.sp-filter-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:14px; border-bottom:1px solid var(--sp-line) }
+.sp-filter-heading { display:flex; flex-shrink:0; align-items:center; justify-content:space-between; gap:16px; padding-bottom:14px; border-bottom:1px solid var(--sp-line) }
 .sp-filter-heading h2 { font-size:22px }.sp-filter-heading button { border:0 }
 #mobile-active-filters { margin-top:16px; flex-shrink:0 }
-#filter-mobile-slot { overflow-y:auto; flex:1; padding:8px 0 20px }
+#filter-mobile-slot { overflow-y:auto; overscroll-behavior:contain; min-height:0; flex:1; padding:8px 4px 20px }
 #filter-mobile-slot .sp-listing-filters { border:0; padding:0; margin:0 }
 #filter-mobile-slot summary { display:none }
 .sp-listing #filter-apply { flex-shrink:0; width:100%; background:var(--sp-green); color:white; font-size:16px; min-height:50px }
