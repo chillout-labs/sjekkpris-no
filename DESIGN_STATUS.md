@@ -97,3 +97,28 @@ PR #20 adds explicitly supplied display facets and values to render_listing; bet
 ## Variable product cards – 17 October
 
 PR #21 merged as 36f861d6a7fdf3b242c6aa71dd068f54bde97f1b. Product-card metadata and prices wrap within available width; arrows do not shrink. Missing-price copy clarified; zero-offer cards show Se produkt. Added beta `/korteksempler/` with long name/brand, high price, missing image/price and one/many offers. Examples link to existing demo products and explicitly describe that distinction. 83 tests pass. Browser run 39036913140 passed at 07d0be5e4c70202cd0d951cbf0f489e720363fba, including card overflow at four widths. Mobile/desktop screenshots inspected. Deploy 39037094845 succeeded; live beta page verified. Further diverse image proportions and broader real-category coverage remain to test when new products arrive.
+
+
+## Extended design implementation session – 17 October
+
+Four reviewed changesets implemented while the user was away:
+
+- PR #22, merge e8b5e026cd11a61f6d7e15d715b416ed9d76b756: beta product-type examples with square, portrait and wide technical image diagrams; twelve-offer and long-variant example; compact beta notice/navigation; safe wrapping of merchant, variant and price text. Browser run 39037665355 passed at 80768f9f8deb5b9f06f5e57abedc75892ad26beb. Mobile/desktop images and offer screenshots inspected. Deploy 39037854320 succeeded; live product-type and shipping-mode views verified.
+- PR #23, merge c3379724f4d48b8d18a427f032ce2f383ac0cd3e: clearer category roots/subcategories; useful 404 page with search/category/home recovery; removed duplicate visible price column on excluded offers. Beta directory contains three top-level categories. Browser run 39038235410 passed at f03d81b6b392f6da9c43b655994b84b9c8485df6 after visual review caught and fixed recovery-button text contrast. Screenshots include 390 px recovery, desktop directory and 1024 px offers. Deploy 39038505052 succeeded; live recovery and category links verified.
+- PR #24, merge 492a735f45ef6770e7c5d3abbdca17a7531d57a0: explicitly supplied card key facts (TV size/panel in beta); six-offer initial view with accessible show-all/show-fewer button; all offers remain in HTML and visible without JavaScript. Shipping-mode sorting remains intact in both views. New example product types now appear in the beta search index and results. Fixed duplicate primary heading on the needs-search example. Browser run 39038787708 passed at 22475efa770f624cd8b14b69eb00b232df29f9b6; unchanged card/list visuals inspected from preceding successful run 39038544076. Deploy 39039092446 succeeded; live six-to-twelve expansion and card facts verified.
+- PR #25, merge e95e5b325000c0a5b955b644a15226b99b30f156: optional category facets use visible checkbox groups. OR within a group, AND between groups and existing price/brand filters. Individual removable chips and reset retain correct selection state. Selected chips and desktop filter panels can scroll, keeping apply/close/reset reachable on short screens. Browser run 39039175991 passed at 3021573fbb9ff2716fcb1b44f41d1c82dfe0c47c. Mobile, desktop and 667×375 screenshots inspected. Deployment 39039454441 succeeded; live 55 + 65 inches with OLED gives two products, and removing 55 inches leaves one.
+
+Verification: 83 unit tests pass. Browser coverage now includes 360, 390, 430, 768, 1024 and 1280 px, plus short viewport cases, no-JavaScript offer visibility, multiple facet selections and removal, sorting, zero results, image proportions and existing journeys. All 26 preview HTML pages have one H1 and no duplicate IDs; local beta links/assets and output-safety checks pass. This is Chromium coverage, not Safari/device certification or a complete WCAG audit.
+
+All extra products, prices, image diagrams and editorial content remain isolated under /beta/, visibly synthetic and noindex. Long-variant examples explicitly state that their links reopen the same layout-test page. Actual catalogue data, price selection, API contracts and backend/SEO branches were not changed.
+
+### Next design priorities
+
+1. Review real products across the incoming categories: actual image crops/backgrounds, sparse and rich metadata, package/variant names, price ranges and merchant counts.
+2. Connect validated display adapters for card facts, category facets, product specifications, galleries, history and product relationships when Chillout provides them. Optional sections must stay absent when reliable content is missing.
+3. Finish reference-by-reference visual acceptance against the approved mockups, including cross-browser/mobile-device checks and a fuller keyboard/contrast/accessibility review. Do not claim 95% fidelity or WCAG certification yet.
+4. Finish actual editorial content, source/date presentation and trust/error-reporting journeys when their content and destination are defined.
+5. Review filter option counts, large option sets and richer category-specific groups against real data. Multi-select is now implemented; real facet adapters remain pending.
+6. Complete natural-language result integration and richer autocomplete information only when their source data and behavior are defined. Current needs-search page is illustrative.
+
+Accounts, alerts, full product-vs-product comparison and other D05 LATER features remain deferred.
