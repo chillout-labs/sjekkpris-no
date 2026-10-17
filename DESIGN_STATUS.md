@@ -87,3 +87,8 @@ PR #18 adds a scoped editorial reading template at `/beta/guide/velg-tv/`: deskt
 ## Category buying help – 17 October
 
 PR #19 merged as `bf4560650ad48ceaa327fdc7ca89dc595467a7cb`. Preview TV category now has quiet buying-help cards below the listing, linking to the guide and checklist, plus expandable explanations of price basis and missing data. Scope is beta fixtures only. User accepted the guide as a good first version before this continuation. 83 unit tests passed; browser workflow 39035558935 succeeded at exact head 09baa431bad043d2bf8064eb042da920c24c56a3, covering 360/390/768/1280. Category-help mobile/desktop screenshots inspected. Deployment 39035714713 succeeded; live `/beta/kategori/tv/` verified. Real editorial data remains pending.
+
+
+## Optional category facets – 17 October
+
+PR #20 adds explicitly supplied display facets and values to render_listing; beta TV category demonstrates size and panel. Production callers provide none. Single selection per facet combines with price/brand; counts, removable chips, zero state and reset share the existing mobile sheet. No API schema assumed. Merge d5a9eb953fd856fd35d8c677f5946f165fa1d04d. 83 unit tests passed. Browser workflow 39036445154 passed at final head 4404c7da886ceb6d02131e2ea9be2f182b31f229 after fixing explicit accessible names. Mobile/desktop screenshots inspected. Deploy 39036615892 succeeded; live 65-inch + OLED gives one product, removing OLED gives two. Multi-select, counts per option and real Chillout facet adapter remain future work.
