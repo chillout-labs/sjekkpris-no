@@ -26,9 +26,17 @@ def main():
                     page.goto(origin+path,wait_until='networkidle')
                     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(width,path,'overflow')
                     if name=='home_catalogue':
+                        assert page.locator('.sp-home-categories .sp-see-all').get_attribute('href')=='/kategori/'
+                        for selector in ['.sp-home-categories nav', '.sp-home-hero .sp-examples>div']:
+                            row=page.locator(selector)
+                            links=row.locator('a')
+                            if links.count():
+                                links.last.focus()
+                                page.wait_for_function('(selector)=>{const e=document.querySelector(selector).querySelector("a:last-child");const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth}',arg=selector)
+                                links.first.focus()
                         rail=page.locator('.sp-catalogue .sp-product-grid')
                         assert rail.evaluate('(e)=>e.scrollWidth>e.clientWidth')
-                        assert page.locator('.sp-see-all').get_attribute('href')=='/search/'
+                        assert page.locator('.sp-catalogue .sp-see-all').get_attribute('href')=='/search/'
                         page.locator('.sp-catalogue .sp-product-card a').last.focus()
                         assert rail.evaluate('(e)=>e.scrollLeft>0')
                         page.locator('.sp-catalogue .sp-product-card a').first.focus()
