@@ -25,7 +25,7 @@ def render_product_card(product, *, base, money, day, segment):
     price = money(product.get('lowest_item_price'))
     confirmed = day(product.get('lowest_item_price_confirmed_at'))
     count = int(product.get('offer_count') or 0)
-    offer_text = '1 tilbud' if count == 1 else f'{count} tilbud'
+    offer_text = ('1 tilbud' if count == 1 else f'{count} tilbud') if count else 'Se produkt'
     return (
         f'<li data-result data-name="{escape(name, quote=True)}" data-price="{product.get("lowest_item_price", {}).get("minor", "") if product.get("lowest_item_price") else ""}" data-brand="{escape(product.get("local_brand") or "", quote=True)}"><article class="sp-product-card"><a href="{href}">'
         f'{card_image(product)}'
@@ -33,7 +33,7 @@ def render_product_card(product, *, base, money, day, segment):
         + category_markup(product.get("categories"))
         + (f'<p class="sp-product-brand">{escape(product["local_brand"])}</p>' if product.get("local_brand") else "")
         + (f'<p class="sp-card-price-label">Laveste varepris</p><p class="sp-card-price">{escape(price)}</p><p class="sp-card-shipping">Frakt kan komme i tillegg</p>'
-           if price else '<p class="sp-card-no-price">Ingen pris</p>')
+           if price else '<p class="sp-card-no-price">Ingen pris tilgjengelig</p>')
         + f'<div class="sp-card-bottom"><span>{offer_text}</span>{ui_icon("arrow")}</div>'
         + (f'<p class="sp-card-confirmed">Pris bekreftet {escape(confirmed)}</p>' if price and confirmed else '')
         + '</a></article></li>'
@@ -332,4 +332,13 @@ HOME_STYLE += r"""
  .sp-home-categories .sp-catalogue-heading { align-items:center; gap:8px }
  .sp-home-categories .sp-catalogue-heading h2 { font-size:22px }
 }
+"""
+
+HOME_STYLE += """
+.sp-product-card>a>* { min-width:0 }
+.sp-product-card .sp-product-brand,.sp-product-card .sp-product-category,.sp-product-card .sp-card-no-price,.sp-product-card .sp-card-confirmed { overflow-wrap:anywhere;line-height:1.5 }
+.sp-product-card .sp-card-bottom { gap:12px }
+.sp-product-card .sp-card-bottom svg { flex-shrink:0 }
+.sp-product-card .sp-card-price { overflow-wrap:anywhere }
+.sp-product-card .sp-card-no-price { font-size:15px }
 """
