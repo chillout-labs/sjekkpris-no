@@ -32,7 +32,7 @@ def main():
                             links=row.locator('a')
                             if links.count():
                                 links.last.focus()
-                                assert links.last.evaluate('(e)=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth}')
+                                page.wait_for_function('(selector)=>{const e=document.querySelector(selector).querySelector("a:last-child");const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth}',arg=selector)
                                 links.first.focus()
                         rail=page.locator('.sp-catalogue .sp-product-grid')
                         assert rail.evaluate('(e)=>e.scrollWidth>e.clientWidth')
