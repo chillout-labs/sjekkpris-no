@@ -40,6 +40,13 @@ def main():
                         page.locator('.sp-catalogue .sp-product-card a').last.focus()
                         assert rail.evaluate('(e)=>e.scrollLeft>0')
                         page.locator('.sp-catalogue .sp-product-card a').first.focus()
+                    if name in ['search','category']:
+                        assert page.get_by_label('Sorter etter',exact=True).count()==1
+                        if width<768:
+                            assert page.locator('#filter-open').bounding_box()['height']>=44
+                            assert page.locator('#listing-sort').bounding_box()['height']>=44
+                        if name=='category':
+                            assert page.locator('.sp-product-category:visible').count()==0
                     if name in ['home','search','category']:
                         page.locator('.sp-card-photo img:visible').evaluate_all("async images=>{await Promise.all(images.map(async e=>{e.loading='eager';await e.decode();}));}")
                         assert page.locator('.sp-card-photo img:visible').first.evaluate('(e)=>e.complete&&e.naturalWidth>0')
