@@ -20,11 +20,18 @@ def main():
             errors=[]
             page.on('pageerror',lambda error:errors.append(str(error)))
             page.route('**/*',lambda route:route.continue_() if route.request.url.startswith(origin+'/') else route.abort())
-            for width in [360,390,768,1280]:
+            for width in [360,390,430,768,1024,1280]:
                 page.set_viewport_size({'width':width,'height':900})
-                for name,path in [('types','/produkttyper/'),('portrait','/p/catalogue/demo-hoy/'),('square','/p/catalogue/demo-pakning/'),('wide','/p/catalogue/demo-bred/'),('many','/p/catalogue/demo-mange-tilbud/'),('cards','/korteksempler/'),('guide','/guide/velg-tv/'),('home_catalogue','/home-catalogue.html'),('states','/design-states/'),('intent','/behovssok/'),('home','/'),('search','/search/?q=OLED'),('category','/kategori/tv/'),('product','/p/catalogue/demo-tv-2/'),('empty','/p/catalogue/demo-tv-6/')]:
+                for name,path in [('not_found','/404.html'),('directory','/kategori/'),('types','/produkttyper/'),('portrait','/p/catalogue/demo-hoy/'),('square','/p/catalogue/demo-pakning/'),('wide','/p/catalogue/demo-bred/'),('many','/p/catalogue/demo-mange-tilbud/'),('cards','/korteksempler/'),('guide','/guide/velg-tv/'),('home_catalogue','/home-catalogue.html'),('states','/design-states/'),('intent','/behovssok/'),('home','/'),('search','/search/?q=OLED'),('category','/kategori/tv/'),('product','/p/catalogue/demo-tv-2/'),('empty','/p/catalogue/demo-tv-6/')]:
                     page.goto(origin+path,wait_until='networkidle')
                     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(width,path,'overflow')
+                    if name=='not_found':
+                        assert page.get_by_role('heading',level=1).inner_text()=='La oss finne veien videre'
+                        assert page.locator('.sp-recovery-actions a').count()==2
+                        assert all(page.locator('.sp-recovery-actions a').evaluate_all('(es)=>es.map(e=>e.getBoundingClientRect().height>=44)'))
+                    if name=='directory':
+                        assert page.locator('.sp-category-tree a').count()>=2
+                        page.locator('.sp-category-tree a').last.focus()
                     if name in ['portrait','square','wide']:
                         for index in range(3):
                             page.locator(f'[data-gallery-index="{index}"]').click()
