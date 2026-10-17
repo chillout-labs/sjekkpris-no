@@ -1,5 +1,6 @@
 """Isolated layout fixtures for different proportions and dense offer lists."""
 import copy
+import json
 from PIL import Image, ImageDraw
 import build
 from home_release import page, home_money
@@ -50,6 +51,12 @@ def create_scenarios(out, products):
     (target/'index.html').write_text(page('Produkttyper – designtest',content,base='/',noindex=True),encoding='utf-8')
     from category_catalog import category_index, render_category_index, category_href
     nodes=category_index(products+items)
+    index_path=out/'search-index.json'
+    index=json.loads(index_path.read_text(encoding='utf-8'))
+    index.extend({'name':p['local_name'],'url':f"/p/catalogue/{p['local_slug']}/",'price':home_money(p['lowest_item_price'])} for p in items)
+    index_path.write_text(json.dumps(index),encoding='utf-8')
+    search=render_listing(products+items,base='/',money=home_money,day=build.day,segment=build.segment)
+    (out/'search/index.html').write_text(page('Søk – SjekkPris',search,base='/',noindex=True),encoding='utf-8')
     (out/'kategori/index.html').write_text(page('Utforsk kategorier',render_category_index(nodes,'/'),base='/',noindex=True),encoding='utf-8')
     for node in nodes.values():
         if node['slug']=='tv':continue  # Keep the detailed TV help and facets.
@@ -75,7 +82,7 @@ def create_scenarios(out, products):
     excluded['comparison_status']='not_comparable'
     body={'identity':product,'offers':offers,'excluded':[excluded],'lowest_item_price':'offer-0','lowest_known_total_price':'offer-0'}
     url='/p/catalogue/demo-mange-tilbud/'
-    presentation={'summary':'Designeksempel med tolv tilbud og ett tilbud som ikke kan sammenlignes.',
+    presentation={'summary':'Designeksempel med tolv tilbud og ett tilbud som ikke kan sammenlignes. Variantnavnene tester tekstbryting og åpner samme eksempelside.',
                   'variants':[(label,url,i==0) for i,label in enumerate(['Standardpakning','Større pakning med ekstra tilbehør','EkstraLangSammenhengendeVariantbetegnelseForLayoutkontroll'])]}
     target=out/'p/catalogue/demo-mange-tilbud';target.mkdir(parents=True,exist_ok=True)
     (target/'index.html').write_text(build.page(product['local_name'],build.product_body(product,body,base='/',breadcrumbs=[('Designoversikt','/designoversikt/')],presentation=presentation),base='/',noindex=True),encoding='utf-8')
