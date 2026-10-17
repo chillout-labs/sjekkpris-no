@@ -41,7 +41,7 @@ def render_product_card(product, *, base, money, day, segment):
 
 
 def render_home(products, *, base, money, day, segment, category_links=()):
-    category_section = ('<section class="sp-home-categories" aria-labelledby="home-categories-title"><h2 id="home-categories-title">Utforsk kategorier</h2><nav aria-label="Utforsk kategorier">' + ''.join(f'<a href="{escape(url, quote=True)}"><span>{escape(name)}</span>{ui_icon("arrow")}</a>' for name, url in category_links) + '</nav></section>') if category_links else ''
+    category_section = ('<section class="sp-home-categories" aria-labelledby="home-categories-title"><div class="sp-catalogue-heading"><h2 id="home-categories-title">Utforsk kategorier</h2><a class="sp-see-all" href="' + escape(base, quote=True) + 'kategori/">Se alle' + ui_icon("arrow") + '</a></div><nav aria-label="Utforsk kategorier">' + ''.join(f'<a href="{escape(url, quote=True)}"><span>{escape(name)}</span>{ui_icon("arrow")}</a>' for name, url in category_links) + '</nav></section>') if category_links else ''
     cards = [render_product_card(p, base=base, money=money, day=day, segment=segment) for p in products]
     examples = []
     if products:
@@ -304,5 +304,26 @@ HOME_STYLE += r"""
  .sp-home-front .sp-catalogue-heading { gap:10px; margin-bottom:10px }
  .sp-home-front .sp-catalogue-heading h2 { font-size:22px }
  .sp-home-front .sp-home-categories { margin-top:24px }
+}
+"""
+
+
+HOME_STYLE += r"""
+/* Compact discovery navigation follows the locked homepage proportions. */
+.sp-home-categories .sp-catalogue-heading h2 { margin:0 }
+.sp-home-categories nav { display:flex; gap:12px; overflow-x:auto; padding:4px 4px 12px; scroll-padding-inline:4px; overscroll-behavior-x:contain }
+.sp-home-categories nav a { flex:0 0 auto; max-width:240px; min-height:48px; padding:12px 16px; border-radius:24px; background:var(--sp-mint); border-color:transparent; font-size:14px }
+.sp-home-categories nav a span { overflow-wrap:anywhere }
+.sp-home-categories nav a:hover { border-color:var(--sp-green) }
+.sp-home-categories nav a:focus-visible { outline-offset:0 }
+@media(max-width:767px) {
+ .sp-home-hero .sp-examples>div { flex-wrap:nowrap; overflow-x:auto; padding:4px 4px 10px; scroll-padding-inline:4px; overscroll-behavior-x:contain }
+ .sp-home-hero a.sp-example { flex:0 0 auto; max-width:250px; border-radius:16px }
+ .sp-home-hero .sp-example svg { flex-shrink:0 }
+ .sp-home-hero .sp-examples { margin-top:12px }
+ .sp-home-categories nav { gap:8px }
+ .sp-home-categories nav a { max-width:210px; font-size:13px; padding:10px 14px }
+ .sp-home-categories .sp-catalogue-heading { align-items:center; gap:8px }
+ .sp-home-categories .sp-catalogue-heading h2 { font-size:22px }
 }
 """
