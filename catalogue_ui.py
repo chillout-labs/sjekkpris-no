@@ -192,3 +192,19 @@ LISTING_STYLE += r"""
  .sp-listing .sp-card-price { line-height:1.25 }
 }
 """
+
+LISTING_STYLE += r"""
+/* Category roots read as destinations; deeper paths stay easy to scan. */
+.sp-category-tree { align-items:start }
+.sp-category-tree li { min-width:0 }
+.sp-category-tree>li { padding:12px 20px 16px }
+.sp-category-tree>li>a { font-size:19px;font-weight:700;line-height:1.4;padding:12px 0 }
+.sp-category-tree>li>ul { margin:8px 0 0;padding-top:8px;border-top:1px solid var(--sp-line);border-left:0;padding-left:0 }
+.sp-category-tree a { border-radius:6px;line-height:1.5 }
+.sp-category-tree a>span { min-width:0;overflow-wrap:anywhere }
+.sp-category-tree small { font-size:12px;font-weight:400;flex-shrink:0 }
+.sp-category-tree a:hover { background:var(--sp-surface) }
+.sp-category-tree a:focus-visible { outline:3px solid #177fc5;outline-offset:3px }
+.sp-category-tree ul ul { margin:0 0 4px 4px }
+@media(max-width:767px) { .sp-category-tree { gap:14px;margin-top:24px }.sp-category-tree>li { padding:10px 16px 14px }.sp-category-tree>li>a { font-size:18px } }
+"""
