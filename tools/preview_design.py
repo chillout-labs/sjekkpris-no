@@ -95,7 +95,7 @@ def main():
     args=dict(base='/',money=home_money,day=build.day,segment=build.segment)
     cards=[render_product_card(p,**args) for p in products[:3]]
     highlights=search_highlights('TV til film og serier','Eksempel på behovssøk. Kortene viser oppsettet; utvalget er ikke en beregnet anbefaling.',cards,[('Endre behov','/search/?q=TV'),('Endre pris','/search/?q=OLED')])
-    listing=render_listing(products,**args,title='Alle eksempelprodukter')
+    listing=render_listing(products,**args,title='Alle eksempelprodukter').replace('<h1>Alle eksempelprodukter</h1>','<h2>Alle eksempelprodukter</h2>',1)
     target=out/'behovssok';target.mkdir(exist_ok=True)
     (target/'index.html').write_text(page('Behovssøk – designeksempel',highlights+listing,base='/',noindex=True),encoding='utf-8')
     varied=copy.deepcopy(products)
