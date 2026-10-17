@@ -22,10 +22,23 @@ def main():
             page.route('**/*',lambda route:route.continue_() if route.request.url.startswith(origin+'/') else route.abort())
             for width in [360,390,430,768,1024,1280]:
                 page.set_viewport_size({'width':width,'height':900})
-                for name,path in [('not_found','/404.html'),('directory','/kategori/'),('types','/produkttyper/'),('portrait','/p/catalogue/demo-hoy/'),('square','/p/catalogue/demo-pakning/'),('wide','/p/catalogue/demo-bred/'),('many','/p/catalogue/demo-mange-tilbud/'),('cards','/korteksempler/'),('guide','/guide/velg-tv/'),('home_catalogue','/home-catalogue.html'),('states','/design-states/'),('intent','/behovssok/'),('home','/'),('search','/search/?q=OLED'),('category','/kategori/tv/'),('product','/p/catalogue/demo-tv-2/'),('empty','/p/catalogue/demo-tv-6/')]:
+                for name,path in [('oled','/kategori/tv/oled/'),('led','/kategori/tv/led/'),('not_found','/404.html'),('directory','/kategori/'),('types','/produkttyper/'),('portrait','/p/catalogue/demo-hoy/'),('square','/p/catalogue/demo-pakning/'),('wide','/p/catalogue/demo-bred/'),('many','/p/catalogue/demo-mange-tilbud/'),('cards','/korteksempler/'),('guide','/guide/velg-tv/'),('home_catalogue','/home-catalogue.html'),('states','/design-states/'),('intent','/behovssok/'),('home','/'),('search','/search/?q=OLED'),('category','/kategori/tv/'),('product','/p/catalogue/demo-tv-2/'),('empty','/p/catalogue/demo-tv-6/')]:
                     page.goto(origin+path,wait_until='networkidle')
                     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(width,path,'overflow')
                     assert page.get_by_role('heading',level=1).count()==1,(width,path,'primary heading')
+                    if name in ['category','oled','led']:
+                        insight=page.locator('.sp-insights')
+                        assert insight.count()==1
+                        assert insight.bounding_box()['y']>=page.locator('.sp-listing').bounding_box()['y']+page.locator('.sp-listing').bounding_box()['height']
+                        assert insight.locator('nav a').count()==3
+                        insight.locator('summary').click()
+                        assert insight.locator('details[open]').count()==1
+                        insight.screenshot(path=str(shots/f'insights_{name}_{width}.png'))
+                        insight.locator('summary').click()
+                        if name in ['oled','led']:
+                            assert page.locator('#search-results>li').count()==3
+                            assert insight.locator('dd').all_text_contents()==(['3','9 990 kr','21 990 kr'] if name=='oled' else ['3','6 490 kr','8 990 kr'])
+                        page.evaluate('window.scrollTo(0,0)')
                     if name=='not_found':
                         assert page.get_by_role('heading',level=1).inner_text()=='La oss finne veien videre'
                         assert page.locator('.sp-recovery-actions a').count()==2
