@@ -59,6 +59,7 @@ def main():
     def fixture_listing(items, **kwargs):
         if kwargs.get('category') and kwargs.get('title')=='TV':
             kwargs['facets']=[('size','Skjermstørrelse',[(str(n),str(n)+' tommer') for n in [43,50,55,65,77]]),('panel','Paneltype',[('OLED','OLED'),('LED','LED')])]
+            kwargs['card_attributes']={p['local_slug']:[('Skjermstørrelse',p['local_name'].split(' tommer')[0].split()[-1]+' tommer'),('Panel','OLED' if 'OLED' in p['local_name'] else 'LED')] for p in products if p['local_slug']!='demo-tv-6'}
             kwargs['facet_values']={p['local_slug']:{'size':p['local_name'].split(' tommer')[0].split()[-1],'panel':'OLED' if 'OLED' in p['local_name'] else 'LED'} for p in products}
         return original_listing(items,**kwargs)
     def full_product(product,body,**kwargs):
