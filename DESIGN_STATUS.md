@@ -138,3 +138,14 @@ Accepted direction for future integration: products remain first; optional usefu
 Merged 7a6136e832d09c1a11136936bc8a1a563bd1e2ba. Beta TV/OLED/LED pages now have quick category links above products, model counts, current-page indication, shared TV breadcrumb, and a visible +/- methodology disclosure. Beta overview links to the category examples. Group membership uses explicit synthetic IDs; no production taxonomy changes.
 
 83 tests passed; browser run 39051919476 passed all six widths, including placement, 44px targets, keyboard focus, counts and current state. Mobile OLED page and desktop insight screenshots manually reviewed. Live quick-link navigation to OLED, current selection and breadcrumb return verified. Deployment run 39052216064. Real-data adapters, richer approved knowledge and AI integration remain pending.
+
+
+## 2026-10-17: Four additional design areas (PR #28)
+
+Merged f9ee3a2a15faa2b129c475bfe758bf9078de25eb. 14 beta pages added (42 HTML pages total): brand directory + Nord/Fjord, store directory + example store, about/methodology/contact/privacy templates, deterministic assistant preview, favourites, target-price alert preview, account hub and two-product comparison.
+
+Reusable shell/listing components retained. Beta overview, menu and footer connect the journeys. Interaction examples support removing/restoring favourites, native validation and explicit non-submission feedback, predefined assistant answers with category/product links and unknown-query state, switching either comparison candidate, same-product feedback and differences-only view. Mobile comparison fits both candidates after screenshot review.
+
+Validation: 83 tests pass; packaged output clean (53 files); all 42 pages have one H1, unique IDs and valid local links. Browser run 39056337729 passed all new pages at 360/390/430/768/1024/1280 and existing journeys. Screenshots inspected across mobile and desktop. Deployment 39056690428 succeeded; live assistant-to-category links, comparison contents and menu-to-brand navigation verified.
+
+Limitations: design prototypes only, no actual AI service, accounts/sync, notifications or feedback delivery. Privacy template is not a finished legal policy. Brands/stores/products are synthetic. Production data adapters and actual service/content decisions remain pending. Existing production pages, product URLs, pricing rules and noindex preserved.
