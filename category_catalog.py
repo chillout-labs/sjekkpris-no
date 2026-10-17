@@ -79,4 +79,4 @@ def render_category_index(nodes, base):
     return ('<section class="sp-home sp-category-index"><nav class="sp-breadcrumb" aria-label="Brødsmulesti">'
             f'<a href="{e(base)}">Hjem</a><span>›</span><span>Kategorier</span></nav>'
             '<h1>Utforsk kategorier</h1><p>Finn produkter og sammenlign butikkenes priser.</p>'
-            '<ul class="sp-category-tree">' + ''.join(branch(k) for k in roots) + '</ul></section>')
+            '<ul class="sp-category-tree" aria-label="Produktkategorier">' + ''.join(branch(k) for k in roots) + '</ul></section>')

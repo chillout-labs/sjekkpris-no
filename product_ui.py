@@ -265,3 +265,15 @@ PRODUCT_STYLE += r"""
 .sp-offers tbody tr:last-child { border-bottom-color:transparent }
 @media(max-width:767px) { .sp-offers tbody tr:last-child { border-bottom-color:var(--sp-line) } }
 """
+
+PRODUCT_STYLE += r"""
+/* Excluded offers keep one item-price column, independent of shipping mode. */
+.sp-excluded-offers .sp-item,.sp-excluded-offers th:nth-child(2) { display:none }
+@media(min-width:768px) {
+ .sp-excluded-offers tr { grid-template-columns:1.3fr .6fr 1fr 1.2fr }
+ .sp-excluded-offers .sp-shipping { grid-column:2 }
+ .sp-excluded-offers .sp-total { grid-column:3 }
+ .sp-excluded-offers .sp-action { grid-column:4 }
+}
+@media(max-width:767px) { .sp-excluded-offers .sp-shipping { grid-column:1/-1;text-align:left } }
+"""

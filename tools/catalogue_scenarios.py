@@ -7,7 +7,8 @@ from catalogue_ui import render_listing
 from test_build import offer, TOKEN_WINNER
 
 
-def create_scenarios(out, prototype):
+def create_scenarios(out, products):
+    prototype=products[0]
     # Technical proportion diagrams, not product photography or real packaging.
     dimensions = [('portrait', 320, 800), ('square', 600, 600), ('wide', 1000, 300)]
     for name, width, height in dimensions:
@@ -26,9 +27,12 @@ def create_scenarios(out, prototype):
     for index,(slug,name,category,shape) in enumerate(examples):
         product=copy.deepcopy(prototype)
         product.update(local_slug=slug,local_name=name,local_brand='Eksempelmerke',local_category=category,
-                       categories={'primary':{'id':slug,'display_name':category,'active':True,'path':[{'display_name':category}]}},
+                       categories={'primary':{'id':slug,'display_name':category,'active':True,'path':[{'id':slug,'display_name':category}]}},
                        image={'url':f'https://sjekkpris.no/assets/layout-{shape}.webp'},
                        lowest_item_price={'minor':24900+index*10000,'currency':'NOK'},offer_count=2)
+        if category=='Elektronikk':
+            product['categories']['primary']['id']='demo-electronics'
+            product['categories']['primary']['path']=[{'id':'demo-electronics','display_name':category}]
         minor=product['lowest_item_price']['minor']
         offers=[offer('a','Eksempelbutikk A',minor,token=TOKEN_WINNER),offer('b','Eksempelbutikk B',minor+2000)]
         body={'identity':product,'offers':offers,'excluded':[],'lowest_item_price':'a','lowest_known_total_price':None}
@@ -44,6 +48,15 @@ def create_scenarios(out, prototype):
     content=render_listing(items,base='/',money=home_money,day=build.day,segment=build.segment,title='Ulike produkttyper',category=True)
     content=content.replace('<h1>Ulike produkttyper</h1>','<h1>Ulike produkttyper</h1><p>Fiktive eksempler med kvadratiske, høye og brede måldiagrammer. Åpne et produkt for å prøve bildegalleriet.</p>')
     (target/'index.html').write_text(page('Produkttyper – designtest',content,base='/',noindex=True),encoding='utf-8')
+    from category_catalog import category_index, render_category_index, category_href
+    nodes=category_index(products+items)
+    (out/'kategori/index.html').write_text(page('Utforsk kategorier',render_category_index(nodes,'/'),base='/',noindex=True),encoding='utf-8')
+    for node in nodes.values():
+        if node['slug']=='tv':continue  # Keep the detailed TV help and facets.
+        target=out/'kategori'/node['slug'];target.mkdir(parents=True,exist_ok=True)
+        content=render_listing(list(node['products'].values()),base='/',money=home_money,day=build.day,segment=build.segment,
+            title=node['name'],category=True,children=[(nodes[k]['name'],category_href(nodes[k],'/'),len(nodes[k]['products'])) for k in node['children']])
+        (target/'index.html').write_text(page(node['name'],content,base='/',noindex=True),encoding='utf-8')
     # A dense list includes stale, unavailable and excluded offers, all explicit.
     product=copy.deepcopy(prototype)
     product['local_name']='Eksempel med mange butikker og lange variantnavn'

@@ -342,3 +342,28 @@ HOME_STYLE += """
 .sp-product-card .sp-card-price { overflow-wrap:anywhere }
 .sp-product-card .sp-card-no-price { font-size:15px }
 """
+
+
+def render_not_found(base):
+    return ('<section class="sp-not-found" aria-labelledby="not-found-title">'
+            + ui_icon('search') + '<p class="sp-error-code">404 · Siden finnes ikke</p>'
+            + '<h1 id="not-found-title">La oss finne veien videre</h1>'
+            + '<p>Lenken kan være feil, eller siden kan ha blitt flyttet. Søk etter produktet eller utforsk kategoriene.</p>'
+            + '<div class="sp-recovery-actions">'
+            + f'<a class="sp-cta" href="{escape(base)}search/">Søk etter produkter {ui_icon("arrow")}</a>'
+            + f'<a href="{escape(base)}kategori/">Utforsk kategorier</a></div>'
+            + f'<a class="sp-recovery-home" href="{escape(base)}">← Til forsiden</a></section>')
+
+
+HOME_STYLE += """
+.sp-not-found { max-width:680px;margin:64px auto 80px;padding:36px;border:1px solid var(--sp-line);border-radius:16px;background:var(--sp-surface) }
+.sp-not-found>svg { width:48px;height:48px;padding:12px;box-sizing:content-box;border-radius:16px;background:var(--sp-mint);color:var(--sp-green) }
+.sp-not-found .sp-error-code { color:var(--sp-muted);font-size:13px;margin:24px 0 12px }
+.sp-not-found h1 { font-size:36px;line-height:1.2;letter-spacing:-1px;margin:0 0 16px;overflow-wrap:anywhere }
+.sp-not-found>p { font-size:16px;line-height:1.7;color:var(--sp-muted);max-width:560px }
+.sp-recovery-actions { display:flex;align-items:center;flex-wrap:wrap;gap:12px 24px;margin-top:28px }
+.sp-recovery-actions a,.sp-recovery-home { min-height:44px;display:inline-flex;align-items:center;color:var(--sp-green);font-size:15px }
+.sp-recovery-actions a.sp-cta { color:white;font-size:15px;padding:12px 18px }.sp-recovery-home { margin-top:20px }
+.sp-not-found a:focus-visible { outline:3px solid #177fc5;outline-offset:3px }
+@media(max-width:767px) { .sp-not-found { padding:24px;margin:28px auto 40px }.sp-not-found h1 { font-size:29px }.sp-recovery-actions { align-items:stretch;flex-direction:column;gap:8px }.sp-recovery-actions>a { justify-content:center } }
+"""
