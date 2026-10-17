@@ -7,13 +7,15 @@ from home_ui import render_product_card
 def product_presentation(product):
     slug=product['local_slug']
     if slug=='demo-tv-6':return {}
+    size=product['local_name'].split(' tommer')[0].split()[-1]
+    panel='OLED' if 'OLED' in product['local_name'] else 'LED'
     return {
         'summary':'Denne eksempelmodellen kombinerer et slankt TV-design med et tydelig bilde. Opplysningene demonstrerer produktmalen og er ikke produsentfakta.',
-        'attributes':[('Panel','OLED'),('Oppløsning','4K'),('Frekvens','120 Hz')],
+        'attributes':[('Panel',panel),('Oppløsning','4K'),('Frekvens','120 Hz')],
         'variants':[(label,f'/p/catalogue/demo-tv-{i}/',slug==f'demo-tv-{i}') for i,label in [(1,'55 tommer'),(2,'65 tommer'),(5,'77 tommer')]],
         'gallery':[({'url':'https://sjekkpris.no/assets/tv-illustration.webp'},'Produktillustrasjon'),({'url':'https://sjekkpris.no/assets/tv-detail.webp'},'Detalj av samme illustrasjon')],
-        'about':'Kort fortalt: Her får produktets bekreftede egenskaper og bruksområder plass. Dette eksemplet viser hvordan en utfyllende beskrivelse leses uten å konkurrere med priser og butikkvalg.',
-        'specs':[('Skjermteknologi','OLED'),('Skjermstørrelse','65 tommer'),('Oppløsning','3840 × 2160'),('Oppdateringsfrekvens','120 Hz'),('Tilkoblinger','4 HDMI-innganger')],
+        'about':f'Designeksempel: {product["local_name"]} er en fiktiv {size}-tommers TV med {panel}-panel. Her prøver vi hvordan en fyldigere produktbeskrivelse, egenskaper og praktiske vurderinger fungerer sammen. Modellen er ikke et virkelig produkt, og opplysningene skal ikke brukes som kjøpsråd.',
+        'specs':[('Skjermteknologi',panel),('Skjermstørrelse',size+' tommer'),('Oppløsning','3840 × 2160'),('Oppdateringsfrekvens','120 Hz'),('Tilkoblinger','4 HDMI-innganger')],
         'history':[('1. sep.',16990),('10. sep.',15990),('20. sep.',16490),('1. okt.',15490),('10. okt.',14990)],
         'use_cases':[('Film og serier','Eksempel: kontrast og detaljgjengivelse i mørke scener.'),('Gaming','Eksempel: høy oppdateringsfrekvens og støttede spillfunksjoner.'),('Streaming','Eksempel: apper og tjenester som faktisk støttes.')],
         'alternatives':[('Vil du bruke mindre?','Eksempel: mindre skjerm, med lavere varepris.','Se 55-tommersmodellen','/p/catalogue/demo-tv-1/'),('For omtrent samme pris','Eksempel: vurder annen paneltype og dine viktigste egenskaper.','Se alternativ modell','/p/catalogue/demo-tv-4/'),('Vil du gå opp?','Eksempel: større skjerm krever mer plass og høyere budsjett.','Se 77-tommersmodellen','/p/catalogue/demo-tv-5/')],
