@@ -62,6 +62,7 @@ def main():
         start=result.index('<section class="sp-catalogue"')
         end=result.index('</section>',start)+len('</section>')
         args={k:v for k,v in kwargs.items() if k!='category_links'}
+        (out/'home-catalogue.html').write_text(page('Forside med katalogdata',result,base='/',noindex=True,home=True),encoding='utf-8')
         return result[:start]+homepage_sections(products,**args)+result[end:]
     build.product_body=full_product
     home_release.render_home=full_home
