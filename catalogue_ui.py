@@ -229,3 +229,9 @@ LISTING_STYLE += r"""
 .sp-listing .sp-facet-choice span { min-width:0;overflow-wrap:anywhere }
 .sp-listing .sp-active-filters button { max-width:100%;overflow-wrap:anywhere;text-align:left }
 """
+
+LISTING_STYLE += r"""
+/* Many selected values must not push the mobile apply/close controls away. */
+.sp-listing #mobile-active-filters { max-height:min(28dvh,160px);overflow-y:auto;overscroll-behavior:contain;scroll-padding:4px }
+@media(min-width:768px) { .sp-listing-filters { max-height:calc(100dvh - 40px);overflow-y:auto;overscroll-behavior:contain } }
+"""
