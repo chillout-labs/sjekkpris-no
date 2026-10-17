@@ -75,3 +75,10 @@ PR #15 merged as 86bab22167c4b5743b8d2c564fa4abac1788f809. Improved offer price/
 PR #16 merged as `dd4c28cd295a35447c0cb87f683ec246cce5b600`. User requested illustrative data during design while Chillout develops. Added preview-only `/designoversikt/` linking complete and missing-data product examples, homepage, needs search and states. Corrected sample TV size/panel consistency and expanded explicitly fictional description. Beta notice now covers body classes, including mobile product pages (verified all 18 preview pages). No fixture data or preview routes are added to production catalogue.
 
 83 unit tests pass; browser workflow 39029770120 passed at final head `bfd9e09900b8b1fda81cb64cc59575d954f0975d`; build check 39029772499 passed. Desktop/mobile product screenshots reviewed from prior run 39029602811; final follow-up fixes missing notice on product pages. Preview artifact available from final workflow. Real content adapters remain pending; continue design against these examples without claiming real product knowledge is integrated.
+
+
+## Public beta and editorial design – 17 October
+
+PR #17 publishes the separate illustrative design journey under `/beta/`, including `/beta/designoversikt/`. Build/deploy 39034700737 succeeded; live overview, product imagery and autocomplete verified. Packaging rebases links/assets/search JSON and excludes fixture sitemap/robots/CNAME; every preview page retains noindex and beta notice.
+
+PR #18 adds a scoped editorial reading template at `/beta/guide/velg-tv/`: desktop contents sidebar, mobile stacked contents, reading column, comparison table, FAQ and onward product-category link. Content remains explicitly illustrative; no invented authors, sources or review dates. Merge `e4f1d043911c7366b0d349e9950e6af5d32e9f59`. 83 unit tests passed; browser run 39035087784 passed at head ea3f4e6ca53bf59d9b6fe0a4eea3439ba8221ec0 across 360/390/768/1280. Desktop and mobile guide screenshots visually inspected. Deployment 39035256954 and live guide verified. Real editorial content and adapters still pending; no fidelity/WCAG certification implied.
