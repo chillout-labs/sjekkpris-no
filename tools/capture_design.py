@@ -22,9 +22,15 @@ def main():
             page.route('**/*',lambda route:route.continue_() if route.request.url.startswith(origin+'/') else route.abort())
             for width in [360,390,768,1280]:
                 page.set_viewport_size({'width':width,'height':900})
-                for name,path in [('home_catalogue','/home-catalogue.html'),('states','/design-states/'),('intent','/behovssok/'),('home','/'),('search','/search/?q=OLED'),('category','/kategori/tv/'),('product','/p/catalogue/demo-tv-2/'),('empty','/p/catalogue/demo-tv-6/')]:
+                for name,path in [('guide','/guide/velg-tv/'),('home_catalogue','/home-catalogue.html'),('states','/design-states/'),('intent','/behovssok/'),('home','/'),('search','/search/?q=OLED'),('category','/kategori/tv/'),('product','/p/catalogue/demo-tv-2/'),('empty','/p/catalogue/demo-tv-6/')]:
                     page.goto(origin+path,wait_until='networkidle')
                     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(width,path,'overflow')
+                    if name=='guide':
+                        page.get_by_role('link',name='2. Sammenlign egenskapene',exact=True).click()
+                        assert page.locator('#egenskaper').is_visible()
+                        page.get_by_text('Er dette en ferdig kjøpsguide?',exact=True).click()
+                        assert page.locator('.sp-guide details[open]').count()==1
+                        page.evaluate('window.scrollTo(0,0)')
                     if name=='home_catalogue':
                         assert page.locator('.sp-home-categories .sp-see-all').get_attribute('href')=='/kategori/'
                         for selector in ['.sp-home-categories nav', '.sp-home-hero .sp-examples>div']:
