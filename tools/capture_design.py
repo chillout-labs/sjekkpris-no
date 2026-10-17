@@ -20,6 +20,8 @@ def main():
             errors=[]
             page.on('pageerror',lambda error:errors.append(str(error)))
             page.route('**/*',lambda route:route.continue_() if route.request.url.startswith(origin+'/') else route.abort())
+            from capture_extended import capture_extended
+            capture_extended(page, origin, shots)
             for width in [360,390,430,768,1024,1280]:
                 page.set_viewport_size({'width':width,'height':900})
                 for name,path in [('oled','/kategori/tv/oled/'),('led','/kategori/tv/led/'),('not_found','/404.html'),('directory','/kategori/'),('types','/produkttyper/'),('portrait','/p/catalogue/demo-hoy/'),('square','/p/catalogue/demo-pakning/'),('wide','/p/catalogue/demo-bred/'),('many','/p/catalogue/demo-mange-tilbud/'),('cards','/korteksempler/'),('guide','/guide/velg-tv/'),('home_catalogue','/home-catalogue.html'),('states','/design-states/'),('intent','/behovssok/'),('home','/'),('search','/search/?q=OLED'),('category','/kategori/tv/'),('product','/p/catalogue/demo-tv-2/'),('empty','/p/catalogue/demo-tv-6/')]:
