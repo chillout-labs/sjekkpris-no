@@ -53,6 +53,13 @@ def main():
                             assert page.locator('#listing-sort').bounding_box()['height']>=44
                         if name=='category':
                             assert page.locator('.sp-product-category:visible').count()==0
+                            help=page.locator('.sp-category-help')
+                            assert help.is_visible()
+                            page.get_by_text('Er frakt med i prisen på produktkortene?',exact=True).click()
+                            assert help.locator('details[open]').count()==1
+                            page.get_by_text('Er frakt med i prisen på produktkortene?',exact=True).click()
+                            help.screenshot(path=str(shots/f'category_help_{width}.png'))
+                            page.evaluate('window.scrollTo(0,0)')
                     if name in ['home','search','category']:
                         page.locator('.sp-card-photo img:visible').evaluate_all("async images=>{await Promise.all(images.map(async e=>{e.loading='eager';await e.decode();}));}")
                         assert page.locator('.sp-card-photo img:visible').first.evaluate('(e)=>e.complete&&e.naturalWidth>0')

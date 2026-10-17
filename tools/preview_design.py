@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path[:0] = [str(ROOT), str(ROOT / 'tests')]
 import build
 import home_release
-from design_fixtures import product_presentation, homepage_sections
+from design_fixtures import product_presentation, homepage_sections, category_help
 from home_release import page, home_money
 from catalogue_ui import render_listing
 from test_build import offer, TOKEN_WINNER, TOKEN_OOS
@@ -76,6 +76,8 @@ def main():
     from PIL import Image
     with Image.open(ROOT/'tools/design_assets/tv-illustration.webp') as im:
         im.crop((im.width//4,im.height//4,im.width*3//4,im.height*3//4)).save(out/'assets/tv-detail.webp')
+    category_page=out/'kategori/tv/index.html'
+    category_page.write_text(category_page.read_text(encoding='utf-8').replace('</main>',category_help()+'</main>'),encoding='utf-8')
     guide=out/'guide/velg-tv';guide.mkdir(parents=True,exist_ok=True)
     from guide_fixture import guide_example
     (guide/'index.html').write_text(page('Eksempelguide – SjekkPris',guide_example(),base='/',noindex=True),encoding='utf-8')
