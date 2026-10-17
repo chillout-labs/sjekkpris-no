@@ -22,9 +22,31 @@ def main():
             page.route('**/*',lambda route:route.continue_() if route.request.url.startswith(origin+'/') else route.abort())
             for width in [360,390,768,1280]:
                 page.set_viewport_size({'width':width,'height':900})
-                for name,path in [('cards','/korteksempler/'),('guide','/guide/velg-tv/'),('home_catalogue','/home-catalogue.html'),('states','/design-states/'),('intent','/behovssok/'),('home','/'),('search','/search/?q=OLED'),('category','/kategori/tv/'),('product','/p/catalogue/demo-tv-2/'),('empty','/p/catalogue/demo-tv-6/')]:
+                for name,path in [('types','/produkttyper/'),('portrait','/p/catalogue/demo-hoy/'),('square','/p/catalogue/demo-pakning/'),('wide','/p/catalogue/demo-bred/'),('many','/p/catalogue/demo-mange-tilbud/'),('cards','/korteksempler/'),('guide','/guide/velg-tv/'),('home_catalogue','/home-catalogue.html'),('states','/design-states/'),('intent','/behovssok/'),('home','/'),('search','/search/?q=OLED'),('category','/kategori/tv/'),('product','/p/catalogue/demo-tv-2/'),('empty','/p/catalogue/demo-tv-6/')]:
                     page.goto(origin+path,wait_until='networkidle')
                     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(width,path,'overflow')
+                    if name in ['portrait','square','wide']:
+                        for index in range(3):
+                            page.locator(f'[data-gallery-index="{index}"]').click()
+                            img=page.locator('[data-gallery-slide]:visible img')
+                            img.evaluate('async e=>await e.decode()')
+                            assert img.evaluate('(e)=>e.naturalWidth>0 && getComputedStyle(e).objectFit==="contain"')
+                            assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+                        page.locator('[data-gallery-index="0"]').click()
+                        page.locator('.sp-image-expand').click()
+                        page.locator('.sp-image-dialog img').evaluate('async e=>await e.decode()')
+                        assert page.locator('.sp-image-close').is_visible()
+                        page.keyboard.press('Escape')
+                    if name=='many':
+                        assert page.locator('#price-rows tr').count()==12
+                        assert page.locator('#price-rows .sp-cta').count()==9
+                        assert page.locator('.sp-excluded-title + table .sp-cta').count()==0
+                        page.locator('#include-shipping').check()
+                        assert page.locator('.sp-product').get_attribute('data-price-basis')=='total'
+                        assert 'Totalpris ukjent' in page.locator('#price-rows tr').last.inner_text()
+                        page.locator('#prices').screenshot(path=str(shots/f'many_total_{width}.png'))
+                        page.locator('#include-shipping').uncheck()
+                        assert all(page.locator('.sp-variants a').evaluate_all('(es)=>es.map(e=>e.scrollWidth<=e.clientWidth)'))
                     if name=='cards':
                         assert page.locator('.sp-card-no-price').count()==2
                         assert all(page.locator('.sp-product-card').evaluate_all('(es)=>es.map(e=>e.scrollWidth<=e.clientWidth)'))
