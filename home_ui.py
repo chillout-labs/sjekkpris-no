@@ -235,8 +235,8 @@ HOME_STYLE += r"""
 .sp-home-categories { margin:36px 0 }
 .sp-home-categories h2 { font-size:26px; letter-spacing:-.5px; margin-bottom:18px }
 .sp-home-categories nav { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px }
-.sp-home-categories a { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:64px; border:1px solid var(--sp-line); border-radius:10px; padding:16px; text-decoration:none; color:var(--sp-ink) }
-.sp-home-categories a:hover { background:var(--sp-mint); border-color:var(--sp-green) }
+.sp-home-categories nav a { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:64px; border:1px solid var(--sp-line); border-radius:10px; padding:16px; text-decoration:none; color:var(--sp-ink) }
+.sp-home-categories nav a:hover { background:var(--sp-mint); border-color:var(--sp-green) }
 .sp-home-categories svg { width:20px; height:20px; flex-shrink:0; color:var(--sp-green) }
 @media(max-width:767px) { .sp-home-categories nav { grid-template-columns:1fr }.sp-home-categories h2 { font-size:23px } }
 """
