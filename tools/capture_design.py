@@ -99,12 +99,19 @@ def main():
                             assert page.locator('.sp-card-attributes').count()==5
                             assert all(page.locator('.sp-card-attributes').evaluate_all('(es)=>es.map(e=>e.scrollWidth<=e.clientWidth)'))
                             if width<768:page.locator('#filter-open').click()
-                            page.get_by_label('Skjermstørrelse',exact=True).select_option('65')
+                            page.get_by_label('Skjermstørrelse: 65 tommer',exact=True).check()
                             assert page.locator('#result-status').inner_text()=='2 produkter'
-                            page.get_by_label('Paneltype',exact=True).select_option('OLED')
+                            page.get_by_label('Paneltype: OLED',exact=True).check()
                             assert page.locator('#result-status').inner_text()=='1 produkt'
+                            page.get_by_label('Skjermstørrelse: 55 tommer',exact=True).check()
+                            assert page.locator('#result-status').inner_text()=='2 produkter'
                             page.screenshot(path=str(shots/f'category_facets_{width}.png'))
-                            page.get_by_label('Skjermstørrelse',exact=True).select_option('43')
+                            active=page.locator('#mobile-active-filters' if width<768 else '#active-filters')
+                            active.get_by_role('button',name='Fjern filter: Skjermstørrelse: 55 tommer',exact=True).click()
+                            assert not page.get_by_label('Skjermstørrelse: 55 tommer',exact=True).is_checked()
+                            assert page.locator('#result-status').inner_text()=='1 produkt'
+                            page.get_by_label('Skjermstørrelse: 65 tommer',exact=True).uncheck()
+                            page.get_by_label('Skjermstørrelse: 43 tommer',exact=True).check()
                             assert page.locator('#result-status').inner_text()=='0 produkter'
                             page.locator('#listing-reset').click()
                             assert page.locator('#result-status').inner_text()=='6 produkter'
@@ -239,6 +246,22 @@ def main():
             page.locator('#filter-open').click()
             page.keyboard.press('Escape')
             assert page.locator('#filter-open').evaluate('(e)=>document.activeElement===e')
+            page.set_viewport_size({'width':667,'height':375})
+            page.goto(origin+'/kategori/tv/',wait_until='networkidle')
+            page.locator('#filter-open').click()
+            for choice in page.locator('[data-facet]').all():choice.check()
+            assert page.locator('#mobile-active-filters button').count()==7
+            for control in ['#filter-close','#filter-apply']:
+                assert page.locator(control).evaluate('(e)=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}')
+            page.screenshot(path=str(shots/'facets_short_viewport.png'))
+            page.locator('#listing-reset').scroll_into_view_if_needed()
+            page.locator('#listing-reset').click()
+            assert page.locator('#mobile-active-filters button').count()==0
+            page.keyboard.press('Escape')
+            page.set_viewport_size({'width':1024,'height':600})
+            page.goto(origin+'/kategori/tv/',wait_until='networkidle')
+            page.locator('#listing-reset').scroll_into_view_if_needed()
+            assert page.locator('#listing-reset').evaluate('(e)=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}')
             for width in [390,1280]:
                 page.set_viewport_size({'width':width,'height':900})
                 page.route('**/search-index.json',lambda route:route.fulfill(status=503,body='Unavailable'))
