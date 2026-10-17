@@ -43,3 +43,5 @@ Implemented the autocomplete feedback candidate above: visible loading, empty-su
 ## Manual continuation – 17 October
 
 Improved filter-panel behavior for short viewports and mobile-to-desktop transitions: visible keyboard focus returns to the desktop filter summary, header controls do not shrink, and the field area scrolls independently with room for focus outlines. Desktop filter summary meets the 44 px target from D05. Added browser coverage for a 667 × 375 viewport, reset, rotation and Escape focus return. Local 83 unit tests pass; browser and publication verification pending.
+
+Verification: PR #10 merged as 075dd001f03e24611018a4af990737b907004c2d. Browser run 39022381405 passed at 80137364ca47ae0b646044538757bd563f399929; short-viewport screenshot inspected. Deploy 39022510377 succeeded. Public /search/ opened in browser and new summary styling (flex, 44 px) verified. No further changes pending for this filter pass.
