@@ -260,3 +260,19 @@ menu.addEventListener('focusout',()=>{setTimeout(()=>{if(!menu.contains(document
 });})();
 """
 HOME_STYLE += '.sp-menu nav { z-index:40 }.sp-menu summary:focus-visible,.sp-menu nav a:focus-visible { outline:3px solid #177fc5;outline-offset:2px }.sp-menu nav a { text-decoration:none;min-height:44px }'
+
+SHELL_SCRIPT += r"""
+(()=>{
+ const toggle=document.querySelector('.sp-mobile-search-toggle');
+ const panel=document.getElementById('product-header-search');
+ if(!toggle||!panel)return;
+ const input=panel.querySelector('input');
+ function closeSearch(){document.body.classList.remove('sp-search-open');toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','Åpne søk');toggle.focus();}
+ toggle.addEventListener('click',event=>{
+   event.preventDefault();
+   if(document.body.classList.contains('sp-search-open')){closeSearch();return;}
+   document.body.classList.add('sp-search-open');toggle.setAttribute('aria-expanded','true');toggle.setAttribute('aria-label','Lukk søk');input.focus();
+ });
+ panel.addEventListener('keydown',event=>{if(event.key==='Escape'){closeSearch();}});
+})();
+"""
