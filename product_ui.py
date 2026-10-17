@@ -237,3 +237,23 @@ PRODUCT_STYLE += r"""
  .sp-product-page .sp-meta [data-product-meta="category"] { display:none }
 }
 """
+
+
+PRODUCT_STYLE += r"""
+/* Readable comparison data and consistent content spacing. */
+.sp-offers th { font-size:12px }.sp-offers td { font-size:13px }
+.sp-offers .sp-total { font-size:17px }.sp-offers .sp-cta { font-size:13px }
+.sp-note,.sp-price-note { font-size:12px;line-height:1.4 }
+.sp-product .sp-subtitle { font-size:13px }.sp-product .sp-specs { font-size:14px }
+.sp-details #about>p { margin-top:16px;line-height:1.65 }
+.sp-product .sp-confirmed,.sp-product .sp-price-caveat { font-size:12px;line-height:1.5 }
+.sp-facts div { font-size:12px;line-height:1.4 }
+.sp-trust strong { font-size:14px }.sp-trust span { font-size:13px;line-height:1.5 }.sp-trust svg { flex-shrink:0 }
+@media(max-width:767px) {
+ .sp-offers .sp-total { font-size:19px }
+ .sp-offers .sp-total .sp-mobile-label,.sp-offers .sp-item,.sp-offers .sp-shipping,.sp-offers .sp-stock { font-size:12px;line-height:1.45 }
+ .sp-offers .sp-cta { font-size:13px }
+ .sp-product .sp-breakdown { font-size:13px }
+ .sp-tabs a { font-size:13px }
+}
+"""
