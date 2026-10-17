@@ -99,12 +99,19 @@ def main():
                             assert page.locator('.sp-card-attributes').count()==5
                             assert all(page.locator('.sp-card-attributes').evaluate_all('(es)=>es.map(e=>e.scrollWidth<=e.clientWidth)'))
                             if width<768:page.locator('#filter-open').click()
-                            page.get_by_label('Skjermstørrelse',exact=True).select_option('65')
+                            page.get_by_label('Skjermstørrelse: 65 tommer',exact=True).check()
                             assert page.locator('#result-status').inner_text()=='2 produkter'
-                            page.get_by_label('Paneltype',exact=True).select_option('OLED')
+                            page.get_by_label('Paneltype: OLED',exact=True).check()
                             assert page.locator('#result-status').inner_text()=='1 produkt'
+                            page.get_by_label('Skjermstørrelse: 55 tommer',exact=True).check()
+                            assert page.locator('#result-status').inner_text()=='2 produkter'
                             page.screenshot(path=str(shots/f'category_facets_{width}.png'))
-                            page.get_by_label('Skjermstørrelse',exact=True).select_option('43')
+                            active=page.locator('#mobile-active-filters' if width<768 else '#active-filters')
+                            active.get_by_role('button',name='Fjern filter: Skjermstørrelse: 55 tommer',exact=True).click()
+                            assert not page.get_by_label('Skjermstørrelse: 55 tommer',exact=True).is_checked()
+                            assert page.locator('#result-status').inner_text()=='1 produkt'
+                            page.get_by_label('Skjermstørrelse: 65 tommer',exact=True).uncheck()
+                            page.get_by_label('Skjermstørrelse: 43 tommer',exact=True).check()
                             assert page.locator('#result-status').inner_text()=='0 produkter'
                             page.locator('#listing-reset').click()
                             assert page.locator('#result-status').inner_text()=='6 produkter'
