@@ -363,7 +363,7 @@ HOME_STYLE += """
 .sp-not-found>p { font-size:16px;line-height:1.7;color:var(--sp-muted);max-width:560px }
 .sp-recovery-actions { display:flex;align-items:center;flex-wrap:wrap;gap:12px 24px;margin-top:28px }
 .sp-recovery-actions a,.sp-recovery-home { min-height:44px;display:inline-flex;align-items:center;color:var(--sp-green);font-size:15px }
-.sp-recovery-actions .sp-cta { font-size:15px;padding:12px 18px }.sp-recovery-home { margin-top:20px }
+.sp-recovery-actions a.sp-cta { color:white;font-size:15px;padding:12px 18px }.sp-recovery-home { margin-top:20px }
 .sp-not-found a:focus-visible { outline:3px solid #177fc5;outline-offset:3px }
 @media(max-width:767px) { .sp-not-found { padding:24px;margin:28px auto 40px }.sp-not-found h1 { font-size:29px }.sp-recovery-actions { align-items:stretch;flex-direction:column;gap:8px }.sp-recovery-actions>a { justify-content:center } }
 """
