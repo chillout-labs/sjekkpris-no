@@ -122,3 +122,12 @@ All extra products, prices, image diagrams and editorial content remain isolated
 6. Complete natural-language result integration and richer autocomplete information only when their source data and behavior are defined. Current needs-search page is illustrative.
 
 Accounts, alerts, full product-vs-product comparison and other D05 LATER features remain deferred.
+
+
+## 2026-10-17: Category insight beta (PR #26)
+
+Merged 509a0c31566ffb48bf7e9bc62d8afd7833870823. Beta TV listing now includes a lightweight HTML/CSS insight panel below products, calculated synthetic model counts and min/max item prices, explicit missing-price coverage and methodology. OLED and LED subset pages link to the same existing product pages. No production taxonomy, data adapter, AI integration or indexing change.
+
+Verification: 83 unit tests; browser run 39050115699 passed across 360/390/430/768/1024/1280 widths; screenshots manually inspected for mobile and desktop. Deploy 39050381328 succeeded. Live OLED → LED → TV navigation and insight headings verified in browser.
+
+Accepted direction for future integration: products remain first; optional useful category knowledge and statistics below products. Assistant answers should link discussed concepts to validated existing category/product destinations (both sides of a comparison where available), never invent URLs. Shared approved knowledge must include sources and freshness; synthetic beta content must not be used as real AI evidence. Production integration remains pending.
