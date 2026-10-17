@@ -104,6 +104,25 @@ def main():
                 page.locator('#listing-sort').select_option('price')
                 assert page.locator('[data-result]').first.get_attribute('data-price')=='649000'
                 assert page.locator('[data-result]').last.get_attribute('data-price')==''
+            # A short viewport must retain the close/apply controls, allow the
+            # fields to scroll, and restore focus when rotating to desktop.
+            page.set_viewport_size({'width':667,'height':375})
+            page.goto(origin+'/search/?q=OLED',wait_until='networkidle')
+            page.locator('#filter-open').click()
+            page.locator('#listing-min').fill('20000')
+            page.locator('#listing-max').fill('10000')
+            for control in ['#filter-close','#filter-apply']:
+                assert page.locator(control).evaluate('(e)=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}')
+            page.locator('#listing-reset').scroll_into_view_if_needed()
+            page.screenshot(path=str(shots/'filter_short_viewport.png'))
+            page.locator('#listing-reset').click()
+            page.set_viewport_size({'width':1280,'height':720})
+            page.wait_for_function("!document.querySelector('#filter-dialog').open && document.activeElement===document.querySelector('.sp-listing-filters summary')")
+            assert page.locator('#listing-max').input_value()==''
+            page.set_viewport_size({'width':390,'height':720})
+            page.locator('#filter-open').click()
+            page.keyboard.press('Escape')
+            assert page.locator('#filter-open').evaluate('(e)=>document.activeElement===e')
             for width in [390,1280]:
                 page.set_viewport_size({'width':width,'height':900})
                 page.route('**/search-index.json',lambda route:route.fulfill(status=503,body='Unavailable'))
