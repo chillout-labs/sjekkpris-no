@@ -149,3 +149,23 @@ Reusable shell/listing components retained. Beta overview, menu and footer conne
 Validation: 83 tests pass; packaged output clean (53 files); all 42 pages have one H1, unique IDs and valid local links. Browser run 39056337729 passed all new pages at 360/390/430/768/1024/1280 and existing journeys. Screenshots inspected across mobile and desktop. Deployment 39056690428 succeeded; live assistant-to-category links, comparison contents and menu-to-brand navigation verified.
 
 Limitations: design prototypes only, no actual AI service, accounts/sync, notifications or feedback delivery. Privacy template is not a finished legal policy. Brands/stores/products are synthetic. Production data adapters and actual service/content decisions remain pending. Existing production pages, product URLs, pricing rules and noindex preserved.
+
+## 2026-10-18: Guide directory and cross-page design review (PR #29)
+
+Code head: 38dd9b76c9310b716eb5c343b9726f6db8adc9f1. Continues the approved design; D05 and the homepage/product visual references were inspected. Later approved item-price default and compact mobile product header take precedence over older reference text.
+
+Implemented:
+- New beta /guider/ directory, one actual example guide and a relevant TV category link. No fake catalogue of unwritten guides, invented authors or source dates.
+- Guide directory connected from the main beta menu, homepage editorial section, design overview and guide return link.
+- Contextual navigation/current-page state across information pages and personal feature previews. Store detail has a 44px return target.
+- Consistent card link alignment, visible status messages, wrapping and normal-weight form input text; labels stay emphasized.
+- Explicit empty comparison explanation when differences-only has no rows; shorter mobile row label.
+- Browser checks cover guide directory, contextual navigation, control dimensions and updated comparison state.
+
+Review: mobile guide directory, guide reading page, brands/store overview and store detail, information/methodology/privacy/contact, assistant, favourites/alerts/account and comparison reviewed; desktop guide directory/account and existing homepage/product layout reviewed. Existing category layout remains product-first, with insight and buying help underneath. Existing component family and scoped beta styling retained; no global redesign.
+
+Local verification: 83 tests pass; beta output guard passes (54 files); 43 HTML pages checked for single H1, duplicate IDs and local link/fragment resolution. Full browser suite passed at six widths before the final return-target/label adjustment; those final changes and keyboard guide roundtrip then passed targeted checks at all six widths. Final CI and deployment evidence follows below.
+
+Boundaries: Chromium desktop viewport emulation, not Safari/physical-device certification or full WCAG audit. No claim of 95% pixel fidelity. Real editorial/legal content, authentic brand/store data, large real category/product datasets, approved content/data adapters and actual AI/account/notification services remain outstanding. Existing product URLs, price rules, production catalogue, backend and noindex are preserved.
+
+CI: final browser run 39116479189 and PR build run 39116482794 passed at code head 38dd9b76c9310b716eb5c343b9726f6db8adc9f1. PR #29 merged as 8c8cef939128ec94feacccb634deda750715af1d after local visual inspection. Deployment run 39116773043 succeeded. Public beta guide directory, guide return link, account contextual navigation, comparison empty-state code and homepage guide entry verified over HTTP after deployment, including rebased beta links and noindex. Interactions were browser-tested locally; live verification here checked served HTML.
