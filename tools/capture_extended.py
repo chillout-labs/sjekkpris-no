@@ -3,7 +3,7 @@ from extended_pages import PAGES
 
 
 def capture_extended(page, origin, shots):
-    pages=PAGES+[('guider','Guider'),('merker/nord','Nord'),('merker/fjord','Fjord'),('butikker/eksempel-a','Butikk')]
+    pages=PAGES+[('guider','Guider'),('merker/nord','Nord'),('merker/fjord','Fjord'),('butikker/eksempel-a','Butikk'),('butikker/babybrezza','Baby Brezza')]
     for width in [360,390,430,768,1024,1280]:
         page.set_viewport_size({'width':width,'height':900})
         for slug,title in pages:
@@ -16,6 +16,33 @@ def capture_extended(page, origin, shots):
                 nav=page.get_by_role('navigation',name='Relaterte sider')
                 assert nav.locator('[aria-current="page"]').count()==1
                 assert all(nav.locator('a').evaluate_all('(es)=>es.map(e=>e.getBoundingClientRect().height>=44)'))
+            if slug=='butikker/babybrezza':
+                assert page.locator('.store-card').count()==15
+                assert page.locator('.store-card:visible').count()==6
+                assert page.locator('.store-facts dd').all_text_contents()==['15','4','1']
+                assert 'fiktive produkter' not in page.locator('.sp-beta-notice').inner_text()
+                assert all(page.locator('.store-card a').evaluate_all('(es)=>es.map(e=>e.href.startsWith("https://sjekkpris.no/p/catalogue/"))'))
+                assert all(page.locator('.sp-store img:visible').evaluate_all('(es)=>es.map(e=>e.complete && e.naturalWidth>0)'))
+                assert all(page.locator('.sp-store button:visible,.sp-store input,.sp-store select,.sp-store .store-link').evaluate_all('(es)=>es.filter(e=>e.getBoundingClientRect().width).map(e=>e.getBoundingClientRect().height>=44)'))
+                page.locator('#store-query').fill('instant')
+                assert page.locator('.store-card:visible').count()==1
+                page.locator('#store-query').fill('ingen-treff')
+                assert page.locator('#store-empty').is_visible()
+                page.locator('#store-reset').click()
+                assert page.locator('#store-query').evaluate('(e)=>e===document.activeElement')
+                page.locator('[data-store-filter="Matlagere"]').click()
+                assert page.locator('.store-card:visible').count()==1
+                page.locator('[data-store-filter=""]').click()
+                page.locator('#store-sort').select_option('price')
+                assert 'Instant Warmer' in page.locator('.store-card:visible').first.inner_text()
+                page.locator('#store-more').click()
+                assert page.locator('.store-card:visible').count()==15
+                assert page.locator('.store-card:visible').nth(6).locator('h3 a').evaluate('(e)=>e===document.activeElement')
+                page.locator('#store-sort').select_option('name')
+                page.locator('.store-sources summary').click()
+                assert page.locator('.store-sources[open]').count()==1
+                page.locator('.store-sources summary').click()
+                page.evaluate('window.scrollTo(0,0)')
             if slug=='guider':
                 assert page.locator('.sp-extra a[href="/guide/velg-tv/"]').count()==1
             if slug=='favoritter':
