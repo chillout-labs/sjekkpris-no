@@ -6,7 +6,7 @@ def guide_example():
 @media(max-width:767px){.sp-guide{padding-top:12px}.sp-guide-header{margin:12px 0 24px}.sp-guide-lead{font-size:16px}.sp-guide-layout{grid-template-columns:minmax(0,1fr);gap:28px}.sp-guide-toc{position:static;padding:16px 20px}.sp-guide-copy h2{font-size:24px}.sp-guide th,.sp-guide td{padding:12px 10px;font-size:14px}.sp-guide-note,.sp-guide-next{padding:20px}}
 </style>
 <article class="sp-guide">
-<a class="sp-guide-back" href="/kategori/tv/">← Til TV-kategorien</a>
+<a class="sp-guide-back" href="/guider/">← Alle guider</a>
 <header class="sp-guide-header"><p class="sp-guide-kicker">Kjøpsguide · Designeksempel</p><h1>Slik finner du en TV som passer deg</h1><p class="sp-guide-lead">Plass, bruk og budsjett gir et godt utgangspunkt. Denne eksempelsiden viser hvordan en guide kan hjelpe deg videre til en produktsammenligning.</p></header>
 <div class="sp-guide-layout"><nav class="sp-guide-toc" aria-label="Innhold i guiden"><h2>På denne siden</h2><a href="#behov">1. Start med behovet</a><a href="#egenskaper">2. Sammenlign egenskapene</a><a href="#sjekkliste">3. Før du velger</a><a href="#sporsmal">4. Vanlige spørsmål</a><a href="#videre">Se eksempelproduktene</a></nav>
 <div class="sp-guide-copy">

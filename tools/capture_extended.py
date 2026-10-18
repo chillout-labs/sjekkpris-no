@@ -3,7 +3,7 @@ from extended_pages import PAGES
 
 
 def capture_extended(page, origin, shots):
-    pages=PAGES+[('merker/nord','Nord'),('merker/fjord','Fjord'),('butikker/eksempel-a','Butikk')]
+    pages=PAGES+[('guider','Guider'),('merker/nord','Nord'),('merker/fjord','Fjord'),('butikker/eksempel-a','Butikk')]
     for width in [360,390,430,768,1024,1280]:
         page.set_viewport_size({'width':width,'height':900})
         for slug,title in pages:
@@ -11,6 +11,12 @@ def capture_extended(page, origin, shots):
             assert page.get_by_role('heading',level=1).count()==1,slug
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(slug,width)
             assert page.locator('meta[name="robots"]').get_attribute('content')=='noindex'
+            if slug in ['om','slik-fungerer-det','kontakt','personvern','konto','favoritter','prisvarsler','sammenlign']:
+                nav=page.get_by_role('navigation',name='Relaterte sider')
+                assert nav.locator('[aria-current="page"]').count()==1
+                assert all(nav.locator('a').evaluate_all('(es)=>es.map(e=>e.getBoundingClientRect().height>=44)'))
+            if slug=='guider':
+                assert page.locator('a[href="/guide/velg-tv/"]').count()==1
             if slug=='favoritter':
                 assert page.locator('[data-favorite]').count()==2
                 page.locator('[data-remove]').first.click();page.locator('[data-remove]').first.click()
@@ -38,7 +44,7 @@ def capture_extended(page, origin, shots):
                 assert page.locator('#compare-body tr').count()==2
                 page.locator('#compare-b').select_option('0')
                 assert 'samme produkt' in page.locator('#compare-status').inner_text()
-                assert page.locator('#compare-body tr').count()==0
+                assert 'Ingen forskjeller' in page.locator('#compare-body').inner_text()
                 page.locator('#compare-b').select_option('2')
                 assert page.locator('#compare-body tr').count()==3
                 page.locator('#compare-a').select_option('4')
