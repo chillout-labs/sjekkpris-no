@@ -252,3 +252,11 @@ Denne runden:
 beta. Full nettleserkontroll og publiseringsresultat registreres i tilhørende PR.
 Butikk-/produkterfaringer, ekte konto/AI/varsler, produksjonsadapter for store
 kataloger, nye retailer-affiliate-targets og SEO-aktivering er fortsatt utsatt.
+
+Publiseringsbevis: PR #33, code head bc7079448960587411b56d6146c9cf9215d03865,
+merge e698c59278b0175a010ca0d2d797beae19e36c56. Hele lokale nettleserreisen
+bestod; CI 39123036271 (nettleser) og 39123038876 (PR-bygg) var grønne.
+Deploy 39123351018 lyktes. Offentlig beta-HTML ble kontrollert for URL-/
+historikkhåndtering, retry, kortressurser, 12 innledende kort, noindex og fravær
+av direkte butikklenker. Interaksjonene er nettlesertestet lokalt/CI; offentlig
+kontroll her gjaldt servert HTML. Ingen nye bekreftede feil i denne runden.
