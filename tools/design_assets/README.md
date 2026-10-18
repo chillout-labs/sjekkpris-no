@@ -17,8 +17,8 @@ runs in CI, and this snapshot must not be mistaken for a live feed adapter.
 Prices and source date are explicitly labelled. Counts represent product pages,
 including distinct variants, and do not represent the retailer's full range.
 The page has no invented click metrics, reviews, price-history or cheapest-store
-claims. Product links open the real SjekkPris catalogue; direct retailer links
-are informational, untracked links. The beta remains noindex.
+claims. Product links open the real SjekkPris catalogue; retailer actions remain inactive until verified affiliate destinations are
+provided by Chillout. No direct merchant-link fallback is allowed. The beta remains noindex.
 
 Future integration: use stable advertiser identity and active offer joins;
 maintain source and checked-at fields for editorial store facts. SjekkPris and

@@ -17,6 +17,8 @@ def capture_extended(page, origin, shots):
                 assert nav.locator('[aria-current="page"]').count()==1
                 assert all(nav.locator('a').evaluate_all('(es)=>es.map(e=>e.getBoundingClientRect().height>=44)'))
             if slug=='butikker/babybrezza':
+                assert page.locator('.sp-store a[href^="https://babybrezza.no"]').count()==0
+                assert page.locator('.sp-store button.store-link:disabled').count()==3
                 assert page.locator('.store-card').count()==15
                 assert page.locator('.store-card:visible').count()==6
                 assert page.locator('.store-facts dd').all_text_contents()==['15','4','1']
