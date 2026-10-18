@@ -169,3 +169,21 @@ Local verification: 83 tests pass; beta output guard passes (54 files); 43 HTML 
 Boundaries: Chromium desktop viewport emulation, not Safari/physical-device certification or full WCAG audit. No claim of 95% pixel fidelity. Real editorial/legal content, authentic brand/store data, large real category/product datasets, approved content/data adapters and actual AI/account/notification services remain outstanding. Existing product URLs, price rules, production catalogue, backend and noindex are preserved.
 
 CI: final browser run 39116479189 and PR build run 39116482794 passed at code head 38dd9b76c9310b716eb5c343b9726f6db8adc9f1. PR #29 merged as 8c8cef939128ec94feacccb634deda750715af1d after local visual inspection. Deployment run 39116773043 succeeded. Public beta guide directory, guide return link, account contextual navigation, comparison empty-state code and homepage guide entry verified over HTTP after deployment, including rebased beta links and noindex. Interactions were browser-tested locally; live verification here checked served HTML.
+
+## Retailer page proposal – 18 October 2026
+
+User requested a concrete store profile using a current test-feed retailer.
+Added `/beta/butikker/babybrezza/`, reachable from the store index and beta menu.
+Uses a dated public snapshot of 15 Baby Brezza products, official retailer logo,
+product photos, item prices and source links. Product search, four editorial
+category filters, price/name sorting, show-all and zero-result recovery work.
+Below the products: exact snapshot category counts, an honest unavailable
+outbound-click popularity state, sourced store details and shipping/contact
+links. All pricing is explicitly dated; no claim of live store statistics,
+bestsellers or competitive price advantage. Noindex preserved. Normal product
+URLs, catalogue builder, pricing and backend are unchanged.
+
+83 unit tests and packaged output guard passed locally. Six-width browser
+checks and screenshot review added for the new page, including interaction,
+image loading, target sizes and preservation of production product links.
+Publication verification will be recorded after CI/deploy.
