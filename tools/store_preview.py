@@ -16,12 +16,14 @@ STYLE = '''<style>
 
 SCRIPT = '''<script>(()=>{
 const root=document.querySelector('.sp-store'),list=root.querySelector('.store-products'),items=JSON.parse(root.querySelector('#store-index').textContent),search=root.querySelector('#store-query'),sort=root.querySelector('#store-sort'),empty=root.querySelector('#store-empty'),buttons=Array.from(root.querySelectorAll('[data-store-filter]')),pager=root.querySelector('#store-pages'),prev=root.querySelector('#store-prev'),next=root.querySelector('#store-next'),status=root.querySelector('#store-status'),failure=root.querySelector('#store-failure');
-const size=12,cache=new Map(Array.from(list.children).map(c=>[c.dataset.name,c.outerHTML]));let category='',current=1,version=0;
-async function render(focus=false){
+const size=12,cache=new Map(Array.from(list.children).map(c=>[c.dataset.name,c.outerHTML]));let category='',current=1,version=0,lastQuery=location.search;
+function readState(){const p=new URL(location.href).searchParams;search.value=p.get('q')||'';category=buttons.some(b=>b.dataset.storeFilter===p.get('gruppe'))?p.get('gruppe'):'';sort.value=p.get('sort')==='pris'?'price':'name';const n=Number(p.get('side'));current=Number.isSafeInteger(n)&&n>0?n:1;}
+function saveState(mode){const url=new URL(location.href);for(const key of ['q','gruppe','sort','side'])url.searchParams.delete(key);if(search.value.trim())url.searchParams.set('q',search.value.trim());if(category)url.searchParams.set('gruppe',category);if(sort.value==='price')url.searchParams.set('sort','pris');if(current>1)url.searchParams.set('side',String(current));if(url.href!==location.href)history[mode==='push'?'pushState':'replaceState'](null,'',url);lastQuery=location.search;}
+async function render(focus=false,historyMode='replace'){
  const request=++version,q=search.value.trim().toLocaleLowerCase('nb-NO');
  const matches=items.filter(c=>(!category||c.category===category)&&c.name.toLocaleLowerCase('nb-NO').includes(q));
  matches.sort((a,b)=>sort.value==='price'?a.price-b.price||a.name.localeCompare(b.name,'nb'):a.name.localeCompare(b.name,'nb'));
- const pages=Math.max(1,Math.ceil(matches.length/size));current=Math.min(current,pages);const start=(current-1)*size,selected=matches.slice(start,start+size);
+ const pages=Math.max(1,Math.ceil(matches.length/size));current=Math.min(current,pages);const start=(current-1)*size,selected=matches.slice(start,start+size);saveState(historyMode);
  buttons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.storeFilter===category)));
  failure.hidden=true;prev.disabled=next.disabled=true;list.setAttribute('aria-busy','true');status.textContent='Laster produkter …';
  try{
@@ -31,13 +33,14 @@ async function render(focus=false){
   prev.disabled=current===1;next.disabled=current===pages;root.querySelector('#store-page-number').textContent='Side '+current+' av '+pages;
   status.textContent=matches.length?'Viser '+(start+1)+'–'+(start+selected.length)+' av '+matches.length+' produkter':'Ingen produkter passer søket';
   if(focus){root.querySelector('#store-products-title').focus();root.querySelector('#store-products-title').scrollIntoView({block:'start'});}
- }catch(error){if(request!==version)return;list.replaceChildren();empty.hidden=true;pager.hidden=true;failure.hidden=false;status.textContent='Produktene kunne ikke lastes.';}
+ }catch(error){if(request!==version)return;list.replaceChildren();empty.hidden=true;pager.hidden=true;failure.hidden=false;status.textContent='Produktene kunne ikke lastes.';if(focus)root.querySelector('#store-retry').focus();}
  finally{if(request===version)list.removeAttribute('aria-busy');}
 }
-function resetPage(){current=1;render();}
-root.querySelector('#store-controls').hidden=false;buttons.forEach(b=>b.addEventListener('click',()=>{category=b.dataset.storeFilter;resetPage()}));search.addEventListener('input',resetPage);sort.addEventListener('change',resetPage);
-prev.addEventListener('click',()=>{current--;render(true)});next.addEventListener('click',()=>{current++;render(true)});
-root.querySelector('#store-reset').addEventListener('click',()=>{search.value='';category='';resetPage();search.focus()});root.querySelector('#store-retry').addEventListener('click',()=>render());render();})();</script>'''
+function resetPage(historyMode='push'){current=1;render(false,historyMode);}
+root.querySelector('#store-controls').hidden=false;buttons.forEach(b=>b.addEventListener('click',()=>{category=b.dataset.storeFilter;resetPage()}));search.addEventListener('input',()=>resetPage('replace'));sort.addEventListener('change',()=>resetPage());
+prev.addEventListener('click',()=>{current--;render(true,'push')});next.addEventListener('click',()=>{current++;render(true,'push')});
+root.querySelector('#store-reset').addEventListener('click',()=>{search.value='';category='';resetPage();search.focus()});root.querySelector('#store-retry').addEventListener('click',()=>render(true));
+window.addEventListener('popstate',()=>{if(location.search===lastQuery)return;readState();render(true)});readState();render();})();</script>'''
 
 
 def build_store_preview(out):

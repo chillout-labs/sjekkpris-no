@@ -30,6 +30,7 @@ jobs:
         run: |
           python tools/preview_design.py
           python tools/package_beta.py _beta_test
+          python tools/check_design_links.py _beta_test /beta/
       # FIXTURE data against a localhost stub. No secret, no network.
       - run: python -m unittest discover -s tests -v
 
@@ -55,6 +56,7 @@ jobs:
           pip install Pillow==11.3.0
           python tools/preview_design.py
           python tools/package_beta.py _site
+          python tools/check_design_links.py _site /beta/
 
       - name: Refuse output that carries the key, the origin, a platform id or /go/
         env:

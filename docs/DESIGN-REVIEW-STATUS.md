@@ -1,6 +1,8 @@
 # Product design review — 15 October 2026
 
-Status: implementation on `frontend-v1-design`, PR #1 remains unmerged. No production deployment.
+Historical checkpoint from 15 October 2026. This is not current deployment status.
+Subsequent approvals, merges and publication are recorded in `DESIGN_STATUS.md`.
+See `docs/DESIGN-JOURNEY.md` for the current beta scope.
 
 ## Reference
 
@@ -32,4 +34,5 @@ This is not a pixel-identical reproduction of the populated TV reference. Curren
 
 The current real examples have unknown shipping, so their shipping-on screenshots show the explicit unknown-total state. Known-total winner changes remain covered by fixture/interaction tests, not by these real-product screenshots.
 
-Visual acceptance and merge approval are still pending.
+At this historical checkpoint, visual acceptance and merge approval were pending.
+Do not use this sentence as a present-day release gate; consult the latest status log.
