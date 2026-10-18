@@ -1,17 +1,66 @@
-# Launch design journey
+# SjekkPris – designbeta og videre arbeid
 
-Status: implemented preview, pending visual approval. Not published.
+Oppdatert 18. oktober 2026. Betaen er publisert under `/beta/` og beholder
+`noindex`. Dette dokumentet beskriver nåværende avgrensning; eldre daterte
+reviewrapporter er historiske, ikke gjeldende publiseringsstatus.
 
-Run `python tools/preview_design.py`, then `python -m http.server 8765 --directory .design-preview`. Open http://localhost:8765/. The separate output contains a homepage, search, TV category, priced product, empty product and a simulated store destination. All pages are noindex and labelled as examples. The preview does not use API credentials. The production build never imports the example catalogue or illustration.
+## Bruk og verifisering
 
-The homepage and search/category pages share `render_product_card()`. The preview uses the actual product renderer. The category component is ready for a curated product list; production category routes are not enabled. Current search matches names, with price/brand filters and sorting. It does not imply natural-language understanding, popularity, reviews or deals.
+Bygg med `python tools/preview_design.py`. Server `.design-preview` lokalt.
+`/designoversikt/` gir tilgang til alle designreisene. `tools/package_beta.py`
+pakker betaen under `/beta/` med korrekte interne lenker og ressurser.
 
-## Presentation data needed from Chillout
+`python tools/capture_design.py` kontrollerer samtlige eksisterende reiser på
+seks skjermbredder og tar skjermbilder. Playwright Chromium og Pillow kreves.
+Internlenker, fragmenter, unike ID-er og utsatt lastede kortressurser sjekkes
+også uten nettverk før publisering, både i lokalt og pakket betaoppsett.
+Designarbeidsgrener under `design/` får automatisk nettleserkontrollen i CI når
+relevante designfiler endres. Vanlig build/test og outputkontroll gjelder også.
 
-Existing catalogue fields: namespace, local_slug, local_name, lowest_item_price (minor/currency), offer_count and confirmation timestamp. Optional presentation fields prepared here: image.url and local_brand. These additions are a frontend view-model proposal, not a claim that the current catalogue API supplies them. Product pages continue using the existing identity and offer contracts.
+## Ferdig designgrunnlag
 
-Before activation, agree the catalogue image/brand mapping and curated category identifiers. Images must be published through the agreed property image pipeline. Missing pictures/prices remain explicit. Descriptions, specifications and real history still need their own data contract before populated sections can be enabled.
+- Felles navigasjon, søk, produktkort og responsive produkt-/kategorisider.
+- Produktpresentasjon med varepris som standard og kjent/ukjent frakt eksplisitt.
+- Betaeksempler på galleri, varianter, prishistorikk, spesifikasjoner og produktlenker.
+- Kategoriutvalg, filtre og innsikt; merkeoversikt og merkesider.
+- Guideoversikt og én lesbar TV-guide med produkt-/kategorilenker.
+- Butikkoversikt og Baby Brezza-forslag, med 12 produkter per side.
+- Informasjonssider, kontaktskjema, konto, favoritter, prisvarsel, sammenligning
+  og assistentsvar som tydelig merkede funksjonsdemonstrasjoner.
 
-The fixture TV illustration comes from the approved HTML prototype; it is not a photograph verified against any real product. The six preview products and all prices/stores are invented. Preview store links stop on a local explanatory page.
+Betaen består av 44 HTML-sider. De fleste produktene, prisene og butikkene er
+fiktive. Baby Brezza-siden bruker et uttrykkelig datert offentlig øyeblikksbilde
+med 15 produkter fra 18.10.2026. Den er ikke koblet til løpende butikkdata.
+Produktlenkene der går til den virkelige SjekkPris-katalogen.
 
-Desktop uses the existing navy/green visual system, image cards, left filters and three result columns. Mobile keeps search prominent, hides the homepage hero artwork, uses two card columns and collapsible filters. Full-height mobile filter panel from the older reference remains a later fidelity refinement; this version uses accessible native disclosure.
+Det virkelige katalogbygget og betaen er separate. Virkelige kategorier,
+produktbilder og merker finnes allerede når de leveres via gjeldende kontrakt.
+Tidligere formuleringer om at kategorier/bilder ennå ikke er aktivert er utdaterte.
+
+## Gjeldende beslutninger
+
+`docs/BUTIKKSIDER-V1.md` er godkjent butikkstandard. Produkter først, maks 12
+kort per side, dokumenterte butikkopplysninger og ingen direkte butikklenker
+uten godkjent affiliate-destinasjon. Erfaringer for butikker og produkter er
+utsatt til et eget segment. Senere brukerbeslutninger i `DESIGN_STATUS.md`
+går foran eldre referanser, blant annet mobilheader og varepris som standard.
+
+## Neste arbeid – riktig ansvar og rekkefølge
+
+1. **Frontend:** videre kontroll av faktiske brukerreiser, tilgjengelighet,
+   søke-/filtertilstand og feilretting innenfor godkjent design.
+2. **Chillout-integrasjon:** godkjente butikkidentiteter, aktive produkttellinger,
+   serverbasert søk/filter/paginering og destinasjonsspesifikke affiliate-lenker.
+   Ingen stor butikkatalog eller komplett indeks skal sendes til nettleseren.
+3. **Produktinnhold:** avtalte kilder og adaptere for ekte galleri, varianter,
+   spesifikasjoner, historikk og relaterte produkter. Vis ikke fixturedata som fakta.
+4. **Redaksjon:** verifiserte butikk-/merkeopplysninger, originale guider og
+   personvern-/kontaktinnhold som samsvarer med faktisk drift.
+5. **Separate funksjonsprosjekter:** AI, konto/synk, varsler og senere modererte
+   butikk-/produkterfaringer. Dagens demonstrasjoner er ikke aktive tjenester.
+6. **SEO-sporet:** videre arbeid med metadata, canonical, strukturert data og
+   indekseringsregler skjer separat. Noindex beholdes inntil lansering er godkjent.
+
+Se `DESIGN_STATUS.md` og tilhørende pull requests for faktisk test-, merge- og
+publiseringsbevis. Dette er ikke en full WCAG-sertifisering eller en påstand om
+at alle sider er pikselidentiske med alle historiske designreferanser.

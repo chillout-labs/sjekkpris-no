@@ -20,6 +20,8 @@ def main():
             errors=[]
             page.on('pageerror',lambda error:errors.append(str(error)))
             page.route('**/*',lambda route:route.continue_() if route.request.url.startswith(origin+'/') else route.abort())
+            from capture_store_state import capture_store_state
+            capture_store_state(page, origin)
             from capture_extended import capture_extended
             capture_extended(page, origin, shots)
             for width in [360,390,430,768,1024,1280]:

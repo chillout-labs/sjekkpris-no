@@ -225,3 +225,30 @@ Verifisert lokalt: 83 enhetstester, pakket outputkontroll og nettlesersjekk på
 360/390/430/768/1024/1280 px. Kontrollerte 12/3 produkter, utsatt innlasting av
 siste tre kort, filter/søk/sortering, fokus og lastingsfeil med nytt forsøk.
 Mobilskjermbilde gjennomgått. Ingen direkte butikklenker er aktivert.
+
+## Selvstendig kvalitetsrunde – 18. oktober 2026
+
+Brukeren ba om videre arbeid mens han er borte. Avgrenset til kvalitet i
+allerede godkjent frontend/beta, uten nye backend-/SEO-kontrakter eller erfaringer.
+PR #32 ble publisert som 872334c91eb93d9703d083816422449594fe245b; deployment
+39122599888 og offentlig kontroll bekreftet 12 kort og paginering.
+
+Denne runden:
+- Delbar butikktilstand i URL: søk, gruppe, prisrekkefølge og side. Reload og
+  tilbake/frem gjenoppretter valgene. Ugyldige verdier normaliseres. Rene
+  ankernavigasjoner får beholde vanlig scrollposisjon.
+- Lastingsfeil ved sidebytte flytter fokus til «Prøv igjen», og vellykket nytt
+  forsøk flytter fokus tilbake til produktoverskriften.
+- Nettleserdekning for delte URL-er, historikk, ugyldige verdier og fokus ved feil.
+- Ny offline kontroll av betaens HTML-/JSON-lenker, inline kortmanifest,
+  fragmentmål, duplikate ID-er og utsatt lastede ressurser. Kjøres i både
+  design-CI og pakket beta før deploy. Ingen eksterne/affiliate-kall.
+- Alle design/*-grener omfattes nå av den eksisterende design-CI-en; nye
+  arbeidsgrener trenger ikke manuelt legges inn i navnelisten.
+- DESIGN-JOURNEY.md beskriver faktisk publisert omfang og prioritert restarbeid.
+  Reviewrapporten fra 15. oktober er tydelig merket historisk.
+
+87 enhetstester består; offline lenkekontroll og outputguard består for pakket
+beta. Full nettleserkontroll og publiseringsresultat registreres i tilhørende PR.
+Butikk-/produkterfaringer, ekte konto/AI/varsler, produksjonsadapter for store
+kataloger, nye retailer-affiliate-targets og SEO-aktivering er fortsatt utsatt.

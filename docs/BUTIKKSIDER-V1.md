@@ -39,7 +39,8 @@ publiseringslaget. Nettleseren mottar maksimalt én side med produktdata per
 forespørsel, ikke et komplett søkeindeks-/produktdatasett for 100 000 produkter.
 Fast øvre sidegrense, stabil rekkefølge og konsistent snapshot må ivaretas.
 Kategori-/merkelister må også ha begrenset størrelse eller søk ved store utvalg.
-Side-/søketilstand bør kunne deles og gjenopprettes med tilbakeknappen.
+Side-/søketilstand skal kunne deles og gjenopprettes med tilbakeknappen.
+Betaen demonstrerer dette med q, gruppe, sort og side i URL-en.
 Indeksering av sidevalg og filterkombinasjoner avklares i eksisterende SEO-spor;
 vi oppretter ikke automatisk indeksérbare butikk × kategori × filter-sider.
 
