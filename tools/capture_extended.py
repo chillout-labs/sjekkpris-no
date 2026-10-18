@@ -19,8 +19,8 @@ def capture_extended(page, origin, shots):
             if slug=='butikker/babybrezza':
                 assert page.locator('.sp-store a[href^="https://babybrezza.no"]').count()==0
                 assert page.locator('.sp-store button.store-link:disabled').count()==3
-                assert page.locator('.store-card').count()==15
-                assert page.locator('.store-card:visible').count()==6
+                assert page.locator('.store-card').count()==12
+                assert page.locator('.store-card:visible').count()==12
                 assert page.locator('.store-facts dd').all_text_contents()==['15','4','1']
                 assert 'fiktive produkter' not in page.locator('.sp-beta-notice').inner_text()
                 assert all(page.locator('.store-card a').evaluate_all('(es)=>es.map(e=>e.href.startsWith("https://sjekkpris.no/p/catalogue/"))'))
@@ -36,11 +36,28 @@ def capture_extended(page, origin, shots):
                 assert page.locator('.store-card:visible').count()==1
                 page.locator('[data-store-filter=""]').click()
                 page.locator('#store-sort').select_option('price')
+                page.wait_for_function("!document.querySelector('.store-products').hasAttribute('aria-busy')")
                 assert 'Instant Warmer' in page.locator('.store-card:visible').first.inner_text()
-                page.locator('#store-more').click()
-                assert page.locator('.store-card:visible').count()==15
-                assert page.locator('.store-card:visible').nth(6).locator('h3 a').evaluate('(e)=>e===document.activeElement')
+                page.locator('#store-next').click()
+                page.wait_for_function("document.querySelector('#store-page-number').textContent==='Side 2 av 2' && !document.querySelector('.store-products').hasAttribute('aria-busy')")
+                assert page.locator('.store-card').count()==3
+                assert page.locator('#store-next').is_disabled()
+                assert page.locator('#store-products-title').evaluate('(e)=>e===document.activeElement')
+                page.locator('#store-prev').click()
+                page.wait_for_function("document.querySelectorAll('.store-card').length===12")
                 page.locator('#store-sort').select_option('name')
+                page.wait_for_function("!document.querySelector('.store-products').hasAttribute('aria-busy')")
+                if width==360:
+                    page.reload(wait_until='networkidle')
+                    page.route('**/kort/*.json',lambda route:route.abort())
+                    page.locator('#store-next').click()
+                    page.wait_for_function("!document.querySelector('.store-products').hasAttribute('aria-busy')")
+                    assert page.locator('#store-failure').is_visible()
+                    page.unroute('**/kort/*.json')
+                    page.locator('#store-retry').click()
+                    page.wait_for_function("document.querySelectorAll('.store-card').length===3")
+                    page.locator('#store-prev').click()
+                    page.wait_for_function("document.querySelectorAll('.store-card').length===12")
                 page.locator('.store-sources summary').click()
                 assert page.locator('.store-sources[open]').count()==1
                 page.locator('.store-sources summary').click()
