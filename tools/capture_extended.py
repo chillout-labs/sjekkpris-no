@@ -16,7 +16,7 @@ def capture_extended(page, origin, shots):
                 assert nav.locator('[aria-current="page"]').count()==1
                 assert all(nav.locator('a').evaluate_all('(es)=>es.map(e=>e.getBoundingClientRect().height>=44)'))
             if slug=='guider':
-                assert page.locator('a[href="/guide/velg-tv/"]').count()==1
+                assert page.locator('.sp-extra a[href="/guide/velg-tv/"]').count()==1
             if slug=='favoritter':
                 assert page.locator('[data-favorite]').count()==2
                 page.locator('[data-remove]').first.click();page.locator('[data-remove]').first.click()
