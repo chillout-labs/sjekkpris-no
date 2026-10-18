@@ -11,6 +11,7 @@ def capture_extended(page, origin, shots):
             assert page.get_by_role('heading',level=1).count()==1,slug
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(slug,width)
             assert page.locator('meta[name="robots"]').get_attribute('content')=='noindex'
+            assert all(page.locator('.sp-extra button,.sp-extra select,.sp-extra input:not([type=checkbox])').evaluate_all('(es)=>es.filter(e=>e.getBoundingClientRect().width).map(e=>e.getBoundingClientRect().height>=44)')), (slug,width,'control size')
             if slug in ['om','slik-fungerer-det','kontakt','personvern','konto','favoritter','prisvarsler','sammenlign']:
                 nav=page.get_by_role('navigation',name='Relaterte sider')
                 assert nav.locator('[aria-current="page"]').count()==1
