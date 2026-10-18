@@ -208,3 +208,20 @@ separate customer reports, editorial assessment and official store policies.
 Link to public review sources initially; copying Trustpilot reviews/TrustScore or
 branding requires a suitable rights/licensing arrangement. A standalone
 experiences route is deferred until original substantive coverage justifies it.
+
+## Butikksider v1 – besluttet 18. oktober 2026
+
+Brukeren godkjente å gjennomføre, spikre og lagre butikkplanen. Gjeldende
+spesifikasjon: `docs/BUTIKKSIDER-V1.md`. Erstatter show-all og tidligere forslag
+om en Experiences-seksjon nå. Erfaringer for både butikker og produkter utsettes
+som eget segment. Betaen får 12 produkter per side, forrige/neste, sideantall,
+søk/filter-reset, lastingsfeil med retry og «Dette bør du vite før du handler».
+Kort utover første side lastes ved behov. Produksjonsintegrasjonen for store
+kataloger krever serverbasert søk, filtre, antall og paginering; den lille
+15-produkters søkeindeksen i betaen er uttrykkelig ikke den løsningen.
+Affiliatekravet fra PR #31 beholdes (publisert og kontrollert offentlig).
+
+Verifisert lokalt: 83 enhetstester, pakket outputkontroll og nettlesersjekk på
+360/390/430/768/1024/1280 px. Kontrollerte 12/3 produkter, utsatt innlasting av
+siste tre kort, filter/søk/sortering, fokus og lastingsfeil med nytt forsøk.
+Mobilskjermbilde gjennomgått. Ingen direkte butikklenker er aktivert.
