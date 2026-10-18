@@ -29,7 +29,7 @@ def homepage_sections(products,*,base,money,day,segment):
     return (product_rail('Dagens beste priser',cards[:4],'/kategori/tv/')+
             product_rail('Fortsett der du slapp',cards[1:3],'/kategori/tv/')+
             product_rail('Mest søkt akkurat nå',cards[2:6],'/kategori/tv/')+
-            '<section class="sp-discovery"><div class="sp-catalogue-heading"><h2>Nytt og aktuelt</h2></div><div class="sp-editorial"><a href="/guide/velg-tv/"><h3>Slik velger du TV</h3><p>Eksempel på guidekort og redaksjonelt innhold.</p></a><a href="/kategori/tv/"><h3>Finn riktig skjermstørrelse</h3><p>Utforsk eksempelmodeller i flere størrelser.</p></a></div></section>')
+            '<section class="sp-discovery"><div class="sp-catalogue-heading"><h2>Nytt og aktuelt</h2><a href="/guider/">Se alle guider →</a></div><div class="sp-editorial"><a href="/guide/velg-tv/"><h3>Slik velger du TV</h3><p>Eksempel på guidekort og redaksjonelt innhold.</p></a><a href="/kategori/tv/"><h3>Finn riktig skjermstørrelse</h3><p>Utforsk eksempelmodeller i flere størrelser.</p></a></div></section>')
 
 
 def category_help():
