@@ -187,3 +187,24 @@ URLs, catalogue builder, pricing and backend are unchanged.
 checks and screenshot review added for the new page, including interaction,
 image loading, target sizes and preservation of production product links.
 Publication verification will be recorded after CI/deploy.
+
+PR #30 merged as `76a00c247e39d04c0e74dd70fb6246f30f56b53c`. Six-width local
+browser journey and final browser CI 39119638799 passed; mobile, tablet and
+desktop screenshots inspected. Build/deploy 39119968821 succeeded and the
+public store page was verified (15 cards, noindex, assets, product URLs).
+
+User subsequently required ALL merchant website links, including guarantees,
+shipping, contact and source links, to use affiliate tracking. The current
+frontend contract only supplies product-offer targets; do not invent store-level
+URLs or reuse a product target for a different destination. Three store actions
+are now inactive and retailer source URLs are plain text until Chillout provides
+validated destination-specific targets. Internal product links remain functional.
+External review-source links (e.g. Trustpilot) remain ordinary citations, not
+merchant affiliate links. Future active merchant links must use the approved
+SjekkPris clickout route, sponsored/nofollow and visible ad-link disclosure.
+
+Store content recommendation: begin with one profile and an Experiences section;
+separate customer reports, editorial assessment and official store policies.
+Link to public review sources initially; copying Trustpilot reviews/TrustScore or
+branding requires a suitable rights/licensing arrangement. A standalone
+experiences route is deferred until original substantive coverage justifies it.
