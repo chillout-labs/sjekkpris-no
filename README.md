@@ -39,6 +39,19 @@ A provider URL is never rendered.
 
 - **noindex** on every page.
 
+## ADR-039 URL readiness (not activated)
+
+An explicit `--url-registry PRIVATE_SNAPSHOT.json` enables the isolated
+readiness build for `/p/{frozen-slug}/`, `/k/{frozen-slug}/` and `/sok/`.
+Brand/guide route validation uses `/merke/{slug}/` and `/guide/{slug}/`.
+The snapshot binds routes to canonical identities, never merchant titles.
+Use `--previous-url-registry` to enforce historical reservations on revision.
+This mode requires noindex and writes an edge redirect plan **beside**, not
+inside, the served output. Existing workflows do not enable it.
+
+See [ADR-039 readiness and blockers](docs/ADR-039-URL-READINESS.md) for the
+private input contract, verification, inventory and remaining cutover blockers.
+
 ## Truthfulness
 
 A `null` price is shown as "Ingen pris", never 0. Stale and out-of-stock
