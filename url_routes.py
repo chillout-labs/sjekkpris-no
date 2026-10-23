@@ -9,6 +9,7 @@ from html.parser import HTMLParser
 import json
 import re
 import unicodedata
+import xml.etree.ElementTree as ET
 from urllib.parse import urlsplit, urljoin, unquote
 
 PREFIXES = {'product': 'p', 'category': 'k', 'brand': 'merke', 'guide': 'guide'}
@@ -48,7 +49,7 @@ def local_path(path):
         raise RouteError('Invalid alias source')
     parts = urlsplit(path)
     if (not path.startswith('/') or path.startswith('//') or parts.scheme or parts.netloc
-            or parts.query or parts.fragment or any(c in path for c in ('\\', '%'))
+            or parts.path != path or '//' in path or any(c in path for c in ('\\', '%'))
             or any(ord(c) < 33 for c in path)
             or any(p in ('.', '..') for p in path.split('/'))):
         raise RouteError('Invalid alias source')
@@ -62,6 +63,7 @@ class RouteRegistry:
         if not snapshot.get('revision'):
             raise RouteError('Missing route revision')
         self.snapshot = deepcopy(snapshot)
+        snapshot = self.snapshot
         self.entities, self.owners, self.aliases = {}, {}, {}
         for row in snapshot.get('entities', []):
             key = (row['kind'], row['entity_id'])
@@ -89,9 +91,10 @@ class RouteRegistry:
                 raise RouteError('Alias shadows an existing route')
             status = alias['status']
             if status in (301, 308):
-                target = self.path(alias['kind'], alias['entity_id'])
-                if source == target:
-                    raise RouteError('Redirect loop')
+                # Resolve after all aliases are loaded, so successive merges
+                # flatten historical destinations without rewriting history.
+                if any(k not in alias for k in ('kind', 'entity_id')):
+                    raise RouteError('Redirect requires a canonical target identity')
             elif status in (404, 410):
                 if any(k in alias for k in ('kind', 'entity_id', 'target')):
                     raise RouteError('Gone routes cannot have a successor')
@@ -100,6 +103,11 @@ class RouteRegistry:
             if not alias.get('evidence'):
                 raise RouteError('Alias requires reviewed identity/migration evidence')
             self.aliases[source] = alias
+        for alias in self.aliases.values():
+            if alias['status'] in (301, 308):
+                _, target = self.redirect_disposition(alias['kind'], alias['entity_id'])
+                if alias['source'] == target:
+                    raise RouteError('Redirect loop')
         if previous is not None:
             old = RouteRegistry(previous)
             for path, key in old.owners.items():
@@ -125,6 +133,12 @@ class RouteRegistry:
     def bind_product(self, product, comparison):
         # The existing offers contract supplies the canonical ID. A title, GTIN,
         # namespace or local slug is never sufficient evidence of this identity.
+        if comparison.get('property_id') != self.snapshot['property']:
+            raise RouteError('Offers response belongs to a different or missing Property')
+        supplied = comparison.get('identity') or {}
+        for field in ('namespace', 'local_slug'):
+            if field in supplied and supplied[field] != product.get(field):
+                raise RouteError('Offers response does not match the requested catalogue alias')
         identity = comparison.get('product_id')
         if not identity:
             raise RouteError('Offers response lacks canonical product identity')
@@ -133,6 +147,24 @@ class RouteRegistry:
         result = dict(product)
         result['_public_path'] = self.path('product', identity)
         return result
+
+    def redirect_disposition(self, kind, entity_id):
+        """Follow reviewed retired-entity dispositions internally; emit one hop."""
+        seen = set()
+        while (kind, entity_id) not in seen:
+            seen.add((kind, entity_id))
+            row = self.entities.get((kind, entity_id))
+            if row is None:
+                raise RouteError('Redirect target identity is missing')
+            if row['state'] == 'active':
+                return None, self.path(kind, entity_id)
+            disposition = self.aliases.get(entity_path(kind, row['slug']))
+            if not disposition:
+                raise RouteError('Retired redirect target requires a reviewed disposition')
+            if disposition['status'] in (404, 410):
+                return disposition['status'], None
+            kind, entity_id = disposition['kind'], disposition['entity_id']
+        raise RouteError('Canonical successor cycle')
 
     def redirect_plan(self, built_paths, base='/', existing_products=None):
         """Auditable edge input; GitHub Pages does not execute this plan."""
@@ -146,21 +178,37 @@ class RouteRegistry:
         for source, alias in self.aliases.items():
             rule = {'source': scoped(source), 'status': alias['status']}
             if alias['status'] in (301, 308):
-                target = self.path(alias['kind'], alias['entity_id'])
-                if target not in built_paths:
-                    raise RouteError('Redirect target is not a built canonical page')
-                rule['target'] = scoped(target)
+                terminal_status, target = self.redirect_disposition(alias['kind'], alias['entity_id'])
+                if terminal_status:
+                    rule['status'] = terminal_status
+                else:
+                    if target not in built_paths:
+                        raise RouteError('Redirect target is not a built canonical page')
+                    rule['target'] = scoped(target)
             if source in built_paths or source in rules:
                 raise RouteError('Alias shadows a built route or slash rule')
             rules[source] = rule
         for source, target in (existing_products or {}).items():
             local_path(source)
+            if source.startswith('/p/') and source not in self.aliases:
+                raise RouteError('Existing product URL requires a reviewed registry alias')
             if target not in built_paths or source in built_paths:
                 raise RouteError('Invalid existing product URL mapping')
             rule = {'source': scoped(source), 'status': 308, 'target': scoped(target)}
-            if source in rules and rules[source] != rule:
+            if source in rules and (rules[source]['status'] not in (301, 308)
+                                    or rules[source].get('target') != scoped(target)):
                 raise RouteError('Conflicting existing product URL disposition')
-            rules[source] = rule
+            if source not in rules:
+                rules[source] = rule
+        # Old directory URLs must reach the final canonical in one hop too,
+        # rather than relying on a host slash redirect followed by our alias.
+        for source, rule in list(rules.items()):
+            if source.endswith('/'):
+                alternate = source.rstrip('/')
+                candidate = dict(rule, source=scoped(alternate))
+                if alternate in built_paths or (alternate in rules and rules[alternate] != candidate):
+                    raise RouteError('Conflicting slash disposition for historical URL')
+                rules[alternate] = candidate
         return list(rules.values())
 
 
@@ -221,6 +269,12 @@ class _Page(HTMLParser):
 def validate_readiness(out, base):
     """Fail on missing/self-conflicting canonical, lost noindex or broken links."""
     out = out.resolve()
+    try:
+        sitemap = ET.parse(out / 'sitemap.xml').getroot()
+    except (ET.ParseError, OSError) as exc:
+        raise RouteError('Missing or invalid readiness sitemap') from exc
+    if sitemap.tag != '{http://www.sitemaps.org/schemas/sitemap/0.9}urlset' or len(sitemap):
+        raise RouteError('Noindex readiness sitemap must be an empty urlset')
     pages = {file: _Page(file.read_text(encoding='utf-8')) for file in out.rglob('*.html')}
     links = []
     for file, page in pages.items():
@@ -246,6 +300,10 @@ def validate_readiness(out, base):
             path = path / 'index.html'
         if not path.is_file():
             raise RouteError('Required internal link target is missing')
+        if path.name == 'index.html':
+            preferred = base + path.relative_to(out).as_posix().removesuffix('index.html')
+            if parts.path != preferred:
+                raise RouteError('Internal page link must use its canonical trailing-slash route')
         if parts.fragment and path.suffix == '.html':
             if unquote(parts.fragment) not in pages[path].ids:
                 raise RouteError('Required internal fragment is missing')

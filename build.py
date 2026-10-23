@@ -45,7 +45,7 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from category_catalog import category_index, category_navigation, category_links, preview_slug
+from category_catalog import category_index, category_navigation, category_links
 from url_routes import RouteRegistry, RouteError, finalize_readiness
 from catalogue_media import image_markup, category_markup
 from product_ui import PRODUCT_STYLE, PRICE_MODE_SCRIPT, ui_icon
@@ -117,8 +117,10 @@ class Chillout:
             raise BuildError(f"{path} could not be reached ({exc.reason})") from None
 
 
-def catalogue(client: Chillout) -> list[dict]:
+def catalogue(client: Chillout, *, verify_property=False) -> list[dict]:
     body = client.get(f"/api/v1/properties/{PROPERTY}/catalogue?locale=nb")
+    if verify_property and body.get('property_id') != PROPERTY:
+        raise RouteError('Catalogue response belongs to a different or missing Property')
     return list(body.get("products") or [])
 
 
@@ -1678,6 +1680,9 @@ def normalise_base(value: str) -> str:
 
 
 def build(client: Chillout, out: Path, *, base: str, noindex: bool, routes=None) -> int:
+    # A failed retry must not leave a previous success's edge plan beside a
+    # partial/new artifact. This file belongs exclusively to this output path.
+    out.with_name(out.name + '.redirects.json').unlink(missing_ok=True)
     if routes is not None and not noindex:
         raise BuildError('URL readiness requires beta noindex; cutover is not authorized')
     if out.exists():
@@ -1691,7 +1696,7 @@ def build(client: Chillout, out: Path, *, base: str, noindex: bool, routes=None)
     css_name = "style-" + hashlib.sha256((STYLE + PRODUCT_STYLE + HOME_STYLE).encode()).hexdigest()[:12] + ".css"
     shutil.copyfile(out / "style.css", out / css_name)
 
-    products = catalogue(client)
+    products = catalogue(client, verify_property=routes is not None)
     comparisons = {}
     if routes is not None:
         bound = []
@@ -1729,11 +1734,8 @@ def build(client: Chillout, out: Path, *, base: str, noindex: bool, routes=None)
     )
     if routes is not None:
         old_products = {f'/p/{p["namespace"]}/{p["local_slug"]}/': p['_public_path'] for p in products}
-        for node in categories.values():
-            old = f'/kategori/{preview_slug(node["name"])}/'
-            if old in old_products and old_products[old] != node['_public_path']:
-                raise RouteError('Ambiguous historical category URL requires reviewed disposition')
-            old_products[old] = node['_public_path']
+        # Historical category paths require explicit, evidenced registry aliases.
+        # Today's translated label cannot prove who owned an old public URL.
         plan = finalize_readiness(out, routes, base, old_products)
         # Outside the served artifact: an edge plan is not a live redirect.
         out.with_name(out.name + '.redirects.json').write_text(json.dumps(plan, indent=2), encoding='utf-8')

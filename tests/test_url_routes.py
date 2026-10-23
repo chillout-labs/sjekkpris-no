@@ -23,7 +23,10 @@ def snapshot():
             {'kind': 'category', 'entity_id': 'root', 'slug': 'elektronikk', 'state': 'active'},
             {'kind': 'category', 'entity_id': 'leaf', 'slug': 'telefoner', 'state': 'active'},
         ], 'aliases': [
+            {'source': '/kategori/mobiltelefoner/', 'kind': 'category', 'entity_id': 'leaf', 'status': 301, 'evidence': 'Synthetic reviewed category identity'},
             {'source': '/produkt/old-phone/', 'kind': 'product', 'entity_id': 'prd_FIXTURE', 'status': 301, 'evidence': 'Synthetic verified same entity'},
+            {'source': '/p/catalogue/fixture-lamp/', 'kind': 'product', 'entity_id': 'prd_FIXTURE', 'status': 308, 'evidence': 'Synthetic reviewed beta product URL'},
+            {'source': '/p/catalogue/fixture-empty/', 'kind': 'product', 'entity_id': 'prd_FIXTURE2', 'status': 308, 'evidence': 'Synthetic reviewed beta product URL'},
             {'source': '/Shopping/gone.aspx', 'status': 410, 'evidence': 'Synthetic known removal'},
             {'source': '/never-existed.aspx', 'status': 404, 'evidence': 'Synthetic no successor'},
         ]}
@@ -34,11 +37,12 @@ class FixtureClient:
         self.products = copy.deepcopy(products if products is not None else INDEX['products'])
         self.comparisons = copy.deepcopy(comparisons if comparisons is not None else COMPARISONS)
         self.paths = []
+        self.property_id = 'sjekkpris-no'
 
     def get(self, path):
         self.paths.append(path)
         if path.split('?')[0].endswith('/catalogue'):
-            return {'products': self.products}
+            return {'property_id': self.property_id, 'products': self.products}
         return self.comparisons[path.split('/')[-2]]
 
 
@@ -124,9 +128,62 @@ class RegistryTests(unittest.TestCase):
             'status': 301, 'evidence': 'Synthetic proven duplicate merge'})
         RouteRegistry(merged, snapshot())
 
+    def test_successive_merges_flatten_all_historical_aliases(self):
+        first = snapshot()
+        first['entities'][0]['state'] = 'reserved'
+        first['aliases'].append({'source': '/p/nord-pro-plus-256-gb/', 'kind': 'product', 'entity_id': 'prd_FIXTURE2',
+            'status': 301, 'evidence': 'Synthetic first reviewed merge'})
+        RouteRegistry(first, snapshot())
+        second = copy.deepcopy(first)
+        second['revision'] = 'synthetic-2'
+        second['entities'][1]['state'] = 'reserved'
+        second['entities'].append({'kind': 'product', 'entity_id': 'prd_SURVIVOR', 'slug': 'surviving-model', 'state': 'active'})
+        second['aliases'].append({'source': '/p/nord-pro-plus-512-gb/', 'kind': 'product', 'entity_id': 'prd_SURVIVOR',
+            'status': 301, 'evidence': 'Synthetic second reviewed merge'})
+        registry = RouteRegistry(second, first)
+        rules = registry.redirect_plan({'/p/surviving-model/', '/k/telefoner/'})
+        for rule in rules:
+            if rule['source'].startswith(('/produkt/', '/p/nord-')):
+                self.assertEqual(rule['target'], '/p/surviving-model/')
+        second['entities'][-1]['state'] = 'reserved'
+        second['aliases'].append({'source': '/p/surviving-model/', 'kind': 'product', 'entity_id': 'prd_FIXTURE',
+            'status': 301, 'evidence': 'Synthetic bad circular merge'})
+        with self.assertRaisesRegex(RouteError, 'cycle'):
+            RouteRegistry(second)
+
+    def test_snapshot_input_mutation_cannot_change_validated_routes(self):
+        data = snapshot()
+        registry = RouteRegistry(data)
+        data['entities'][0]['slug'] = 'changed-after-validation'
+        data['aliases'][1]['entity_id'] = 'wrong'
+        self.assertEqual(registry.path('product', 'prd_FIXTURE'), '/p/nord-pro-plus-256-gb/')
+        self.assertEqual(registry.aliases['/produkt/old-phone/']['entity_id'], 'prd_FIXTURE')
+
+    def test_offers_property_and_requested_alias_must_match(self):
+        registry = RouteRegistry(snapshot())
+        for supplied in (None, 'another-property'):
+            body = dict(COMPARISONS['fixture-lamp'], property_id=supplied)
+            with self.assertRaisesRegex(RouteError, 'Property'):
+                registry.bind_product(INDEX['products'][0], body)
+        for field in ('namespace', 'local_slug'):
+            body = copy.deepcopy(COMPARISONS['fixture-lamp'])
+            body['identity'][field] = 'another-catalogue-alias'
+            with self.assertRaisesRegex(RouteError, 'requested catalogue alias'):
+                registry.bind_product(INDEX['products'][0], body)
+
     def test_retirement_without_reviewed_disposition_fails(self):
         data = snapshot(); data['entities'][1]['state'] = 'reserved'
         with self.assertRaises(RouteError): RouteRegistry(data, snapshot())
+
+    def test_historical_equivalent_aliases_follow_reviewed_terminal_gone_status(self):
+        data = snapshot()
+        data['entities'][0]['state'] = 'reserved'
+        data['aliases'].append({'source': '/p/nord-pro-plus-256-gb/', 'status': 410, 'evidence': 'Synthetic known removal without replacement'})
+        registry = RouteRegistry(data, snapshot())
+        rules = {r['source']: r for r in registry.redirect_plan({'/p/nord-pro-plus-512-gb/', '/k/telefoner/'})}
+        for source in ('/produkt/old-phone/', '/produkt/old-phone', '/p/catalogue/fixture-lamp/', '/p/nord-pro-plus-256-gb/'):
+            self.assertEqual(rules[source]['status'], 410)
+            self.assertNotIn('target', rules[source])
 
     def test_parallel_readers_agree_and_conflicting_snapshot_is_rejected(self):
         # Read-only consumers; atomic allocation is a documented API dependency.
@@ -138,7 +195,7 @@ class RegistryTests(unittest.TestCase):
         with self.assertRaises(RouteError): RouteRegistry(conflicting)
 
     def test_invalid_aliases_chains_loops_and_recycling_fail(self):
-        for source in ('//evil.test/', '/../outside/', '/p/nord-pro-plus-256-gb/', '/a?b=1', '/a%2fb', '/a\\b'):
+        for source in ('//evil.test/', '/../outside/', '/p/nord-pro-plus-256-gb/', '/a?b=1', '/a%2fb', '/a\\b', '/a?', '/a#', '/a//b/'):
             data = snapshot(); data['aliases'][0]['source'] = source
             with self.assertRaises(RouteError): RouteRegistry(data)
         data = snapshot(); data['aliases'][0]['entity_id'] = 'missing'
@@ -196,13 +253,29 @@ class ReadinessBuildTests(unittest.TestCase):
 
     def test_one_product_activates_complete_supplied_ancestry(self):
         self.client.products = self.client.products[:1]
-        self.run_build()
+        data = snapshot()
+        data['aliases'] = [a for a in data['aliases'] if a.get('entity_id') != 'prd_FIXTURE2']
+        build.build(self.client, self.out, base='/', noindex=True, routes=RouteRegistry(data))
         for slug in ('telefoner', 'elektronikk'):
             text = (self.out / f'k/{slug}/index.html').read_text(encoding='utf-8')
             self.assertIn('/p/nord-pro-plus-256-gb/', text)
         nodes = category_index(self.client.products, registry=RouteRegistry(snapshot()))
         self.assertEqual(len(nodes['root']['products']), 1)
         self.assertEqual(category_links(self.client.products[0], nodes, '/')[-1][1], '/k/telefoner/')
+
+    def test_one_product_activates_primary_and_additional_paths_but_not_empty_branches(self):
+        self.client.products = self.client.products[:1]
+        self.client.products[0]['categories']['additional'] = [{'id': 'other', 'display_name': 'Tilbehør',
+            'path': [{'id': 'root', 'display_name': 'Elektronikk'}, {'id': 'other', 'display_name': 'Tilbehør'}]}]
+        data = snapshot()
+        data['aliases'] = [a for a in data['aliases'] if a.get('entity_id') != 'prd_FIXTURE2']
+        data['entities'].extend([
+            {'kind': 'category', 'entity_id': 'other', 'slug': 'tilbehor', 'state': 'active'},
+            {'kind': 'category', 'entity_id': 'empty', 'slug': 'tom-gren', 'state': 'active'}])
+        build.build(self.client, self.out, base='/', noindex=True, routes=RouteRegistry(data))
+        for slug in ('elektronikk', 'telefoner', 'tilbehor'):
+            self.assertTrue((self.out / f'k/{slug}/index.html').exists())
+        self.assertFalse((self.out / 'k/tom-gren').exists())
 
     def test_rename_and_taxonomy_move_preserve_frozen_url(self):
         self.run_build()
@@ -241,6 +314,9 @@ class ReadinessBuildTests(unittest.TestCase):
         self.assertEqual(len(plan), len(rules))
         self.assertEqual(rules['/p/catalogue/fixture-lamp/']['target'], '/p/nord-pro-plus-256-gb/')
         self.assertEqual(rules['/kategori/mobiltelefoner/']['target'], '/k/telefoner/')
+        self.assertEqual(rules['/kategori/mobiltelefoner']['target'], '/k/telefoner/')
+        self.assertEqual(rules['/p/catalogue/fixture-lamp']['target'], '/p/nord-pro-plus-256-gb/')
+        self.assertEqual(rules['/produkt/old-phone']['target'], '/p/nord-pro-plus-256-gb/')
         self.assertEqual(rules['/p/nord-pro-plus-256-gb']['status'], 308)
         self.assertEqual(rules['/Shopping/gone.aspx']['status'], 410)
         self.assertEqual(rules['/never-existed.aspx']['status'], 404)
@@ -264,6 +340,7 @@ class ReadinessBuildTests(unittest.TestCase):
             ('rel="canonical"', 'rel="alternate"'),
             ('content="noindex"', 'content="index"'),
             ('href="/sok/"', 'href="/missing/"'),
+            ('href="/sok/"', 'href="/sok"'),
             ('href="#main"', 'href="#missing"'),
         ]:
             self.run_build()
@@ -281,3 +358,38 @@ class ReadinessBuildTests(unittest.TestCase):
         primary['path'].append(primary['path'][0])
         with self.assertRaisesRegex(ValueError, 'Cyclic'):
             category_index(self.client.products)
+
+    def test_current_category_label_does_not_invent_historical_redirect(self):
+        primary = self.client.products[0]['categories']['primary']
+        primary['display_name'] = primary['path'][-1]['display_name'] = 'Nytt kategorinavn'
+        self.run_build()
+        rules = {r['source']: r for r in json.loads(self.out.with_name('site.redirects.json').read_text())}
+        self.assertNotIn('/kategori/nytt-kategorinavn/', rules)
+        self.assertEqual(rules['/kategori/mobiltelefoner/']['target'], '/k/telefoner/')
+        self.assertTrue((self.out / 'k/telefoner/index.html').exists())
+
+    def test_failed_rebuild_removes_previous_redirect_plan(self):
+        self.run_build()
+        plan = self.out.with_name('site.redirects.json')
+        self.assertTrue(plan.exists())
+        del self.client.comparisons['fixture-lamp']['product_id']
+        with self.assertRaises(RouteError): self.run_build()
+        self.assertFalse(plan.exists())
+
+    def test_missing_reviewed_beta_alias_fails_instead_of_guessing_migration(self):
+        data = snapshot()
+        data['aliases'] = [a for a in data['aliases'] if a['source'] != '/p/catalogue/fixture-lamp/']
+        with self.assertRaisesRegex(RouteError, 'reviewed registry alias'):
+            build.build(self.client, self.out, base='/', noindex=True, routes=RouteRegistry(data))
+
+    def test_wrong_or_missing_catalogue_property_fails(self):
+        for value in (None, 'another-property'):
+            self.client.property_id = value
+            with self.assertRaisesRegex(RouteError, 'Catalogue response'):
+                self.run_build()
+
+    def test_noindex_sitemap_gate_rejects_entries_and_malformed_xml(self):
+        self.run_build()
+        for content in ('<not-xml', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://sjekkpris.no/</loc></url></urlset>'):
+            (self.out / 'sitemap.xml').write_text(content, encoding='utf-8')
+            with self.assertRaises(RouteError): validate_readiness(self.out, '/')

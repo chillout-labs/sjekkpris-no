@@ -47,11 +47,14 @@ policy, ikke en observert generell produktrute i denne koden.
   noindex. Ingen indeksaktivering eller ny ProductGroup/schema-policy.
 - Valideringsport stopper feil canonical, tapt noindex, manglende lokale
   lenkemål/ankere og søkeindekslenker. Eksisterende lekkasjekontroll beholdes.
-- Redirect-plan ved siden av artefaktet: eksakte gamle produktadresser,
-  dagens navneavledede kategorier, søk/kategorioversikt og slash-normalisering.
+- Redirect-plan ved siden av artefaktet: eksplisitt dokumenterte gamle produkt-
+  og kategoriadresser, søk/kategorioversikt og slash-normalisering.
   Eksplisitte historiske aliaser krever dokumentert evidens. Kun 301/308 til
   bygget canonical mål; 404/410 uten irrelevant etterfølger. Ingen kjeder,
-  løkker, asset-shadowing eller blanket redirect til forsiden.
+  løkker, asset-shadowing eller blanket redirect til forsiden. Gamle
+  katalogproduktadresser må ha et eksplisitt registry-alias; dagens kategorinavn
+  brukes aldri til å gjette historisk URL-eierskap. Både med og uten avsluttende
+  skråstrek peker gamle directory-adresser direkte til endelig mål.
 - Tidligere eierskap reserveres ved kontrollerte navnerettelser, merges og
   fjerning. Sammenligning mot forrige snapshot hindrer resirkulering og tap
   av historiske disposisjoner. Canonical produkt-ID-er endres aldri her.
@@ -77,7 +80,11 @@ Ved navnerettelse beholdes gammel kind/entity_id/slug i `reservations`, og
 gammel sti får et dokumentert alias med `source`, `status`, `kind`, `entity_id`
 og `evidence`. Ved kjent fjerning brukes status 410 uten målfelter. Merge
 reserverer gammel eierskap og peker eksplisitt til bevist overlevende entity.
-Aliasene resolver alltid direkte til siste aktive rute.
+Aliasene resolver alltid direkte til siste aktive rute. Ved flere godkjente
+merges følges de dokumenterte identitetsetterfølgerne internt, mens den ferdige
+planen har ett HTTP-hopp. Ved kjent fjerning uten etterfølger blir også gamle
+beviste ekvivalente aliaser 404/410 direkte. Sykluser og udokumenterte ender
+avvises; historiske registry-poster endres ikke for å flate ut planen.
 
 Snapshot og forrige revisjon er private byggeinput, aldri en fil i nettstedet.
 Frontend leser kun. Den allokerer ikke canonical identitet eller slugs og
@@ -140,7 +147,7 @@ automatisk mapping. Manglende data er cutover-blokkere, ikke tillatelse til
 
 ## Verifisering
 
-- 107 Python-tester består: 87 eksisterende og 20 nye ADR-039-tester.
+- 117 Python-tester består: 87 eksisterende og 30 ADR-039-tester.
 - Nye tester dekker kollisjoner, suffix/ID-only, frysing, reservasjoner,
   korrigering/merge/fjerning, canonical-binding, separate kapasitetsidentiteter,
   kategoriaktivering, taksonomiflytting, interne lenker/ankere, søkeindeks,
@@ -154,3 +161,32 @@ automatisk mapping. Manglende data er cutover-blokkere, ikke tillatelse til
 
 Kun `sjekkpris-no` endres. Ingen merge, deploy, migrering, publisering,
 Autodeploy-aktivering eller endring i `chillout-platform` er utført.
+
+## Kritisk gjennomgang av PR #34 — 23.10.2026
+
+Gjennomgangen fant følgende feil i den opprinnelige readiness-implementeringen;
+de er rettet i samme gren og dekket av regresjonstester:
+
+| Funn | Konsekvens før retting | Retting |
+| --- | --- | --- |
+| P1: Historiske kategoriadresser ble avledet fra dagens navn | Navnerettelse kunne opprette en ikke-verifisert migreringsregel og miste den ekte gamle adressen | Bare eksplisitte, dokumenterte kategori-aliaser brukes. Også dagens gamle produktadresser må finnes i registry før en plan godtas. |
+| P1: Tidligere aliaser krevde at mål-ID fortsatt var aktiv | Ny merge av et tidligere mål stoppet ellers legitimt bygg, og gamle aliaser kunne ikke følge livssyklusen | Følg godkjente canonical etterfølgere og skriv direkte sluttmål; propagér dokumentert 404/410 uten redirect til borte-side. Avvis sykluser. |
+| P1: Property og oppslagsalias i API-svar ble ikke kontrollert | Et feillevert svar med en annen registrert produkt-ID kunne bli bundet til feil offentlig adresse | Katalog og tilbud må ha riktig Property; namespace/local_slug i tilbudsidentiteten må samsvare når disse feltene leveres. |
+| P2: Bare sluttmålets slash-variant var normalisert | Gammel directory-adresse uten slash kunne få en ekstra host-redirect før migreringsredirect | Begge gamle stavemåter har samme direkte sluttmål; motstridende regler avvises. |
+| P2: Gammel redirect-plan overlevde mislykket retry | En eldre plan kunne forveksles med resultatet fra et nytt, mislykket bygg | Planen fjernes ved starten av et nytt bygg og skrives kun etter bestått validering. |
+| P2: Snapshot-objekter kunne endres etter validering | Mutasjon av opprinnelig input endret rutene i en eksisterende resolver | Resolveren bruker sin egen dype kopi. |
+| P2: Sitemap og lenkenes foretrukne stavemåte var ikke kontrollert fullt ut | Ikke-tomt/ugyldig sitemap eller lenke uten slash kunne passere porten | XML-validering krever tomt noindex-sitemap; interne innholdslenker må bruke canonical directory-sti. |
+
+ADR-037 er i tillegg kontrollert med ett produkt som har både primærkategori
+og tilleggskategori. Begge komplette leverte stier aktiveres; en tom registrert
+gren publiseres ikke. Dette oppretter ingen konkurrerende kategoriinndeling.
+
+**Produksjonsvurdering: fortsatt ikke klar for URL-overgang.** De seks åpne
+avhengighetene over gjelder fortsatt. Et syntetisk rutesnapshot beviser verken
+korrektheten i den ekte canonical katalogen, at publish eligibility er riktig,
+at hele ancestor-grafen er levert, eller at historikken er komplett. Forrige
+snapshot er fortsatt et eksplisitt lokalt input, ikke en atomisk beskyttet
+produksjonshistorikk. Brand-/guide-URL-validering er ikke komplette sideadaptere;
+og `?farge=` med korrekte tilbud/bilder, ekte ProductGroup-/variantvalidering,
+indekserbart produksjonssitemap og operative HTTP-redirects gjenstår. Noindex
+skal beholdes til en separat godkjent indekserings-/publiseringsvurdering.
