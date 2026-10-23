@@ -21,7 +21,8 @@ def render_product_card(product, *, base, money, day, segment, attributes=()):
     slug = segment(product['local_slug'])
     namespace = segment(product['namespace'])
     name = product.get('local_name') or product['local_slug']
-    href = escape(f'{base}p/{namespace}/{slug}/', quote=True)
+    from url_routes import product_href
+    href = escape(product_href(product, base), quote=True)
     price = money(product.get('lowest_item_price'))
     confirmed = day(product.get('lowest_item_price_confirmed_at'))
     count = int(product.get('offer_count') or 0)
@@ -51,7 +52,8 @@ def render_home(products, *, base, money, day, segment, category_links=()):
         indices = list(dict.fromkeys([0, len(products) // 2, len(products) - 1]))
         for i in indices:
             p = products[i]
-            href = escape(f'{base}p/{segment(p["namespace"])}/{segment(p["local_slug"])}/', quote=True)
+            from url_routes import product_href
+            href = escape(product_href(p, base), quote=True)
             examples.append(f'<a class="sp-example" href="{href}">{ui_icon("search")}<span>{escape(p.get("local_name") or p["local_slug"])}</span></a>')
     examples_html = ('<div class="sp-examples"><p>Prøv for eksempel</p><div>' + ''.join(examples) + '</div></div>') if examples else ''
     catalogue = ('<ul class="sp-product-grid">' + ''.join(cards) + '</ul>') if cards else '<p class="sp-home-empty">Ingen produkter er publisert ennå.</p>'
