@@ -51,6 +51,10 @@ def write_home(client_products, out, *, base, noindex, day, segment, categories=
     body = render_home(products, base=base, money=home_money, day=day, segment=segment, category_links=[(n['name'],category_href(n,base)) for n in sorted(categories.values(),key=lambda n:n['name']) if n['parent'] is None])
     (out / 'index.html').write_text(page('SjekkPris – sammenlign priser', body, base=base, noindex=noindex, home=True, category_nav=navigation), encoding='utf-8')
     index = [{'name':p.get('local_name') or p['local_slug'], 'url':f"{base}p/{segment(p['namespace'])}/{segment(p['local_slug'])}/", 'price':home_money(p.get('lowest_item_price'))} for p in products]
+    for item, product in zip(index, products):
+        if product.get('variant_choices'):
+            item['variants'] = [dict(name=v['local_name'], url=v['presentation_url'], price=home_money(v.get('lowest_item_price')), image=v.get('image')) for v in product['variant_choices']]
+            item.update({k:v for k,v in item['variants'][0].items()})
     (out / 'search-index.json').write_text(json.dumps(index), encoding='utf-8')
     body = render_listing(products, base=base, money=home_money, day=day, segment=segment)
     (out / 'search').mkdir(exist_ok=True)

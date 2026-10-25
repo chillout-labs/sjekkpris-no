@@ -3,6 +3,7 @@
 No popularity, deal, editorial, account or AI capabilities are implied.
 """
 from html import escape
+import json
 
 from product_ui import ui_icon
 from catalogue_media import image_markup, category_markup
@@ -18,10 +19,20 @@ def card_image(product):
 
 
 def render_product_card(product, *, base, money, day, segment, attributes=()):
+    choices = product.get('variant_choices')
+    if choices:
+        # Caller supplies the reviewed default FIRST, never price/name inference.
+        entries = []
+        for choice in choices:
+            leaf = dict(choice, variant_choices=None, other_colors=True)
+            html = render_product_card(leaf, base=base, money=money, day=day, segment=segment, attributes=attributes)
+            entries.append({'name':leaf['local_name'], 'url':leaf['presentation_url'],
+                            'price':money(leaf.get('lowest_item_price')), 'image':leaf.get('image'), 'html':html})
+        return entries[0]['html'].replace('<li ', '<li data-variant-options="'+escape(json.dumps(entries, ensure_ascii=False), quote=True)+'" ', 1)
     slug = segment(product['local_slug'])
     namespace = segment(product['namespace'])
     name = product.get('local_name') or product['local_slug']
-    href = escape(f'{base}p/{namespace}/{slug}/', quote=True)
+    href = escape(product.get('presentation_url') or f'{base}p/{namespace}/{slug}/', quote=True)
     price = money(product.get('lowest_item_price'))
     confirmed = day(product.get('lowest_item_price_confirmed_at'))
     count = int(product.get('offer_count') or 0)
@@ -32,6 +43,7 @@ def render_product_card(product, *, base, money, day, segment, attributes=()):
         f'<li data-result data-name="{escape(name, quote=True)}" data-price="{product.get("lowest_item_price", {}).get("minor", "") if product.get("lowest_item_price") else ""}" data-brand="{escape(product.get("local_brand") or "", quote=True)}"><article class="sp-product-card"><a href="{href}">'
         f'{card_image(product)}'
         f'<h3>{escape(name)}</h3>'
+        + ('<p class="sp-card-colors">Andre farger tilgjengelig</p>' if product.get('other_colors') else '')
         + category_markup(product.get("categories"))
         + (f'<p class="sp-product-brand">{escape(product["local_brand"])}</p>' if product.get("local_brand") else "")
         + attribute_html
@@ -132,16 +144,17 @@ HOME_SEARCH_SCRIPT = r"""
       index = index || await pending;
       if (request !== version || document.activeElement !== input) return;
       input.removeAttribute('aria-busy');
-      items = index.filter(p => typeof p.name === 'string' && typeof p.url === 'string' &&
+      const words=query.split(/\s+/);
+      items = index.map(p => p.variants ? p.variants.find(v=>words.every(w=>v.name.toLocaleLowerCase('nb').includes(w))) : p).filter(p => p && typeof p.name === 'string' && typeof p.url === 'string' &&
         p.url.startsWith('/') && !p.url.startsWith('//') && !p.url.includes('\\') &&
-        p.name.toLocaleLowerCase('nb').includes(query)).slice(0, 8);
+        words.every(w=>p.name.toLocaleLowerCase('nb').includes(w))).slice(0, 8);
       items.forEach((p, i) => {
         const li = document.createElement('li');
         li.id = 'home-option-' + i; li.role = 'option';
         li.setAttribute('aria-selected', 'false');
         const picture=document.createElement('span');picture.className='sp-suggestion-image';picture.setAttribute('aria-hidden','true');
         const source=Array.from(document.querySelectorAll('.sp-product-card>a')).find(a=>a.getAttribute('href')===p.url)?.querySelector('img');
-        if(source){const img=document.createElement('img');img.src=source.currentSrc||source.src;img.alt='';img.referrerPolicy='no-referrer';img.addEventListener('error',()=>img.remove());picture.append(img);}
+        if(p.image?.url||source){const img=document.createElement('img');img.src=p.image?.url||source.currentSrc||source.src;img.alt='';img.referrerPolicy='no-referrer';img.addEventListener('error',()=>img.remove());picture.append(img);}
         const text=document.createElement('span');text.className='sp-suggestion-copy';
         const name=document.createElement('span');name.textContent=p.name;text.append(name);
         if(p.price){const price=document.createElement('strong');price.textContent=p.price; text.append(price);}
