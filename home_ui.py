@@ -144,10 +144,11 @@ HOME_SEARCH_SCRIPT = r"""
       index = index || await pending;
       if (request !== version || document.activeElement !== input) return;
       input.removeAttribute('aria-busy');
-      const words=query.split(/\s+/);
-      items = index.map(p => p.variants ? p.variants.find(v=>words.every(w=>v.name.toLocaleLowerCase('nb').includes(w))) : p).filter(p => p && typeof p.name === 'string' && typeof p.url === 'string' &&
+      const normalize=s=>s.toLocaleLowerCase('nb').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+      const matches=name=>normalize(name).includes(normalize(query));
+      items = index.map(p => p.variants ? p.variants.find(v=>matches(v.name)) : p).filter(p => p && typeof p.name === 'string' && typeof p.url === 'string' &&
         p.url.startsWith('/') && !p.url.startsWith('//') && !p.url.includes('\\') &&
-        words.every(w=>p.name.toLocaleLowerCase('nb').includes(w))).slice(0, 8);
+        matches(p.name)).slice(0, 8);
       items.forEach((p, i) => {
         const li = document.createElement('li');
         li.id = 'home-option-' + i; li.role = 'option';

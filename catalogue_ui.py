@@ -61,8 +61,10 @@ LISTING_SCRIPT = r"""
    priceHelp.hidden=!invalid;priceHelp.textContent=invalid?'Minsteprisen er høyere enn maksprisen. Juster ett av beløpene.':'';
    [min,max].forEach(el=>el.setAttribute('aria-invalid',String(invalid)));
    rows.forEach(row=>{
+     const normalize=s=>s.toLocaleLowerCase('nb').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+     const matches=name=>normalize(name).includes(normalize(q));
      const options=row.dataset.variantOptions ? JSON.parse(row.dataset.variantOptions) : null;
-     const chosen=options?.find(v=>q.split(/\s+/).every(w=>v.name.toLocaleLowerCase('nb').includes(w)));
+     const chosen=options?.find(v=>matches(v.name));
      if(chosen && row.dataset.selectedVariant!==chosen.url){
        const template=document.createElement('template');template.innerHTML=chosen.html;
        const replacement=template.content.firstElementChild;
@@ -70,7 +72,7 @@ LISTING_SCRIPT = r"""
        ['name','price','brand'].forEach(k=>row.dataset[k]=replacement.dataset[k]);
        row.dataset.selectedVariant=chosen.url;
      }
-     row.dataset.queryMatch=String(options ? Boolean(chosen) : q.split(/\s+/).every(w=>row.dataset.name.toLocaleLowerCase('nb').includes(w)));
+     row.dataset.queryMatch=String(options ? Boolean(chosen) : matches(row.dataset.name));
      const price=row.dataset.price===''?Infinity:Number(row.dataset.price);
      row.hidden=facetGroups.some(group=>{const selected=group.filter(el=>el.checked);return selected.length&&!selected.some(el=>row.getAttribute('data-facet-'+el.dataset.facet)===el.value);})||row.dataset.queryMatch!=='true'||(brand&&brand.value&&row.dataset.brand!==brand.value)||(Number.isFinite(limit)&&price>limit)||price<minimum||(minimum>0&&!Number.isFinite(price));
      if(!row.hidden)n++;
