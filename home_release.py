@@ -1,5 +1,6 @@
 """Homepage-only release. Existing product rendering stays unchanged."""
 from analytics_consent import head_markup as gtm_head_markup, body_markup as gtm_body_markup, footer_link as gtm_footer_link
+from analytics_events import events_markup
 
 from html import escape as e
 import json
@@ -29,7 +30,7 @@ def page(title: str, body: str, *, base: str, noindex: bool, home: bool = False,
 <nav aria-label="Hovedmeny"><a href="{e(base)}">Alle produkter</a><a href="{e(base)}search/">Søk etter produkter</a><a href="{e(base)}kategori/">Utforsk kategorier</a></nav></details>
 </div>{category_nav}</header><main id="main" class="sp-shell">{body}</main>
 <footer class="sp-footer"><div class="sp-shell"><strong>SjekkPris</strong><p>Uavhengig prissammenligning. Du handler hos butikken.</p><p>Vi kan motta provisjon når du handler via lenkene våre. Beta – innholdet er under utvikling.</p>{gtm_footer_link()}</div></footer>
-{search_script}{gtm_body_markup()}</body></html>"""
+{search_script}{gtm_body_markup()}{events_markup()}</body></html>"""
 
 
 def home_money(amount):
