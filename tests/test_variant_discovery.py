@@ -1,12 +1,15 @@
 """Synthetic display-only facts. No approval, identity or price inference."""
 import json
 import unittest
+import tempfile
+from pathlib import Path
 from html.parser import HTMLParser
 
 import build
 from catalogue_ui import render_listing
-from home_ui import render_product_card
+from home_ui import render_product_card, variant_search_entry
 from rich_ui import variants
+import home_release
 
 
 def choices(count):
@@ -26,6 +29,20 @@ class Tags(HTMLParser):
 
 
 class VariantDiscovery(unittest.TestCase):
+    def test_unsafe_color_links_refuse_before_rendering(self):
+        for url in ('javascript:alert(1)','//foreign.invalid/p/model/?farge=red','/p/model/?farge=red&foreign=1','/p/model/?farge=../red'):
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                variant_search_entry(dict(choices(2)[0],presentation_url=url),build.money)
+
+    def test_search_index_rejects_image_that_card_rejects(self):
+        values=choices(2)
+        values[1]['image']={'url':'https://foreign.example.invalid/unreviewed.png'}
+        with tempfile.TemporaryDirectory() as directory:
+            out=Path(directory)
+            home_release.write_home([dict(values[0],variant_choices=values)],out,base='/',noindex=True,day=build.day,segment=build.segment)
+            entries=json.loads((out/'search-index.json').read_bytes())[0]['variants']
+        self.assertIsNone(entries[1]['image'])
+
     def test_card_has_one_image_price_and_link_without_color_picker(self):
         values=choices(2)
         html=render_product_card(dict(values[0],variant_choices=values),base='/',money=build.money,day=build.day,segment=build.segment)

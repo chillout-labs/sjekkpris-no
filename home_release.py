@@ -8,6 +8,7 @@ from home_ui import SHELL_SCRIPT, render_header_search, HOME_SEARCH_SCRIPT, rend
 from product_ui import ui_icon, PRODUCT_STYLE
 from category_catalog import category_navigation, category_href, render_category_index
 from catalogue_ui import render_listing, LISTING_STYLE
+from home_ui import variant_search_entry
 
 def page(title: str, body: str, *, base: str, noindex: bool, home: bool = False, category_nav: str = "") -> str:
     css_name = "home-" + hashlib.sha256((PRODUCT_STYLE + HOME_STYLE + LISTING_STYLE).encode()).hexdigest()[:12] + ".css"
@@ -53,7 +54,7 @@ def write_home(client_products, out, *, base, noindex, day, segment, categories=
     index = [{'name':p.get('local_name') or p['local_slug'], 'url':f"{base}p/{segment(p['namespace'])}/{segment(p['local_slug'])}/", 'price':home_money(p.get('lowest_item_price'))} for p in products]
     for item, product in zip(index, products):
         if product.get('variant_choices'):
-            item['variants'] = [dict(name=v['local_name'], url=v['presentation_url'], price=home_money(v.get('lowest_item_price')), image=v.get('image')) for v in product['variant_choices']]
+            item['variants'] = [variant_search_entry(v, home_money) for v in product['variant_choices']]
             item.update({k:v for k,v in item['variants'][0].items()})
     (out / 'search-index.json').write_text(json.dumps(index), encoding='utf-8')
     body = render_listing(products, base=base, money=home_money, day=day, segment=segment)

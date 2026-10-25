@@ -28,3 +28,19 @@ color-specific search/reset, exact one image/price/link; selected member visible
 keyboard disclosure. Core #268 adds actual frozen eight-member browser checks,
 default bare/direct/reload/canonical/noindex and withdrawn input refusal.
 P08 is excluded by the caller. No live build caller or publishing flag changes.
+
+## Independent final review, 2026-10-25
+
+Confirmed P2 cases were reproduced before correction: a default `Farge 10`
+could win a full search for `Farge 1`; and suggestion JSON retained an image
+that the existing card image validator rejected. Exact full names and documented
+color labels now precede partial matches, while generic searches retain the
+explicit default-first order. Both search surfaces share that selection logic.
+Search/card entries share the existing public image validator and refuse unsafe
+non-internal color links before rendering. No new image host allowance is added.
+
+Regression coverage now includes a 20-color model with explicit default 10,
+full/short exact searches for color 1, color 19, generic reset, suggestions and
+keyboard disclosure at both widths; rejected images and unsafe links; complete
+107-case unit suite. Core #268 independently compares each displayed offer's
+advertiser, amount and exact `/go/` target against the selected source snapshot.

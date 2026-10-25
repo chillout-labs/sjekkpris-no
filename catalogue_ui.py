@@ -1,6 +1,6 @@
 """Shared search/category presentation. Input is a product view model, not offers."""
 from html import escape as e
-from home_ui import render_product_card
+from home_ui import render_product_card, VARIANT_SEARCH_SCRIPT
 
 
 def render_listing(products, *, base, money, day, segment, title='Søk etter produkter', category=False, breadcrumbs=(), children=(), facets=(), facet_values=None, card_attributes=None):
@@ -44,6 +44,7 @@ def render_listing(products, *, base, money, day, segment, title='Søk etter pro
 
 LISTING_SCRIPT = r"""
 (()=>{
+""" + VARIANT_SEARCH_SCRIPT + r"""
  const root=document.querySelector('.sp-listing'); if(!root)return;
  const form=document.querySelector('.sp-search'), input=form.querySelector('input');
  const grid=document.getElementById('search-results'), rows=Array.from(grid.children);
@@ -61,10 +62,9 @@ LISTING_SCRIPT = r"""
    priceHelp.hidden=!invalid;priceHelp.textContent=invalid?'Minsteprisen er høyere enn maksprisen. Juster ett av beløpene.':'';
    [min,max].forEach(el=>el.setAttribute('aria-invalid',String(invalid)));
    rows.forEach(row=>{
-     const normalize=s=>s.toLocaleLowerCase('nb').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
-     const matches=name=>normalize(name).includes(normalize(q));
+     const matches=name=>normalizeSearch(name).includes(normalizeSearch(q));
      const options=row.dataset.variantOptions ? JSON.parse(row.dataset.variantOptions) : null;
-     const chosen=options?.find(v=>matches(v.name));
+     const chosen=options ? chooseSearchVariant(options,q) : null;
      if(chosen && row.dataset.selectedVariant!==chosen.url){
        const template=document.createElement('template');template.innerHTML=chosen.html;
        const replacement=template.content.firstElementChild;

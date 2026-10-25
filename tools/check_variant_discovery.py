@@ -25,6 +25,13 @@ with sync_playwright() as p:
     browser=p.chromium.launch()
     for count in (2,20):
         values=choices(count)
+        default=0
+        if count==20:
+            for i,v in enumerate(values):
+                v['local_name']='Synthetic Model – Farge '+str(i)
+                v['color_label']='Farge '+str(i)
+            values=[values[10],*values[:10],*values[11:]]
+            default=10
         product=dict(values[0],variant_choices=values)
         listing=render_listing([product],base='/',money=home_money,day=build.day,segment=build.segment)
         for width in (390,1280):
@@ -33,7 +40,8 @@ with sync_playwright() as p:
             errors=[]
             page.on('pageerror',lambda e:errors.append(str(e)))
             html=build.page('Synthetic variant test',listing,base='/',noindex=True)
-            entries=[dict(name=v['local_name'],url=v['presentation_url'],price=home_money(v['lowest_item_price']),image=v['image']) for v in values]
+            from home_ui import variant_search_entry
+            entries=[variant_search_entry(v,home_money) for v in values]
             def route(r):
                 if r.request.resource_type=='document': r.fulfill(status=200,content_type='text/html',body=html)
                 elif r.request.url.endswith('/search-index.json'): r.fulfill(status=200,content_type='application/json',body=json.dumps([dict(entries[0],variants=entries)]))
@@ -44,17 +52,19 @@ with sync_playwright() as p:
             page.goto('http://127.0.0.1:19999/search/?q=Synthetic+Model')
             card=page.locator('#search-results>li:visible')
             assert card.count()==1
-            assert card.locator('a').get_attribute('href').endswith('farge=0')
+            assert card.locator('a').get_attribute('href').endswith('farge='+str(default))
             field=page.locator('#home-query')
-            for query,index in [('Synthetic Model Hvit',1),('Synthetic Model Svart',0),('Synthetic Model',0)]:
+            queries=[('Synthetic Model Hvit',1),('Synthetic Model Svart',0),('Synthetic Model',0)] if count==2 else [('Synthetic Model Farge 1',1),('Farge 1',1),('Synthetic Model Farge 19',19),('Synthetic Model',10)]
+            for query,index in queries:
+                expected=next(v for v in values if v['presentation_url'].endswith('farge='+str(index)))
                 field.fill(query)
                 assert card.locator('a').get_attribute('href').endswith('farge='+str(index))
-                assert card.locator('img').get_attribute('src')==values[index]['image']['url']
-                assert card.locator('.sp-card-price').inner_text()==home_money(values[index]['lowest_item_price'])
+                assert card.locator('img').get_attribute('src')==expected['image']['url']
+                assert card.locator('.sp-card-price').inner_text()==home_money(expected['lowest_item_price'])
                 assert card.locator('img').count()==1
                 page.wait_for_selector('#home-suggestions li')
                 assert page.locator('#home-suggestions li').count()==1
-                assert page.locator('#home-suggestions img').get_attribute('src')==values[index]['image']['url']
+                assert page.locator('#home-suggestions img').get_attribute('src')==expected['image']['url']
             field.fill('Synthetic Model unknowncolor')
             assert page.locator('#search-results>li:visible').count()==0
             assert not errors,errors
