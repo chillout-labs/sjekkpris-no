@@ -8,6 +8,7 @@ from home_ui import SHELL_SCRIPT, render_header_search, HOME_SEARCH_SCRIPT, rend
 from product_ui import ui_icon, PRODUCT_STYLE
 from category_catalog import category_navigation, category_href, render_category_index
 from catalogue_ui import render_listing, LISTING_STYLE
+from url_routes import product_href
 
 def page(title: str, body: str, *, base: str, noindex: bool, home: bool = False, category_nav: str = "") -> str:
     css_name = "home-" + hashlib.sha256((PRODUCT_STYLE + HOME_STYLE + LISTING_STYLE).encode()).hexdigest()[:12] + ".css"
@@ -40,7 +41,7 @@ def home_money(amount):
     return price + (' kr' if amount['currency'] == 'NOK' else ' ' + str(amount['currency']))
 
 
-def write_home(client_products, out, *, base, noindex, day, segment, categories=None):
+def write_home(client_products, out, *, base, noindex, day, segment, categories=None, url_readiness=False):
     products = client_products
     categories = categories or {}
     navigation = category_navigation(categories,base)
@@ -50,14 +51,15 @@ def write_home(client_products, out, *, base, noindex, day, segment, categories=
     (out / css_name).write_text(css, encoding='utf-8')
     body = render_home(products, base=base, money=home_money, day=day, segment=segment, category_links=[(n['name'],category_href(n,base)) for n in sorted(categories.values(),key=lambda n:n['name']) if n['parent'] is None])
     (out / 'index.html').write_text(page('SjekkPris – sammenlign priser', body, base=base, noindex=noindex, home=True, category_nav=navigation), encoding='utf-8')
-    index = [{'name':p.get('local_name') or p['local_slug'], 'url':f"{base}p/{segment(p['namespace'])}/{segment(p['local_slug'])}/", 'price':home_money(p.get('lowest_item_price'))} for p in products]
+    index = [{'name':p.get('local_name') or p['local_slug'], 'url':product_href(p,base), 'price':home_money(p.get('lowest_item_price'))} for p in products]
     (out / 'search-index.json').write_text(json.dumps(index), encoding='utf-8')
     body = render_listing(products, base=base, money=home_money, day=day, segment=segment)
-    (out / 'search').mkdir(exist_ok=True)
-    (out / 'search' / 'index.html').write_text(page('Søk – SjekkPris',body,base=base,noindex=True,category_nav=navigation),encoding='utf-8')
+    search = out / ('sok' if url_readiness else 'search')
+    search.mkdir(exist_ok=True)
+    (search / 'index.html').write_text(page('Søk – SjekkPris',body,base=base,noindex=True,category_nav=navigation),encoding='utf-8')
 
-    if categories:
-        target = out / 'kategori'
+    if categories or url_readiness:
+        target = out / ('k' if url_readiness else 'kategori')
         target.mkdir(exist_ok=True)
         (target / 'index.html').write_text(page('Kategorier – SjekkPris', render_category_index(categories,base), base=base, noindex=True, category_nav=navigation), encoding='utf-8')
         for node in categories.values():

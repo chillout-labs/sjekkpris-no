@@ -47,6 +47,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from category_catalog import category_index, category_navigation, category_links
+from url_routes import RouteRegistry, RouteError, finalize_readiness
 from catalogue_media import image_markup, category_markup
 from product_ui import PRODUCT_STYLE, PRICE_MODE_SCRIPT, ui_icon
 from home_ui import SHELL_SCRIPT, render_header_search, HOME_SEARCH_SCRIPT, HOME_STYLE, render_home, render_not_found
@@ -117,8 +118,10 @@ class Chillout:
             raise BuildError(f"{path} could not be reached ({exc.reason})") from None
 
 
-def catalogue(client: Chillout) -> list[dict]:
+def catalogue(client: Chillout, *, verify_property=False) -> list[dict]:
     body = client.get(f"/api/v1/properties/{PROPERTY}/catalogue?locale=nb")
+    if verify_property and body.get('property_id') != PROPERTY:
+        raise RouteError('Catalogue response belongs to a different or missing Property')
     return list(body.get("products") or [])
 
 
@@ -1677,7 +1680,12 @@ def normalise_base(value: str) -> str:
     return "/" if value == "//" else value
 
 
-def build(client: Chillout, out: Path, *, base: str, noindex: bool) -> int:
+def build(client: Chillout, out: Path, *, base: str, noindex: bool, routes=None) -> int:
+    # A failed retry must not leave a previous success's edge plan beside a
+    # partial/new artifact. This file belongs exclusively to this output path.
+    out.with_name(out.name + '.redirects.json').unlink(missing_ok=True)
+    if routes is not None and not noindex:
+        raise BuildError('URL readiness requires beta noindex; cutover is not authorized')
     if out.exists():
         shutil.rmtree(out)
     out.mkdir(parents=True)
@@ -1689,17 +1697,31 @@ def build(client: Chillout, out: Path, *, base: str, noindex: bool) -> int:
     css_name = "style-" + hashlib.sha256((STYLE + PRODUCT_STYLE + HOME_STYLE).encode()).hexdigest()[:12] + ".css"
     shutil.copyfile(out / "style.css", out / css_name)
 
-    products = catalogue(client)
-    categories = category_index(products)
+    products = catalogue(client, verify_property=routes is not None)
+    comparisons = {}
+    if routes is not None:
+        bound = []
+        seen_paths = set()
+        for product in products:
+            key = (segment(product['namespace']), segment(product['local_slug']))
+            body = comparison(client, *key)
+            resolved = routes.bind_product(product, body)
+            if resolved['_public_path'] in seen_paths:
+                raise RouteError('Multiple catalogue records resolve to one canonical product page')
+            seen_paths.add(resolved['_public_path'])
+            comparisons[key] = body
+            bound.append(resolved)
+        products = bound
+    categories = category_index(products, registry=routes)
     navigation = category_navigation(categories, base)
 
     from home_release import write_home
-    write_home(products, out, base=base, noindex=noindex, day=day, segment=segment, categories=categories)
+    write_home(products, out, base=base, noindex=noindex, day=day, segment=segment, categories=categories, url_readiness=routes is not None)
 
     for product in products:
         ns, slug = segment(product["namespace"]), segment(product["local_slug"])
-        body = comparison(client, ns, slug)
-        target = out / "p" / ns / slug
+        body = comparisons[(ns, slug)] if routes else comparison(client, ns, slug)
+        target = out / product['_public_path'].strip('/') if routes else out / "p" / ns / slug
         target.mkdir(parents=True, exist_ok=True)
         title = f"{product.get('local_name') or slug} – SjekkPris.no"
         (target / "index.html").write_text(
@@ -1711,12 +1733,21 @@ def build(client: Chillout, out: Path, *, base: str, noindex: bool) -> int:
              noindex=True),
         encoding="utf-8",
     )
+    if routes is not None:
+        old_products = {f'/p/{p["namespace"]}/{p["local_slug"]}/': p['_public_path'] for p in products}
+        # Historical category paths require explicit, evidenced registry aliases.
+        # Today's translated label cannot prove who owned an old public URL.
+        plan = finalize_readiness(out, routes, base, old_products)
+        # Outside the served artifact: an edge plan is not a live redirect.
+        out.with_name(out.name + '.redirects.json').write_text(json.dumps(plan, indent=2), encoding='utf-8')
     return len(products)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--out", default="_site")
+    parser.add_argument("--url-registry", help="Private ADR-039 v1 frozen route snapshot; offline readiness only")
+    parser.add_argument("--previous-url-registry", help="Previous snapshot for frozen route/reservation validation")
     args = parser.parse_args(argv)
     base = normalise_base(os.environ.get("BASE_PATH", "/"))
     noindex = os.environ.get("ROBOTS_NOINDEX", "1") != "0"
@@ -1724,8 +1755,15 @@ def main(argv: list[str] | None = None) -> int:
         client = Chillout(
             os.environ.get("CHILLOUT_ORIGIN", ""), os.environ.get("CHILLOUT_READ_KEY", "")
         )
-        count = build(client, Path(args.out), base=base, noindex=noindex)
-    except BuildError as exc:
+        routes = None
+        if args.previous_url_registry and not args.url_registry:
+            raise BuildError('--previous-url-registry requires --url-registry')
+        if args.url_registry:
+            snapshot = json.loads(Path(args.url_registry).read_text(encoding='utf-8'))
+            previous = json.loads(Path(args.previous_url_registry).read_text(encoding='utf-8')) if args.previous_url_registry else None
+            routes = RouteRegistry(snapshot, previous)
+        count = build(client, Path(args.out), base=base, noindex=noindex, routes=routes)
+    except (BuildError, RouteError) as exc:
         print(f"build failed: {exc}", file=sys.stderr)
         return 1
     print(f"built {count} product page(s) at base {base} with {client.requests} request(s)")

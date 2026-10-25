@@ -1,0 +1,129 @@
+{
+  "checked_date": "2026-10-23",
+  "scope": "Five explicit existing URLs; no clickouts followed; not a full crawl or legacy migration audit",
+  "samples": [
+    {
+      "url": "https://sjekkpris.no/",
+      "status": 200,
+      "noindex": true,
+      "canonical": null,
+      "site_links": [
+        "/",
+        "/kategori/",
+        "/kategori/baby-og-barn/",
+        "/kategori/hjem-og-hage/",
+        "/p/catalogue/alligator-lokhakker-original/",
+        "/p/catalogue/baby-brezza-bottle-washer-pro-hvit/",
+        "/p/catalogue/baby-brezza-bottle-washer-pro-svart/",
+        "/p/catalogue/baby-brezza-food-maker-deluxe/",
+        "/p/catalogue/baby-brezza-formula-pro-advanced-hvit-med-ekstra-trakt/",
+        "/p/catalogue/baby-brezza-formula-pro-advanced-slate/",
+        "/p/catalogue/baby-brezza-formula-pro-advanced-svart/",
+        "/p/catalogue/baby-brezza-formula-pro-mini/",
+        "/p/catalogue/baby-brezza-instant-warmer/",
+        "/p/catalogue/baby-brezza-safe-smart-bottle-warmer/",
+        "/p/catalogue/baby-brezza-sterilizer-dryer-advanced-hvit/",
+        "/p/catalogue/baby-brezza-sterilizer-dryer-advanced-svart/",
+        "/p/catalogue/baby-brezza-superfast-portable-bottle-warmer/",
+        "/p/catalogue/baby-brezza-superfast-sterilizer-dryer/",
+        "/p/catalogue/baby-brezza-superquick-sterilizer-dryer-steel/",
+        "/p/catalogue/baby-brezza-superquick-sterilizer-dryer-svart/",
+        "/search/"
+      ]
+    },
+    {
+      "url": "https://sjekkpris.no/beta/designoversikt/",
+      "status": 200,
+      "noindex": true,
+      "canonical": null,
+      "site_links": [
+        "/beta/",
+        "/beta/behovssok/",
+        "/beta/butikker/",
+        "/beta/butikker/babybrezza/",
+        "/beta/design-states/",
+        "/beta/designoversikt/",
+        "/beta/favoritter/",
+        "/beta/guide/velg-tv/",
+        "/beta/guider/",
+        "/beta/kategori/",
+        "/beta/kategori/tv/",
+        "/beta/kategori/tv/led/",
+        "/beta/kategori/tv/oled/",
+        "/beta/kontakt/",
+        "/beta/konto/",
+        "/beta/korteksempler/",
+        "/beta/merker/",
+        "/beta/om/",
+        "/beta/p/catalogue/demo-mange-tilbud/",
+        "/beta/p/catalogue/demo-tv-2/",
+        "/beta/p/catalogue/demo-tv-6/",
+        "/beta/personvern/",
+        "/beta/prisvarsler/",
+        "/beta/produkttyper/",
+        "/beta/sammenlign/",
+        "/beta/search/",
+        "/beta/slik-fungerer-det/",
+        "/beta/spor/"
+      ]
+    },
+    {
+      "url": "https://sjekkpris.no/p/catalogue/alligator-lokhakker-original/",
+      "status": 200,
+      "noindex": true,
+      "canonical": null,
+      "site_links": [
+        "/",
+        "/kategori/",
+        "/kategori/baby-og-barn/",
+        "/kategori/hjem-og-hage/",
+        "/kategori/kjokken-og-spiserom/",
+        "/kategori/kjokkenverktoy-og-bestikk/",
+        "/kategori/manuelle-gronnsakshakkere-og-terningkuttere/",
+        "/search/"
+      ]
+    },
+    {
+      "url": "https://sjekkpris.no/kategori/hjem-og-hage/",
+      "status": 200,
+      "noindex": true,
+      "canonical": null,
+      "site_links": [
+        "/",
+        "/kategori/",
+        "/kategori/baby-og-barn/",
+        "/kategori/hjem-og-hage/",
+        "/kategori/kjokken-og-spiserom/",
+        "/p/catalogue/alligator-lokhakker-original/",
+        "/search/"
+      ]
+    },
+    {
+      "url": "https://sjekkpris.no/beta/guide/velg-tv/",
+      "status": 200,
+      "noindex": true,
+      "canonical": null,
+      "site_links": [
+        "/beta/",
+        "/beta/butikker/",
+        "/beta/butikker/babybrezza/",
+        "/beta/design-states/",
+        "/beta/designoversikt/",
+        "/beta/guide/velg-tv/",
+        "/beta/guider/",
+        "/beta/kategori/",
+        "/beta/kategori/tv/",
+        "/beta/kontakt/",
+        "/beta/konto/",
+        "/beta/merker/",
+        "/beta/om/",
+        "/beta/p/catalogue/demo-mange-tilbud/",
+        "/beta/personvern/",
+        "/beta/produkttyper/",
+        "/beta/search/",
+        "/beta/slik-fungerer-det/",
+        "/beta/spor/"
+      ]
+    }
+  ]
+}

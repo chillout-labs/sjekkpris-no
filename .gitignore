@@ -2,3 +2,7 @@ _site/
 __pycache__/
 *.pyc
 .env
+.design-preview/
+_beta_test/
+_url-readiness/
+_url-readiness.redirects.json
