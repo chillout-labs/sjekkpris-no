@@ -21,10 +21,15 @@ def events_markup() -> str:
     } catch (_) { return null; }
   }
   const current = productPath(location.href);
-  if (current) {
-    track("view_item",Object.assign({item_name:
-      document.getElementById("product-title")?.textContent?.trim() || ""},current));
+  let viewTracked = false;
+  function viewItem() {
+    if (!current || !consented() || viewTracked) return;
+    viewTracked = true;
+    track("view_item",{items:[{item_id:current.product_namespace+"/"+current.product_slug,
+      item_name:document.getElementById("product-title")?.textContent?.trim() || ""}]});
   }
+  viewItem();
+  document.addEventListener("sp-analytics-enabled",viewItem);
   document.addEventListener("submit",function(e) {
     const form = e.target;
     if (!(form instanceof HTMLFormElement) || !form.matches(
@@ -53,10 +58,11 @@ def events_markup() -> str:
     const card = target.closest('.sp-product-card a[href]');
     if (card) {
       const item=productPath(card.href);
-      if (item) track("select_item",Object.assign({
-        item_name:card.querySelector("h3")?.textContent?.trim() || "",
-        item_list_name:document.querySelector(".sp-listing") ? "catalogue" : "homepage"
-      },item));
+      if (item) track("select_item",{
+        item_list_name:document.querySelector(".sp-listing") ? "catalogue" : "homepage",
+        items:[{item_id:item.product_namespace+"/"+item.product_slug,
+          item_name:card.querySelector("h3")?.textContent?.trim() || ""}]
+      });
     }
   },true);
 })();
