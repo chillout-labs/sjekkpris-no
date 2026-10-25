@@ -45,6 +45,7 @@ def body_markup() -> str:
     try{{localStorage.setItem(key,v);}}catch(e){{}}
     dialog.hidden=true;
     if(v==="accepted")loadGtm();
+    else if(loaded)window.location.reload();
   }}
   dialog.querySelector('[data-choice="accept"]').addEventListener("click",function(){{update("accepted");}});
   dialog.querySelector('[data-choice="reject"]').addEventListener("click",function(){{update("rejected");}});
