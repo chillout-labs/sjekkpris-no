@@ -22,4 +22,4 @@ jobs:
           python -m unittest discover -s tests -p test_model_preview.py -v
           python tools/check_model_preview.py --out /tmp/sjekkpris-model-proof --axe /tmp/sjekkpris-a11y/node_modules/axe-core/axe.min.js
           python -m unittest discover -s tests -p test_variant_discovery.py -v
-          python tools/check_variant_discovery.py
+          python tools/check_variant_discovery.py --axe /tmp/sjekkpris-a11y/node_modules/axe-core/axe.min.js
