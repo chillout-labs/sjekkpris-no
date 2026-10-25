@@ -74,6 +74,7 @@ class ModelPreviewTests(unittest.TestCase):
 
     def test_f08_expired_inactive_or_overlong_review_refused(self):
         for change in ({"active": False}, {"expires_at": (datetime.now(timezone.utc)-timedelta(hours=1)).isoformat()},
+                       {"observed_at": (datetime.now(timezone.utc)+timedelta(minutes=5)).isoformat()},
                        {"expires_at": (datetime.now(timezone.utc)+timedelta(days=3)).isoformat()}):
             with self.subTest(change=change):
                 self.doc = fixture() | change
@@ -88,6 +89,7 @@ class ModelPreviewTests(unittest.TestCase):
 
     def test_f10_mixed_revision_and_missing_or_duplicate_member_refused(self):
         for mutate in (lambda d: d["snapshots"][1]["value"]["source"].update(revision=2),
+                       lambda d: d["snapshots"][1]["value"]["specification"].update(revision=2),
                        lambda d: d["snapshots"].pop(),
                        lambda d: d["snapshots"].__setitem__(1, copy.deepcopy(d["snapshots"][0]))):
             with self.subTest(mutate=mutate):
