@@ -29,6 +29,7 @@ Truthfulness rules this file follows, because the platform's data carries them:
 """
 
 from __future__ import annotations
+from analytics_consent import head_markup as gtm_head_markup, body_markup as gtm_body_markup, footer_link as gtm_footer_link
 
 import hashlib
 import argparse
@@ -181,7 +182,7 @@ def page(title: str, body: str, *, base: str, noindex: bool, home: bool = False,
 <html lang="nb"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">{robots}<title>{e(title)}</title>
-<link rel="stylesheet" href="{e(base)}{css_name}"></head><body class="{body_class}">
+<link rel="stylesheet" href="{e(base)}{css_name}">{gtm_head_markup()}</head><body class="{body_class}">
 <a class="sp-skip" href="#main">Hopp til innhold</a>
 <header class="sp-header"><div class="sp-shell sp-topbar">
 <a class="sp-brand" href="{e(base)}" aria-label="SjekkPris – forsiden"><span>S</span>jekkPris</a>
@@ -190,8 +191,8 @@ def page(title: str, body: str, *, base: str, noindex: bool, home: bool = False,
 <details class="sp-menu"><summary>{ui_icon('menu')}<span>Meny</span></summary>
 <nav aria-label="Hovedmeny"><a href="{e(base)}">Alle produkter</a><a href="{e(base)}search/">Søk etter produkter</a><a href="{e(base)}kategori/">Utforsk kategorier</a></nav></details>
 </div>{category_nav}</header><main id="main" class="sp-shell">{body}</main>
-<footer class="sp-footer"><div class="sp-shell"><strong>SjekkPris</strong><p>Uavhengig prissammenligning. Du handler hos butikken.</p><p>Vi kan motta provisjon når du handler via lenkene våre. Beta – innholdet er under utvikling.</p></div></footer>
-{search_script}</body></html>"""
+<footer class="sp-footer"><div class="sp-shell"><strong>SjekkPris</strong><p>Uavhengig prissammenligning. Du handler hos butikken.</p><p>Vi kan motta provisjon når du handler via lenkene våre. Beta – innholdet er under utvikling.</p>{gtm_footer_link()}</div></footer>
+{search_script}{gtm_body_markup()}</body></html>"""
 
 
 def index_body(products: list[dict], *, base: str) -> str:
