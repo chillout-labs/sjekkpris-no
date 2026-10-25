@@ -1,5 +1,6 @@
-from analytics_consent import head_markup as gtm_head_markup, body_markup as gtm_body_markup, footer_link as gtm_footer_link
 """Homepage-only release. Existing product rendering stays unchanged."""
+from analytics_consent import head_markup as gtm_head_markup, body_markup as gtm_body_markup, footer_link as gtm_footer_link
+
 from html import escape as e
 import json
 import hashlib
