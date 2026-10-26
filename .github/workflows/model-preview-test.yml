@@ -1,7 +1,7 @@
 name: Private model preview tests (synthetic, no deploy)
 on:
   pull_request:
-    paths: ['tools/model_preview.py', 'tools/check_model_preview.py', 'tests/*model_preview*', '.github/workflows/model-preview-test.yml']
+    paths: ['tools/model_preview.py', 'tools/check_model_preview.py', 'tools/check_variant_discovery.py', 'tests/*model_preview*', 'tests/test_variant_discovery.py', 'home_ui.py', 'home_release.py', 'catalogue_ui.py', 'rich_ui.py', '.github/workflows/model-preview-test.yml']
 permissions:
   contents: read
 jobs:
@@ -21,3 +21,5 @@ jobs:
         run: |
           python -m unittest discover -s tests -p test_model_preview.py -v
           python tools/check_model_preview.py --out /tmp/sjekkpris-model-proof --axe /tmp/sjekkpris-a11y/node_modules/axe-core/axe.min.js
+          python -m unittest discover -s tests -p test_variant_discovery.py -v
+          python tools/check_variant_discovery.py --axe /tmp/sjekkpris-a11y/node_modules/axe-core/axe.min.js

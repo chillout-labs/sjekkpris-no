@@ -1,6 +1,6 @@
 """Shared search/category presentation. Input is a product view model, not offers."""
 from html import escape as e
-from home_ui import render_product_card
+from home_ui import render_product_card, VARIANT_SEARCH_SCRIPT
 
 
 def render_listing(products, *, base, money, day, segment, title='Søk etter produkter', category=False, breadcrumbs=(), children=(), facets=(), facet_values=None, card_attributes=None):
@@ -44,6 +44,7 @@ def render_listing(products, *, base, money, day, segment, title='Søk etter pro
 
 LISTING_SCRIPT = r"""
 (()=>{
+""" + VARIANT_SEARCH_SCRIPT + r"""
  const root=document.querySelector('.sp-listing'); if(!root)return;
  const form=document.querySelector('.sp-search'), input=form.querySelector('input');
  const grid=document.getElementById('search-results'), rows=Array.from(grid.children);
@@ -61,8 +62,19 @@ LISTING_SCRIPT = r"""
    priceHelp.hidden=!invalid;priceHelp.textContent=invalid?'Minsteprisen er høyere enn maksprisen. Juster ett av beløpene.':'';
    [min,max].forEach(el=>el.setAttribute('aria-invalid',String(invalid)));
    rows.forEach(row=>{
+     const matches=name=>normalizeSearch(name).includes(normalizeSearch(q));
+     const options=row.dataset.variantOptions ? JSON.parse(row.dataset.variantOptions) : null;
+     const chosen=options ? chooseSearchVariant(options,q) : null;
+     if(chosen && row.dataset.selectedVariant!==chosen.url){
+       const template=document.createElement('template');template.innerHTML=chosen.html;
+       const replacement=template.content.firstElementChild;
+       row.replaceChildren(...replacement.childNodes);
+       ['name','price','brand'].forEach(k=>row.dataset[k]=replacement.dataset[k]);
+       row.dataset.selectedVariant=chosen.url;
+     }
+     row.dataset.queryMatch=String(options ? Boolean(chosen) : matches(row.dataset.name));
      const price=row.dataset.price===''?Infinity:Number(row.dataset.price);
-     row.hidden=facetGroups.some(group=>{const selected=group.filter(el=>el.checked);return selected.length&&!selected.some(el=>row.getAttribute('data-facet-'+el.dataset.facet)===el.value);})||!row.dataset.name.toLocaleLowerCase('nb').includes(q)||(brand&&brand.value&&row.dataset.brand!==brand.value)||(Number.isFinite(limit)&&price>limit)||price<minimum||(minimum>0&&!Number.isFinite(price));
+     row.hidden=facetGroups.some(group=>{const selected=group.filter(el=>el.checked);return selected.length&&!selected.some(el=>row.getAttribute('data-facet-'+el.dataset.facet)===el.value);})||row.dataset.queryMatch!=='true'||(brand&&brand.value&&row.dataset.brand!==brand.value)||(Number.isFinite(limit)&&price>limit)||price<minimum||(minimum>0&&!Number.isFinite(price));
      if(!row.hidden)n++;
    });
    [...rows].sort((a,b)=>{
@@ -81,7 +93,7 @@ LISTING_SCRIPT = r"""
    const selected=[[brand,brand?.value],[min,min.value?'Fra '+min.value+' kr':''],[max,max.value?'Til '+max.value+' kr':''],...facets.map(el=>[el,el.checked?el.dataset.label+': '+el.dataset.optionLabel:''])].filter(([el,label])=>label);
    document.getElementById('filter-count').textContent=selected.length||'';
    activeAreas.forEach(active=>selected.forEach(([el,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label+' ×';b.setAttribute('aria-label','Fjern filter: '+label);b.addEventListener('click',()=>{if(el.type==='checkbox')el.checked=false;else el.value='';filter();if(dialog.open)el.focus();else document.getElementById('listing-sort').focus();});active.appendChild(b);}));
-   const queryMatches=rows.filter(row=>row.dataset.name.toLocaleLowerCase('nb').includes(q)).length;
+   const queryMatches=rows.filter(row=>row.dataset.queryMatch==='true').length;
    const clearFilters=document.getElementById('listing-clear-filters');
    clearFilters.hidden=!(queryMatches&&selected.length);
    clearFilters.textContent='Fjern filtrene – vis '+queryMatches+' '+(queryMatches===1?'produkt':'produkter');
