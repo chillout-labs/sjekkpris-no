@@ -1,39 +1,46 @@
 name: Product preview (no deploy)
+
+# Diagnostic branch only. No product payload, artifact or website is produced.
 on:
-  push:
-    branches: [frontend-v1-design]
-    paths: ['.github/workflows/product-preview.yml', 'build.py', 'product_ui.py', 'home_ui.py', 'home_release.py', 'assets/**', 'catalogue_media.py', 'tools/capture_products.py']
   workflow_dispatch: {}
 permissions:
   contents: read
 jobs:
-  preview:
+  reader-authentication:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
-      - name: Build real catalogue
+      - name: Check existing machine authentication without exporting data
         env:
           CHILLOUT_ORIGIN: ${{ vars.CHILLOUT_ORIGIN }}
           CHILLOUT_READ_KEY: ${{ secrets.CHILLOUT_READ_KEY }}
-          BASE_PATH: /
-          ROBOTS_NOINDEX: '1'
-        run: python build.py --out _preview
-      - name: Check generated output
-        env:
-          CHILLOUT_ORIGIN: ${{ vars.CHILLOUT_ORIGIN }}
-          CHILLOUT_READ_KEY: ${{ secrets.CHILLOUT_READ_KEY }}
-        run: python check_output.py _preview
-      - name: Install visual review browser
         run: |
-          python -m pip install playwright==1.58.0
-          python -m playwright install --with-deps chromium
-      - name: Capture real product pages
-        run: python tools/capture_products.py
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9
-        with:
-          name: product-preview
-          path: _preview
-          retention-days: 7
+          python - <<'PY'
+          import os
+          import sys
+          import urllib.request
+          from build import Chillout
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, *args, **kwargs):
+                  return None
+
+          try:
+              origin = os.environ.get('CHILLOUT_ORIGIN', '')
+              if origin != 'https://backoffice-test-d71d.up.railway.app':
+                  raise ValueError('unreviewed source')
+              urllib.request.install_opener(urllib.request.build_opener(NoRedirect))
+              client = Chillout(origin, os.environ.get('CHILLOUT_READ_KEY', ''))
+              value = client.get('/api/v1/properties/sjekkpris-no/catalogue?locale=nb')
+              if value.get('property_id') != 'sjekkpris-no' or not isinstance(value.get('products'), list):
+                  raise ValueError('invalid property response')
+              del value, client
+          except Exception:
+              print('Machine-reader authentication probe refused; no source data exported.', file=sys.stderr)
+              sys.exit(1)
+          print('Machine-reader property read succeeded; no source data exported.')
+          PY
