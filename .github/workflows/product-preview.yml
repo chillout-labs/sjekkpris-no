@@ -1,46 +1,30 @@
 name: Product preview (no deploy)
-
-# Diagnostic branch only. No product payload, artifact or website is produced.
+# Branch-only encrypted source observation. No pages, grants or public plaintext.
 on:
   workflow_dispatch: {}
 permissions:
   contents: read
 jobs:
-  reader-authentication:
+  encrypted-source:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
-      - name: Check existing machine authentication without exporting data
+      - name: Existing age transport tool
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq age
+      - name: Synthetic source-isolation tests
+        run: python -m unittest tests.test_private_source_export -q
+      - name: One approved encrypted source read
         env:
           CHILLOUT_ORIGIN: ${{ vars.CHILLOUT_ORIGIN }}
           CHILLOUT_READ_KEY: ${{ secrets.CHILLOUT_READ_KEY }}
-        run: |
-          python - <<'PY'
-          import os
-          import sys
-          import urllib.request
-          from build import Chillout
-
-          class NoRedirect(urllib.request.HTTPRedirectHandler):
-              def redirect_request(self, *args, **kwargs):
-                  return None
-
-          try:
-              origin = os.environ.get('CHILLOUT_ORIGIN', '')
-              if origin != 'https://backoffice-test-d71d.up.railway.app':
-                  raise ValueError('unreviewed source')
-              urllib.request.install_opener(urllib.request.build_opener(NoRedirect))
-              client = Chillout(origin, os.environ.get('CHILLOUT_READ_KEY', ''))
-              value = client.get('/api/v1/properties/sjekkpris-no/catalogue?locale=nb')
-              if value.get('property_id') != 'sjekkpris-no' or not isinstance(value.get('products'), list):
-                  raise ValueError('invalid property response')
-              del value, client
-          except Exception:
-              print('Machine-reader authentication probe refused; no source data exported.', file=sys.stderr)
-              sys.exit(1)
-          print('Machine-reader property read succeeded; no source data exported.')
-          PY
+        run: python tools/private_source_export.py --recipient tools/private-source-recipient.txt --out private-source.age
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: encrypted-private-source
+          path: private-source.age
+          retention-days: 1
+          if-no-files-found: error
