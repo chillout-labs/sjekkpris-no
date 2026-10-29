@@ -19,12 +19,21 @@ concurrency:
 
 jobs:
   test:
+    outputs:
+      operational: ${{ steps.changes.outputs.operational }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
+      - name: Classify complete event diff
+        id: changes
+        run: python .github/scripts/site_changes.py
+      - name: Test operational change guard
+        run: python -m unittest discover -s .github/scripts -p "test_*.py" -v
       - run: pip install Pillow==11.3.0
       - name: Validate beta preview packaging
         run: |
@@ -35,7 +44,7 @@ jobs:
       - run: python -m unittest discover -s tests -v
 
   build:
-    if: github.event_name != 'pull_request'
+    if: needs.test.outputs.operational == 'true'
     needs: test
     runs-on: ubuntu-latest
     steps:
