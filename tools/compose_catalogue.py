@@ -5,6 +5,7 @@ import shutil
 from urllib.parse import urljoin, urlsplit
 
 from delivery_candidate import ORIGIN, preservation
+from beta_navigation import PLAN, adjust
 
 
 def catalogue(name):
@@ -71,4 +72,11 @@ def compose(core, baseline, baseline_site, received_site, output, scope, retirem
         dest = output / name
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, dest)
+    # Apply only the separately approved, exact before/after link correction.
+    name = PLAN['before']['path']
+    if retirement and old.get(name) == PLAN['before']:
+        retired_routes = {'/' + row['path'].removesuffix('index.html')
+                          for row in retirement['files']}
+        path = output / name
+        path.write_bytes(adjust(path.read_bytes(), retired_routes))
     return set(aliases)

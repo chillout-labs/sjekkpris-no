@@ -272,3 +272,41 @@ route mapping and the test-catalogue exception belong only to SjekkPris. The
 observed cause and regression live here and in #41/#304, without a new register
 or promotion of an AI-authored policy. Fresh runtime authority/source checks and
 private-to-Pages transport remain separate release work, as documented above.
+
+## 2026-10-30 — approved beta navigation correction
+
+VEDTATT: owner explicitly approves changing the 24 links on the single affected
+beta page to existing catalogue navigation while retaining design/content. This
+supersedes the preceding byte-preservation requirement only for those href values;
+all other protected bytes remain protected. No merge/deploy/publication approved.
+
+IMPLEMENTERT: `beta-navigation-adjustment.json` records the exact public page,
+original/output bytes and SHA-256, 12 source URLs, 24 occurrences and `/k/` target.
+Composition applies the correction only to a staging copy of that exact baseline,
+only when the reviewed retirement includes all referenced product routes. The
+original baseline/rollback archive is unchanged. Preservation accepts only this
+specific before/after descriptor pair; arbitrary beta changes still refuse. The
+private review report records the adjustment. No new input flag, workflow, rights,
+renderer or generic beta rewrite mechanism is introduced. This is a one-time
+website correction for the approved test catalogue, not a Core URL exception.
+
+The replacement operates on exact href bytes, preserving visible text, images,
+styles, structure and all other markup. It keeps beta noindex and does not index
+its old demonstration content. Future catalogue groups use the same existing
+composition; a baseline already containing the approved result needs no rewrite.
+
+Learning: an approved exception to preservation should be a reproducible exact
+before/after change, not a directory-wide waiver. Four focused regressions cover
+link-only output, changed baseline, absent retirement, incorrect count/output and
+one-way descriptor authorization. Existing catalogue/composition tests are reused.
+The earlier observed beta blocker is resolved only when this exact adjustment and
+the complete composed-site checks pass. Real product qualification, source freshness,
+private transfer/release authority and public acceptance remain separate gates.
+
+OBSERVERT validation: 26 focused local tests pass (4 link-adjustment, 14 existing
+candidate, 8 composition). Integration using the original receiver, unchanged #304,
+the actual reconstructed 128-file baseline and SYNTHETIC product catalogue passes
+in both SEO modes: exactly 16 removals, 85 byte-identical beta files, one exact
+24-link-only change, intact internal links, final-hash staging and wrong-hash refusal.
+No real Toalson qualification or visual/public release acceptance is claimed.
+One normal PR CI run follows push; unchanged Core/workflow checks are not rerun.

@@ -7,6 +7,7 @@ import sys
 import tarfile
 import tempfile
 from compose_catalogue import compose, catalogue
+from beta_navigation import PLAN
 
 from delivery_candidate import prepare, preservation
 
@@ -79,6 +80,8 @@ def main():
     report = core.compare(baseline, candidate)
     report.update(received_tree_sha256=received['tree_sha256'], receipt=receipt, website=website)
     report['navigation_aliases'] = sorted(aliases)
+    report['beta_navigation_adjustment'] = (PLAN if PLAN['before'] in baseline['files']
+                                            and PLAN['after'] in candidate['files'] else None)
     report['retirement_sha256'] = args.retirement_sha256
     if args.pages_site:
         report['pages_staging'] = core.stage(args.site, args.pages_site, scope,

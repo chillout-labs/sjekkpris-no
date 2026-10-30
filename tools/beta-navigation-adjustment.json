@@ -1,0 +1,29 @@
+{
+  "version": "sjekkpris.beta-navigation-adjustment.v1",
+  "before": {
+    "path": "beta/butikker/babybrezza/index.html",
+    "bytes": 41853,
+    "sha256": "99f858171d51ee09adda8e57429692f1efa88aadccb2f8c5dde0ba92171bef49"
+  },
+  "after": {
+    "path": "beta/butikker/babybrezza/index.html",
+    "bytes": 40215,
+    "sha256": "3a22731dbd286178a620f1786ef248a9351150fca0b350c31a6169794367765f"
+  },
+  "target": "/k/",
+  "count": 24,
+  "links": [
+    "https://sjekkpris.no/p/catalogue/baby-brezza-bottle-washer-pro-hvit/",
+    "https://sjekkpris.no/p/catalogue/baby-brezza-bottle-washer-pro-svart/",
+    "https://sjekkpris.no/p/catalogue/baby-brezza-food-maker-deluxe/",
+    "https://sjekkpris.no/p/catalogue/baby-brezza-formula-pro-advanced-hvit-med-ekstra-trakt/",
+    "https://sjekkpris.no/p/catalogue/baby-brezza-formula-pro-advanced-slate/",
+    "https://sjekkpris.no/p/catalogue/baby-brezza-formula-pro-advanced-svart/",
+    "https://sjekkpris.no/p/catalogue/baby-brezza-formula-pro-mini/",
+    "https://sjekkpris.no/p/catalogue/baby-brezza-instant-warmer/",
+    "https://sjekkpris.no/p/catalogue/baby-brezza-safe-smart-bottle-warmer/",
+    "https://sjekkpris.no/p/catalogue/baby-brezza-sterilizer-dryer-advanced-hvit/",
+    "https://sjekkpris.no/p/catalogue/baby-brezza-sterilizer-dryer-advanced-svart/",
+    "https://sjekkpris.no/p/catalogue/baby-brezza-superfast-portable-bottle-warmer/"
+  ]
+}

@@ -12,6 +12,10 @@ import json
 from pathlib import Path
 import re
 import sys
+try:
+    from .beta_navigation import approved_change
+except ImportError:
+    from beta_navigation import approved_change
 from urllib.parse import urlsplit, urljoin, unquote
 from xml.sax.saxutils import escape
 
@@ -218,7 +222,7 @@ def preservation(baseline, candidate, retirement=None, *, navigation_aliases=())
     changed_protected = [p for p in old if p not in mutable
                          and not (p.startswith(('p/', 'k/', 'kategori/', 'sok/'))
                                   and p.endswith('/index.html'))]
-    if any(old[p] != new[p] for p in changed_protected):
+    if any(old[p] != new[p] and not approved_change(old[p], new[p]) for p in changed_protected):
         raise ValueError('existing design or beta changed')
 
 
