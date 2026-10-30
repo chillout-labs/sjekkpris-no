@@ -214,3 +214,61 @@ register. No AI-authored policy promoted; no merge/deploy/publication performed.
 
 Companion Core pin for staging: `e0cadebd2b1ebde941969ded3da7f7323250e568`
 (#304). Original receiver pin and implementation hash are unchanged.
+
+## 2026-10-30 — bounded catalogue composition and remaining beta conflict
+
+VEDTATT: owner permits up to USD 5 additional necessary CI for #304/#41 and
+catalogue composition in this Draft, retaining the reconstructed served beta.
+No merge, deploy, rights, product approval or publication is authorized.
+
+IMPLEMENTERT: `review_delivery.py` now requires `--baseline-site DIRECTORY` in
+addition to the independently hashed inventory. #304 verifies every baseline file
+and receives the bundle with the original receiver. `compose_catalogue.py` selects
+received catalogue surfaces into a separate temporary candidate; it never renders,
+fetches, changes identities, qualifies products or supplies authority. Received
+beta is discarded; baseline beta, informational pages and existing assets remain
+byte-identical. Conflicting protected assets referenced by new pages refuse.
+The original receiver receipt and received hash remain distinct from the final
+composed hash. Only a fully checked candidate is moved to the requested new path.
+
+Existing `/search/` serves the received search page. Existing `/kategori/` routes
+serve the received category navigation, remain noindex and outside sitemap; they
+do not retain test-product listings or invent taxonomy. All anchors still must
+resolve. Missing real product/category paths refuse unless explicitly covered by
+the existing reviewed test-product retirement contract. No Toalson-specific code.
+The same composition supports subsequent product groups without a retirement plan.
+The public Actions artifact now additionally needs SYNTHETIC `baseline-site/`.
+Private real input, receipts and baseline artifacts must not be uploaded there.
+The exact Core pin and disconnected Pages publication boundary remain unchanged.
+
+OBSERVERT: local tests: 14 existing candidate tests, 8 composition regressions,
+15 workflow guard tests pass. Synthetic original-receiver -> composition -> exact
+Pages-directory staging succeeds in private and indexable-candidate modes; a wrong
+final hash refuses. No full suite repeated locally. The first local test attempt
+could not write Windows temporary directories; rerun with normal temporary-file
+access passed. No external service changed.
+
+The actual reconstructed 128-file baseline exposes a REAL BLOCKER: the preserved
+`beta/butikker/babybrezza/index.html` contains 24 anchors to 12 of the 16 retired
+product routes. Strict removal plus byte-identical beta therefore cannot satisfy
+internal-link integrity. The real-baseline synthetic candidate is correctly
+REFUSED before a final candidate/staged output exists. The regression covers this
+conflict; it is not waived. The 46 differing beta files must not be overwritten
+with the private renderer's beta. No claim of a complete real candidate, mobile
+QA, fresh Toalson data or public release is made.
+
+FORSLAG/ÅPENT — owner decision: permit a narrowly reviewed link-only change to the
+one affected beta page (preserving design/content), or keep referenced test pages
+outside the real catalogue under a separately reviewed nonindexable retention
+contract. Recommend the former: point retired catalogue links to the received
+category navigation without inventing category membership. Neither option is
+implemented/authorized by this slice. Until resolved, first complete delivery
+remains blocked; do not weaken the preservation or link checks.
+
+Learning check: complete file recovery does not prove that preserved navigation
+is independent of retired catalogue content. Preserve actual bytes, then validate
+cross-surface links before staging. This prevention is reusable by other Properties;
+route mapping and the test-catalogue exception belong only to SjekkPris. The
+observed cause and regression live here and in #41/#304, without a new register
+or promotion of an AI-authored policy. Fresh runtime authority/source checks and
+private-to-Pages transport remain separate release work, as documented above.

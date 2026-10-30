@@ -191,6 +191,7 @@ jobs:
             --result-sha256 "$RESULT_SHA256" \
             --baseline "$RUNNER_TEMP/delivery-input/baseline.json" \
             --baseline-sha256 "$BASELINE_SHA256" \
+            --baseline-site "$RUNNER_TEMP/delivery-input/baseline-site" \
             --environment test --synthetic-only --site "$RUNNER_TEMP/candidate-site" \
             --report "$RUNNER_TEMP/candidate-review.json" "${extra[@]}"
       # Optional _site is hash-verified input for the existing upload-pages-artifact path.

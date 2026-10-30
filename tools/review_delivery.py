@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 import sys
 import tarfile
+import tempfile
+from compose_catalogue import compose, catalogue
 
 from delivery_candidate import prepare, preservation
 
@@ -17,6 +19,7 @@ def main():
     p.add_argument('--result-sha256', required=True)
     p.add_argument('--baseline', type=Path, required=True)
     p.add_argument('--baseline-sha256', required=True)
+    p.add_argument('--baseline-site', type=Path, required=True)
     p.add_argument('--retirement', type=Path)
     p.add_argument('--retirement-sha256')
     p.add_argument('--pages-site', type=Path)
@@ -57,14 +60,25 @@ def main():
             raise ValueError('retirement hash')
         retirement = json.loads(raw)
     baseline = core.read_inventory(args.baseline, args.baseline_sha256, scope)
-    receipt = core.receive(args.bundle, args.site, args.receiver, scope, args.result_sha256)
-    received = core.inventory(args.site, scope, args.result_sha256)
-    preservation(baseline, received, retirement)
-    website = prepare(args.site, indexable=args.indexable_candidate)
-    candidate = core.inventory(args.site, scope, args.result_sha256)
-    preservation(baseline, candidate, retirement)
+    if args.site.exists():
+        raise ValueError('candidate must be a new directory')
+    args.site.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='delivery-review-', dir=args.site.parent) as temporary:
+        received_site = Path(temporary) / 'received'
+        composed = Path(temporary) / 'composed'
+        receipt = core.receive(args.bundle, received_site, args.receiver, scope, args.result_sha256)
+        received = core.inventory(received_site, scope, args.result_sha256)
+        aliases = compose(core, baseline, args.baseline_site, received_site, composed, scope, retirement)
+        mutable = {p.relative_to(composed).as_posix() for p in composed.rglob('*.html')
+                   if catalogue(p.relative_to(composed).as_posix())} | aliases
+        website = prepare(composed, indexable=args.indexable_candidate,
+                          navigation_aliases=aliases, mutable_pages=mutable)
+        candidate = core.inventory(composed, scope, args.result_sha256)
+        preservation(baseline, candidate, retirement, navigation_aliases=aliases)
+        composed.rename(args.site)
     report = core.compare(baseline, candidate)
     report.update(received_tree_sha256=received['tree_sha256'], receipt=receipt, website=website)
+    report['navigation_aliases'] = sorted(aliases)
     report['retirement_sha256'] = args.retirement_sha256
     if args.pages_site:
         report['pages_staging'] = core.stage(args.site, args.pages_site, scope,

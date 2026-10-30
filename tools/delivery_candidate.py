@@ -52,7 +52,7 @@ def entity_path(value):
     return bool(re.fullmatch(r'/(?:p|k|kategori)/[a-zA-Z0-9_./-]+/', value))
 
 
-def inspect(site):
+def inspect(site, *, navigation_aliases=()):
     site = Path(site)
     pages = {}
     for path in site.rglob('*.html'):
@@ -62,7 +62,8 @@ def inspect(site):
             pages[route(path, site).replace('//', '/')] = Page(path.read_text('utf-8'))
     products = {p for p in pages if p.startswith('/p/')}
     categories = {p for p in pages if p.startswith(('/k/', '/kategori/'))
-                  and p not in {'/k/', '/kategori/'}}
+                  and p not in {'/k/', '/kategori/'}
+                  and p.strip('/') + '/index.html' not in navigation_aliases}
     if not products:
         raise ValueError('empty qualified catalogue')
     index = json.loads((site / 'search-index.json').read_text('utf-8'))
@@ -114,15 +115,15 @@ def inspect(site):
             if local.endswith('/'):
                 dest /= 'index.html'
             if not dest.is_file():
-                raise ValueError('broken internal link')
+                raise ValueError('broken internal link: ' + source + ' -> ' + local)
     return pages, products, {p for p, products_in_category in members.items()
                              if products_in_category}
 
 
-def prepare(site, *, indexable=False):
+def prepare(site, *, indexable=False, navigation_aliases=(), mutable_pages=None):
     """Only a staging copy may be passed here. Does not authorize indexability."""
     site = Path(site)
-    pages, products, categories = inspect(site)
+    pages, products, categories = inspect(site, navigation_aliases=navigation_aliases)
     indexable_routes = products | categories
     # Complete validation before any SEO write; never repair conflicting identity.
     for url in indexable_routes:
@@ -154,6 +155,8 @@ def prepare(site, *, indexable=False):
     if indexable:
         # Exact known renderer decoration only. Unknown private markup fails closed.
         for path in site.rglob('*.html'):
+            if mutable_pages is not None and path.relative_to(site).as_posix() not in mutable_pages:
+                continue
             original = path.read_text('utf-8')
             text = original.replace(PRIVATE_BANNER, '')
             if 'Privat forhåndsvisning' in text or 'Privat readinessbygg' in text:
@@ -182,7 +185,7 @@ def prepare(site, *, indexable=False):
                 published=None, publication_authorized=False)
 
 
-def preservation(baseline, candidate, retirement=None):
+def preservation(baseline, candidate, retirement=None, *, navigation_aliases=()):
     """Existing URLs cannot silently vanish during a full catalogue build."""
     old = {f['path']: f for f in baseline['files']}
     new = {f['path']: f for f in candidate['files']}
@@ -208,9 +211,12 @@ def preservation(baseline, candidate, retirement=None):
     if set(removed) != retired:
         raise ValueError('baseline files missing; explicit migration review required')
     # Shared catalogue surfaces may change; protected design/beta assets may not.
-    mutable = {'index.html', 'search-index.json', 'robots.txt', 'sitemap.xml'}
+    if any(p != 'search/index.html' and not (p.startswith('kategori/') and p.endswith('/index.html'))
+           for p in navigation_aliases):
+        raise ValueError('unsupported navigation alias')
+    mutable = {'index.html', 'search-index.json', 'robots.txt', 'sitemap.xml'} | set(navigation_aliases)
     changed_protected = [p for p in old if p not in mutable
-                         and not (p.startswith(('p/', 'k/', 'kategori/'))
+                         and not (p.startswith(('p/', 'k/', 'kategori/', 'sok/'))
                                   and p.endswith('/index.html'))]
     if any(old[p] != new[p] for p in changed_protected):
         raise ValueError('existing design or beta changed')
