@@ -1,0 +1,183 @@
+"""Review an existing complete Delivery site; never fetch, rebuild or publish.
+
+Core owns bundle verification and qualification. This module owns SjekkPris
+presentation checks and explicit candidate SEO. Default remains private noindex.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+from html.parser import HTMLParser
+import json
+from pathlib import Path
+import re
+import sys
+from urllib.parse import urlsplit
+from xml.sax.saxutils import escape
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from check_output import check  # noqa: E402
+
+ORIGIN = "https://sjekkpris.no"
+CLICKOUT = re.compile(r"/go/tgt_[0-9A-HJKMNP-TV-Z]{26}")
+
+
+class Page(HTMLParser):
+    def __init__(self, text):
+        super().__init__(convert_charrefs=True)
+        self.canonicals, self.robots, self.links, self.images = [], [], [], []
+        self.feed(text)
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag == 'link' and a.get('rel') == 'canonical':
+            self.canonicals.append(a.get('href'))
+        if tag == 'meta' and a.get('name', '').lower() == 'robots':
+            self.robots.append(a.get('content', ''))
+        if tag == 'a' and a.get('href'):
+            self.links.append(a)
+        if tag == 'img' and a.get('src'):
+            self.images.append(a)
+
+
+def route(path, root):
+    return '/' + path.relative_to(root).parent.as_posix().strip('.').strip('/') + '/'
+
+
+def entity_path(value):
+    return bool(re.fullmatch(r'/(?:p|k|kategori)/[a-zA-Z0-9_./-]+/', value))
+
+
+def inspect(site):
+    site = Path(site)
+    pages = {}
+    for path in site.rglob('*.html'):
+        if path.is_symlink() or path.is_junction():
+            raise ValueError('site link')
+        if path.name == 'index.html':
+            pages[route(path, site).replace('//', '/')] = Page(path.read_text('utf-8'))
+    products = {p for p in pages if p.startswith('/p/')}
+    categories = {p for p in pages if p.startswith(('/k/', '/kategori/'))
+                  and p not in {'/k/', '/kategori/'}}
+    if not products:
+        raise ValueError('empty qualified catalogue')
+    index = json.loads((site / 'search-index.json').read_text('utf-8'))
+    if not isinstance(index, list):
+        raise ValueError('search index')
+    search = set()
+    for item in index:
+        url = urlsplit(item['url'])
+        if url.scheme or url.netloc or not url.path.startswith('/p/') or url.path not in products:
+            raise ValueError('search references missing or foreign product')
+        search.add(url.path)
+    if search != products:
+        raise ValueError('product missing from search')
+    listed = {urlsplit(a['href']).path for p in categories for a in pages[p].links
+              if not urlsplit(a['href']).scheme and not urlsplit(a['href']).netloc}
+    if not products <= listed:
+        raise ValueError('product missing from category listings')
+    for product in products:
+        page = pages[product]
+        if not page.images:
+            raise ValueError('product image missing')
+        for a in page.links:
+            target = urlsplit(a['href'])
+            if target.path.startswith('/go/'):
+                if (target.scheme or target.netloc) and (
+                        target.scheme != 'https' or target.netloc != 'sjekkpris.no'):
+                    raise ValueError('foreign clickout')
+                if (not CLICKOUT.fullmatch(target.path) or target.query or target.fragment
+                        or not {'sponsored', 'nofollow'} <= set(a.get('rel', '').split())):
+                    raise ValueError('clickout contract')
+            if target.path.startswith(('/p/', '/k/', '/kategori/')) and target.path not in pages:
+                raise ValueError('broken entity link')
+    return pages, products, categories
+
+
+def prepare(site, *, indexable=False):
+    """Only a staging copy may be passed here. Does not authorize indexability."""
+    site = Path(site)
+    pages, products, categories = inspect(site)
+    indexable_routes = products | categories
+    # Complete validation before any SEO write; never repair conflicting identity.
+    for url in indexable_routes:
+        page = pages[url]
+        if not entity_path(url):
+            raise ValueError('entity path')
+        if page.canonicals and page.canonicals != [ORIGIN + url]:
+            raise ValueError('canonical conflict')
+        if (len(page.robots) != 1 or 'noindex' not in
+                {v.strip() for v in page.robots[0].lower().split(',')}):
+            raise ValueError('expected private noindex input')
+    for url in sorted(indexable_routes):
+        path = site / url.strip('/') / 'index.html'
+        text = path.read_text('utf-8')
+        if not pages[url].canonicals:
+            if text.lower().count('</head>') != 1:
+                raise ValueError('page head')
+            text = re.sub('</head>', '<link rel="canonical" href="'+ORIGIN+url+'"></head>',
+                          text, flags=re.I)
+        # Preserve existing public clickout identity; only normalize the private relative form.
+        text = re.sub(r'href="(/go/tgt_[0-9A-HJKMNP-TV-Z]{26})"',
+                      lambda m: 'href="'+ORIGIN+m[1]+'"', text)
+        if indexable:
+            text, n = re.subn(r'<meta\s+name="robots"\s+content="[^"]*"\s*/?>',
+                              '<meta name="robots" content="index,follow">', text, flags=re.I)
+            if n != 1:
+                raise ValueError('robots markup')
+        path.write_text(text, encoding='utf-8')
+    urls = sorted(indexable_routes) if indexable else []
+    (site / 'sitemap.xml').write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
+        ''.join('<url><loc>'+escape(ORIGIN+p)+'</loc></url>' for p in urls) + '</urlset>',
+        encoding='utf-8')
+    (site / 'robots.txt').write_text(
+        'User-agent: *\nDisallow: /beta/\nDisallow: /go/\nDisallow: /search/\n'
+        'Disallow: /sok/\nSitemap: '+ORIGIN+'/sitemap.xml\n'
+        if indexable else 'User-agent: *\nDisallow: /\n', encoding='utf-8')
+    problems = check(site)
+    if problems:
+        raise ValueError('existing output safety check failed')
+    # Non-catalogue pages never gain indexability through this projection.
+    for url, page in pages.items():
+        if url not in indexable_routes and not any('noindex' in v.lower() for v in page.robots):
+            raise ValueError('non-catalogue page lacks noindex')
+    return dict(product_routes=sorted(products), category_routes=sorted(categories),
+                seo_mode='public-candidate' if indexable else 'private',
+                published=None, publication_authorized=False)
+
+
+def preservation(baseline, candidate):
+    """Existing URLs cannot silently vanish during a full catalogue build."""
+    old = {f['path']: f for f in baseline['files']}
+    new = {f['path']: f for f in candidate['files']}
+    removed = sorted(set(old) - set(new))
+    if removed:
+        raise ValueError('baseline files missing; explicit migration review required')
+    # Shared catalogue surfaces may change; protected design/beta assets may not.
+    changed_protected = [p for p in old if p.startswith(('beta/', 'assets/'))
+                         or p.endswith(('.css', '.js'))]
+    if any(old[p] != new[p] for p in changed_protected):
+        raise ValueError('existing design or beta changed')
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--site', type=Path, required=True)
+    p.add_argument('--indexable-candidate', action='store_true')
+    p.add_argument('--report', type=Path, required=True)
+    args = p.parse_args()
+    if args.report.resolve().is_relative_to(args.site.resolve()):
+        raise ValueError('report outside deployable site required')
+    result = prepare(args.site, indexable=args.indexable_candidate)
+    result['sitemap_sha256'] = hashlib.sha256((args.site/'sitemap.xml').read_bytes()).hexdigest()
+    args.report.write_text(json.dumps(result, sort_keys=True), encoding='utf-8')
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except (ValueError, KeyError, TypeError, OSError):
+        raise SystemExit('Candidate refused; do not publish') from None
