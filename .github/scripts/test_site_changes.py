@@ -154,16 +154,17 @@ class ChangeGuard(unittest.TestCase):
 
 
 class WorkflowWiring(unittest.TestCase):
-    def test_existing_tests_remain_and_operational_gate_is_wired(self):
+    def test_existing_tests_and_preview_gates_remain_pages_is_review_only(self):
         root = Path(__file__).resolve().parents[2]
         workflows = root / '.github/workflows'
         path = workflows / 'pages.yml'
         if path.exists():
             text = path.read_text()
-            self.assertIn("if: needs.test.outputs.operational == 'true'", text)
-            self.assertIn('operational: ${{ steps.changes.outputs.operational }}', text)
+            self.assertNotIn("if: needs.test.outputs.operational == 'true'", text)
+            self.assertNotIn('operational: ${{ steps.changes.outputs.operational }}', text)
             self.assertIn('python -m unittest discover -s tests -v', text)
-            self.assertIn('needs: build', text)
+            self.assertNotIn('needs: build', text)
+            self.assertIn('--synthetic-only', text)
             for name in ['category-preview.yml', 'product-preview.yml']:
                 preview = (workflows / name).read_text()
                 self.assertIn("- name: Build real catalogue\n        if: steps.changes.outputs.operational == 'true'", preview)

@@ -1,13 +1,39 @@
-name: Build and deploy
+name: Verify Pages candidate
 
-# Static site from Chillout's read API, published to GitHub Pages.
-# The read key is used in one step only and never leaves this runner:
-# the generated HTML is checked for it before anything is uploaded.
+# Push/merge and manual dispatch cannot publish. The legacy API build/upload/deploy
+# branch is removed; unchanged build.py remains available as historical renderer.
+# Publication must later reuse existing Pages actions with a separately authorized
+# exact Delivery tree and current release authority/audit, never an API rebuild.
 
 on:
   push:
     branches: [main]
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      delivery_run_id:
+        description: 'Optional SAME-REPO SYNTHETIC delivery-input artifact run; review only, never deploy'
+        type: string
+        default: ''
+      result_sha256:
+        description: 'Independently reviewed Delivery result SHA-256'
+        type: string
+        default: ''
+      baseline_sha256:
+        description: 'Independently reviewed complete baseline inventory SHA-256'
+        type: string
+        default: ''
+      retirement_sha256:
+        description: 'Optional independently reviewed test-catalogue retirement.json hash'
+        type: string
+        default: ''
+      candidate_tree_sha256:
+        description: 'Optional reviewed FINAL tree hash; stage in _site only, never upload/deploy'
+        type: string
+        default: ''
+      indexable_candidate:
+        description: 'Prepare indexable product/category candidate only; does not publish'
+        type: boolean
+        default: false
   pull_request: {}
 
 permissions:
@@ -19,8 +45,6 @@ concurrency:
 
 jobs:
   test:
-    outputs:
-      operational: ${{ steps.changes.outputs.operational }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -43,51 +67,86 @@ jobs:
       # FIXTURE data against a localhost stub. No secret, no network.
       - run: python -m unittest discover -s tests -v
 
-  build:
-    if: needs.test.outputs.operational == 'true'
+  delivery-candidate:
+    if: github.event_name == 'workflow_dispatch' && inputs.delivery_run_id != ''
     needs: test
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.12"
-
-      - name: Build from Chillout
-        env:
-          CHILLOUT_ORIGIN: ${{ vars.CHILLOUT_ORIGIN }}
-          CHILLOUT_READ_KEY: ${{ secrets.CHILLOUT_READ_KEY }}
-          BASE_PATH: ${{ vars.BASE_PATH }}
-        run: python build.py --out _site
-
-      - name: Build isolated beta design preview
-        run: |
-          pip install Pillow==11.3.0
-          python tools/preview_design.py
-          python tools/package_beta.py _site
-          python tools/check_design_links.py _site /beta/
-
-      - name: Refuse output that carries the key, the origin, a platform id or /go/
-        env:
-          CHILLOUT_ORIGIN: ${{ vars.CHILLOUT_ORIGIN }}
-          CHILLOUT_READ_KEY: ${{ secrets.CHILLOUT_READ_KEY }}
-        run: python check_output.py _site
-
-      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        with:
-          path: _site
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      contents: read
+      actions: read
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Validate independently supplied references
+        env:
+          DELIVERY_RUN_ID: ${{ inputs.delivery_run_id }}
+          RESULT_SHA256: ${{ inputs.result_sha256 }}
+          BASELINE_SHA256: ${{ inputs.baseline_sha256 }}
+          RETIREMENT_SHA256: ${{ inputs.retirement_sha256 }}
+          CANDIDATE_TREE_SHA256: ${{ inputs.candidate_tree_sha256 }}
+        run: |
+          python - <<'PY'
+          import os, re
+          assert re.fullmatch(r'[1-9][0-9]{0,19}', os.environ['DELIVERY_RUN_ID'])
+          for key in ('RESULT_SHA256', 'BASELINE_SHA256'):
+              assert re.fullmatch(r'[0-9a-f]{64}', os.environ[key])
+          for key in ('RETIREMENT_SHA256', 'CANDIDATE_TREE_SHA256'):
+              assert not os.environ[key] or re.fullmatch(r'[0-9a-f]{64}', os.environ[key])
+          PY
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: chillout-labs/chillout-platform
+          ref: e0cadebd2b1ebde941969ded3da7f7323250e568
+          path: _core
+          persist-credentials: false
+          token: ${{ secrets.CORE_REPOSITORY_READ_TOKEN || github.token }}
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: chillout-labs/chillout-platform
+          ref: 644489ce9b4276bc4c4bf5a07c8a55b008dd47f2
+          path: _receiver
+          persist-credentials: false
+          token: ${{ secrets.CORE_REPOSITORY_READ_TOKEN || github.token }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: delivery-input
+          run-id: ${{ inputs.delivery_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/delivery-input
+      - name: Receive, inspect and compare complete candidate (no publication)
+        env:
+          RESULT_SHA256: ${{ inputs.result_sha256 }}
+          BASELINE_SHA256: ${{ inputs.baseline_sha256 }}
+          RETIREMENT_SHA256: ${{ inputs.retirement_sha256 }}
+          CANDIDATE_TREE_SHA256: ${{ inputs.candidate_tree_sha256 }}
+          INDEXABLE_CANDIDATE: ${{ inputs.indexable_candidate }}
+          CHILLOUT_ORIGIN: ${{ vars.CHILLOUT_ORIGIN }}
+        run: |
+          extra=()
+          if [ -n "$RETIREMENT_SHA256" ]; then
+            extra+=(--retirement "$RUNNER_TEMP/delivery-input/retirement.json" --retirement-sha256 "$RETIREMENT_SHA256")
+          fi
+          if [ -n "$CANDIDATE_TREE_SHA256" ]; then
+            extra+=(--pages-site _site --candidate-tree-sha256 "$CANDIDATE_TREE_SHA256")
+          fi
+          if [ "$INDEXABLE_CANDIDATE" = true ]; then extra+=(--indexable-candidate); fi
+          python tools/review_delivery.py \
+            --core _core/tools/pages_candidate.py \
+            --receiver _receiver/src/chillout/pages_bundle.py \
+            --bundle "$RUNNER_TEMP/delivery-input/bundle.tar" \
+            --result-sha256 "$RESULT_SHA256" \
+            --baseline "$RUNNER_TEMP/delivery-input/baseline.json" \
+            --baseline-sha256 "$BASELINE_SHA256" \
+            --baseline-site "$RUNNER_TEMP/delivery-input/baseline-site" \
+            --environment test --synthetic-only --site "$RUNNER_TEMP/candidate-site" \
+            --report "$RUNNER_TEMP/candidate-review.json" "${extra[@]}"
+      # Optional _site is hash-verified input for the existing upload-pages-artifact path.
+      # No build.py or API refetch occurs after review. Publication remains disconnected.
+      # Deliberately no artifact upload, Pages configuration or deploy in this slice.
+      # Real private inputs must not be staged in public Actions artifacts.
 
