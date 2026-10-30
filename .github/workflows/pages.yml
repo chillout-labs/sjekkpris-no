@@ -1,8 +1,9 @@
-name: Build and deploy
+name: Verify Pages candidate
 
-# Static site from Chillout's read API, published to GitHub Pages.
-# The read key is used in one step only and never leaves this runner:
-# the generated HTML is checked for it before anything is uploaded.
+# Push/merge and manual dispatch cannot publish. The legacy API build/upload/deploy
+# branch is removed; unchanged build.py remains available as historical renderer.
+# Publication must later reuse existing Pages actions with a separately authorized
+# exact Delivery tree and current release authority/audit, never an API rebuild.
 
 on:
   push:
@@ -44,8 +45,6 @@ concurrency:
 
 jobs:
   test:
-    outputs:
-      operational: ${{ steps.changes.outputs.operational }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -67,54 +66,6 @@ jobs:
           python tools/check_design_links.py _beta_test /beta/
       # FIXTURE data against a localhost stub. No secret, no network.
       - run: python -m unittest discover -s tests -v
-
-  build:
-    if: needs.test.outputs.operational == 'true' && !inputs.delivery_run_id && !inputs.result_sha256 && !inputs.baseline_sha256 && !inputs.retirement_sha256 && !inputs.candidate_tree_sha256 && !inputs.indexable_candidate
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.12"
-
-      - name: Build from Chillout
-        env:
-          CHILLOUT_ORIGIN: ${{ vars.CHILLOUT_ORIGIN }}
-          CHILLOUT_READ_KEY: ${{ secrets.CHILLOUT_READ_KEY }}
-          BASE_PATH: ${{ vars.BASE_PATH }}
-        run: python build.py --out _site
-
-      - name: Build isolated beta design preview
-        run: |
-          pip install Pillow==11.3.0
-          python tools/preview_design.py
-          python tools/package_beta.py _site
-          python tools/check_design_links.py _site /beta/
-
-      - name: Refuse output that carries the key, the origin, a platform id or /go/
-        env:
-          CHILLOUT_ORIGIN: ${{ vars.CHILLOUT_ORIGIN }}
-          CHILLOUT_READ_KEY: ${{ secrets.CHILLOUT_READ_KEY }}
-        run: python check_output.py _site
-
-      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        with:
-          path: _site
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
 
   delivery-candidate:
     if: github.event_name == 'workflow_dispatch' && inputs.delivery_run_id != ''

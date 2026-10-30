@@ -4,6 +4,22 @@ The SjekkPris.no beta frontend: a static site built from Chillout's read API
 and published to GitHub Pages. Intentionally simple — this is the integration
 proof, not the design.
 
+## Current publication boundary (#41)
+
+Pushes/merges to `main` run verification only. `pages.yml` no longer invokes the
+legacy API build, uploads a Pages artifact or deploys. Manual dispatch can only
+review a synthetic Delivery candidate and optionally stage its independently
+reviewed final hash; it cannot publish. Existing deployed content is unaffected.
+
+Public release remains closed until the existing Pages upload/deploy actions are
+connected to a real, explicitly authorized Delivery candidate with current
+release authority/audit and exact final-tree verification. A dispatch input or
+hash alone is not authorization. Do not re-enable API rebuild-on-merge or remove
+synthetic-only as a shortcut. See docs/DELIVERY-PAGES-CANDIDATE.md.
+
+The description below documents the retained legacy renderer and its contracts;
+it is no longer an automatically executed publication path.
+
 ## How it works
 
 - `build.py` reads `GET /api/v1/properties/sjekkpris-no/catalogue` for the

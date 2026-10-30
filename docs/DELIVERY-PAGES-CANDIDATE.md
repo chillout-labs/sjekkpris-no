@@ -310,3 +310,62 @@ in both SEO modes: exactly 16 removals, 85 byte-identical beta files, one exact
 24-link-only change, intact internal links, final-hash staging and wrong-hash refusal.
 No real Toalson qualification or visual/public release acceptance is claimed.
 One normal PR CI run follows push; unchanged Core/workflow checks are not rerun.
+
+## 2026-10-30 — merge/publication boundary secured
+
+VEDTATT: owner authorizes a bounded workflow correction so merge cannot publish;
+public publication may only consume an explicitly approved, exact verified
+Delivery candidate. No merge, deployment, grant or publication is authorized now.
+
+OBSERVERT: prior pages.yml was active, non-documentation main pushes were
+operational, and github-pages had only a main branch policy (no reviewer gate).
+PR CI skipped deployment but merge could invoke the old API rebuild/publication.
+
+IMPLEMENTERT: remove the legacy build/upload/deploy jobs from existing pages.yml
+and the now-unused operational job output. Keep push/PR tests and the read-only
+manual synthetic candidate verifier. No action can configure/upload/deploy Pages
+from this workflow; no Pages-write or OIDC permission, publishing input or read-API
+key remains. The renderer, other preview workflows, existing published website,
+design, candidate hash checks and original Core/receiver pins are unchanged.
+Existing preview artifacts are not Pages deployments and remain unchanged.
+
+This deliberately closes publication; it does NOT claim that real publication
+has been implemented. The existing upload-pages-artifact/deploy-pages integration
+is preserved in Git history for reuse, not replaced by another publisher. No new
+secret, token, service, permission, external setting or agent is introduced.
+A workflow_dispatch, a candidate hash or an indexable flag cannot authorize release.
+
+Required before a separately approved reconnection in this same workflow:
+- real private input arrives through reviewed existing access, not public evidence
+  artifacts; retain private receipts and only the publishable tree crosses;
+- independently accepted FINAL hash binds the exact candidate to Property, release
+  target, producer/consumer versions and reviewed baseline/current deployment;
+- existing owner/native release authority is revalidated (expiry, revocation,
+  revisions and target) at the publication boundary and recorded in audit;
+- the existing Pages actions receive only those verified bytes, with no API build
+  or beta regeneration between review and upload; concurrent deployment drift
+  refuses and the verified previous release remains available for rollback;
+- an ordinary merge, empty/incomplete dispatch or synthetic result cannot reach
+  upload/deploy. Owner approval must be enforced, not an unverified boolean.
+
+Four focused boundary tests check the checked-in workflow: its only jobs are
+verification, write/deployment capabilities are absent, the API renderer/key is
+disconnected, and manual candidate review retains synthetic/input/hash checks.
+Other workflow files are checked for absence of Pages deployment capabilities;
+their existing non-deploy preview artifact uploads are intentionally permitted.
+Existing event-classifier behavior is unchanged; its workflow-wiring assertion
+now requires the approved review-only Pages boundary instead of legacy build.
+No catalogue/renderer changes or repeated catalogue test suite are needed here.
+
+Learning: removing the unsafe event-to-publisher connection is the smallest safe
+inactive integration when actual release authority/transport is not yet wired.
+A disabled branch or self-declared approval is not verified release authorization.
+Keep the unresolved operational integration explicit in #41/#304; no new engine,
+new task or promoted active learning rule. This supersedes earlier text saying
+ordinary main pushes retain the legacy Pages publication behavior.
+
+OBSERVERT: all 19 focused workflow checks pass across the initial run and targeted
+rerun of the corrected wiring assertion (14 unchanged event tests plus 5 boundary/
+wiring checks). The initial failure was the obsolete test requiring automatic
+Pages build; the replacement checks the approved absence of that path. No broad
+catalogue suite repeated locally. Ordinary PR CI verifies the committed update.
