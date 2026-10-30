@@ -24,7 +24,8 @@ gates; this inspection does not prove them from an img tag or amount string.
 
 `tools/review_delivery.py` calls the pinned Core utility, which invokes original
 #231 `receive`, then checks the website and compares complete file inventories.
-Any missing old file, changed existing CSS/JS, assets or beta refuses the candidate.
+Missing files refuse unless covered by the exact reviewed test-catalogue retirement
+plan below. Changed non-catalogue content, CSS/JS, assets or beta refuses.
 Shared homepage/search/category content changes are reported in the full diff,
 not silently accepted as publication authority. Review this diff for expected
 new membership and unrelated product changes before release. Core hash verification
@@ -33,7 +34,8 @@ does not prove live revocation checks or ownership of a public URL.
 No renderer reruns after receipt. Existing qualified renderer already produces
 product, search and category surfaces from one input. It must be supplied the
 FULL qualified catalogue: a one-product private build is not a replacement for
-the current live catalogue. Withheld products must never be silently republished
+a real qualified catalogue. The original design-test catalogue may be retired
+as explicitly approved below. Withheld products must never be silently republished
 to satisfy a preservation check; withdrawals need a separately reviewed release.
 
 ## Candidate path in the existing workflow
@@ -86,13 +88,13 @@ or other file is exempted. Provider destinations are never derived here.
 
 Existing `/p/{namespace}/{slug}/` and newer Core `/p/{slug}/` paths are preserved
 as supplied; the receiver never automatically migrates one to the other. A full
-candidate that loses old routes is refused. Before the first live catalogue,
-existing route ownership/aliases must be reconciled using the existing registry
-and reviewed redirects where necessary. Core's private renderer currently also
+candidate that loses old routes outside the explicit test-catalogue exception is
+refused. General route ownership/aliases remain governed by the existing registry. Core's private renderer currently also
 uses `/sok/` and `/k/`; old `/search/` and `/kategori/` must not disappear unnoticed.
 
-No CSS/layout/template or price/ranking formula changes. Head metadata and exact
-clickout prefix are the only HTML rewrites. Mobile/design/browser acceptance on
+No CSS/layout/template or price/ranking formula changes. Head metadata, exact
+clickout prefix and removal of the known private readiness decoration in an
+explicit public candidate are the only HTML rewrites. Mobile/design/browser acceptance on
 the final REAL complete candidate remains required; synthetic parsing does not
 claim visual fidelity, actual clickout resolution or an indexed Google result.
 
@@ -112,8 +114,7 @@ baseline is required. This PR does not assert that this has happened. Future
 accepted releases need retained full archives/inventories tied to deployment IDs,
 not only short-lived Pages artifacts; no storage/retention settings change here.
 
-Remaining first-delivery gates: full baseline; full qualified input preserving old
-catalogue/URLs/beta; actual limited SQL-role acceptance and fresh short owner grants;
+Remaining first-delivery gates: full baseline; full qualified input plus explicit test-catalogue retirement, preserving design/other pages/beta; actual limited SQL-role acceptance and fresh short owner grants;
 private transport and public boundary authority; exact full diff; mobile/desktop,
 canonical/noindex-or-approved-indexing, sitemap, images/prices/affiliate QA. Toalson
 is first test data for that SAME flow, not a branch or hardcoded ID in this code.
@@ -145,3 +146,71 @@ Learning: full rebuild is the normal scalable approach, but historical preservat
 data authority, candidate verification and public release proof are distinct.
 Keep this in the existing Delivery/Pages history; no parallel engine or learning
 registry, and no AI promotion of a new platform policy.
+
+
+## Approved review corrections and Pages handoff — 30 October 2026
+
+VEDTATT: The owner identifies the original 16 products as design-test content.
+They may be removed/replaced by the first real qualified catalogue, including
+slugs and URL history, without 301s. This supersedes earlier preservation/migration
+requirements in this document **only for that catalogue**. Other pages, design and
+functionality remain protected; Core URL rules for real products are unchanged.
+No real product is selected, approved or published by these code changes.
+
+IMPLEMENTERT in #41:
+
+- Only categories linking to products in the received catalogue join the indexable
+  set. Empty categories remain noindex and are excluded from sitemap.
+- The exact existing private readiness banner is removed from the staging copy
+  only for explicit indexable candidates. Private mode retains it. Unknown private
+  decoration refuses rather than being stripped by a broad text/HTML rule.
+- All HTML anchor destinations on this host (absolute or relative, including
+  preserved pages) must resolve inside the candidate. Dynamic /go/ continues to use
+  its existing resolver contract. Search membership must exactly equal product pages;
+  categories cannot link to missing products; sitemap is regenerated from eligible
+  received routes. No website taxonomy/ranking/identity decisions are invented.
+- Optional `--retirement PLAN --retirement-sha256 INDEPENDENT_HASH` accepts a reviewed
+  list, not a general deletion switch. PLAN has version
+  `sjekkpris.test-catalogue-retirement.v1`, `scope: ["sjekkpris-no", "test"]`,
+  `baseline_tree_sha256`, and `files` containing the original exact path/bytes/sha256
+  descriptors of the test product index.html files. Every descriptor must match the
+  hash-verified baseline. Only product HTML paths are eligible; duplicate entries,
+  changed scope/baseline, retained retired products or any unlisted deletion refuse.
+  The independently accepted plan hash remains in the private review report.
+  Build the replacement catalogue upstream; this verifier never deletes products.
+  No actual retirement plan is fabricated from the incomplete live observation.
+
+The workflow accepts optional `retirement_sha256` with retirement.json in the
+SYNTHETIC input. `candidate_tree_sha256` optionally stages the result into `_site`
+using #304, the same path consumed by existing upload-pages-artifact. Supply this
+hash from the separately reviewed FINAL candidate report, then reproduce/verify
+that exact result. CLI equivalents: `--pages-site NEW_DIRECTORY
+--candidate-tree-sha256 REVIEWED_FINAL_HASH`. A mismatching or absent paired hash
+refuses. No API build, feed read or renderer runs between review and staging.
+All candidate-related inputs suppress the ordinary build path, including incomplete
+input combinations; they cannot accidentally fall through to a normal publication.
+
+The candidate branch still has no upload/deploy step and accepts synthetic inputs
+only in public Actions. Real local use remains in the existing private context.
+This prepares the file handoff to existing Pages; it does not claim the real private
+transfer/current-authority boundary is implemented or verified. After a separate
+release decision, existing upload/deploy must consume only this exact accepted tree,
+with fresh authority/source/target/baseline checks and audit. Do not enable a boolean
+publish input as a substitute, expose private receipts, or grant a new token.
+
+Evidence: 14 targeted website tests pass, including all three corrections,
+retirement tampering and preserved-page broken links. Existing 15 workflow guard
+tests pass. Local composition using original receiver and companion Core stages
+both SEO modes successfully and refuses a wrong final tree hash. YAML and candidate
+permission/deploy isolation inspected. No full suite manually repeated. Mobile,
+actual structured data, current price/image/clickout and live release acceptance
+still require the first REAL candidate; no screenshot or public URL proof is claimed.
+
+Learning: content coverage, indexability and release authority are separate. A
+private renderer's decoration is not public presentation merely because robots
+changes. The scoped retirement and final-tree hash tests now prevent these specific
+regressions. Follow-up stays in #41/#304, not a parallel engine or new learning
+register. No AI-authored policy promoted; no merge/deploy/publication performed.
+
+Companion Core pin for staging: `e0cadebd2b1ebde941969ded3da7f7323250e568`
+(#304). Original receiver pin and implementation hash are unchanged.

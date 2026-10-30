@@ -21,6 +21,14 @@ on:
         description: 'Independently reviewed complete baseline inventory SHA-256'
         type: string
         default: ''
+      retirement_sha256:
+        description: 'Optional independently reviewed test-catalogue retirement.json hash'
+        type: string
+        default: ''
+      candidate_tree_sha256:
+        description: 'Optional reviewed FINAL tree hash; stage in _site only, never upload/deploy'
+        type: string
+        default: ''
       indexable_candidate:
         description: 'Prepare indexable product/category candidate only; does not publish'
         type: boolean
@@ -61,7 +69,7 @@ jobs:
       - run: python -m unittest discover -s tests -v
 
   build:
-    if: needs.test.outputs.operational == 'true' && !inputs.delivery_run_id
+    if: needs.test.outputs.operational == 'true' && !inputs.delivery_run_id && !inputs.result_sha256 && !inputs.baseline_sha256 && !inputs.retirement_sha256 && !inputs.candidate_tree_sha256 && !inputs.indexable_candidate
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -128,17 +136,21 @@ jobs:
           DELIVERY_RUN_ID: ${{ inputs.delivery_run_id }}
           RESULT_SHA256: ${{ inputs.result_sha256 }}
           BASELINE_SHA256: ${{ inputs.baseline_sha256 }}
+          RETIREMENT_SHA256: ${{ inputs.retirement_sha256 }}
+          CANDIDATE_TREE_SHA256: ${{ inputs.candidate_tree_sha256 }}
         run: |
           python - <<'PY'
           import os, re
           assert re.fullmatch(r'[1-9][0-9]{0,19}', os.environ['DELIVERY_RUN_ID'])
           for key in ('RESULT_SHA256', 'BASELINE_SHA256'):
               assert re.fullmatch(r'[0-9a-f]{64}', os.environ[key])
+          for key in ('RETIREMENT_SHA256', 'CANDIDATE_TREE_SHA256'):
+              assert not os.environ[key] or re.fullmatch(r'[0-9a-f]{64}', os.environ[key])
           PY
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: chillout-labs/chillout-platform
-          ref: 1be4c6e143d5ef9913bc62ee9bb7e923555ff7bc
+          ref: e0cadebd2b1ebde941969ded3da7f7323250e568
           path: _core
           persist-credentials: false
           token: ${{ secrets.CORE_REPOSITORY_READ_TOKEN || github.token }}
@@ -159,10 +171,18 @@ jobs:
         env:
           RESULT_SHA256: ${{ inputs.result_sha256 }}
           BASELINE_SHA256: ${{ inputs.baseline_sha256 }}
+          RETIREMENT_SHA256: ${{ inputs.retirement_sha256 }}
+          CANDIDATE_TREE_SHA256: ${{ inputs.candidate_tree_sha256 }}
           INDEXABLE_CANDIDATE: ${{ inputs.indexable_candidate }}
           CHILLOUT_ORIGIN: ${{ vars.CHILLOUT_ORIGIN }}
         run: |
           extra=()
+          if [ -n "$RETIREMENT_SHA256" ]; then
+            extra+=(--retirement "$RUNNER_TEMP/delivery-input/retirement.json" --retirement-sha256 "$RETIREMENT_SHA256")
+          fi
+          if [ -n "$CANDIDATE_TREE_SHA256" ]; then
+            extra+=(--pages-site _site --candidate-tree-sha256 "$CANDIDATE_TREE_SHA256")
+          fi
           if [ "$INDEXABLE_CANDIDATE" = true ]; then extra+=(--indexable-candidate); fi
           python tools/review_delivery.py \
             --core _core/tools/pages_candidate.py \
@@ -173,6 +193,8 @@ jobs:
             --baseline-sha256 "$BASELINE_SHA256" \
             --environment test --synthetic-only --site "$RUNNER_TEMP/candidate-site" \
             --report "$RUNNER_TEMP/candidate-review.json" "${extra[@]}"
+      # Optional _site is hash-verified input for the existing upload-pages-artifact path.
+      # No build.py or API refetch occurs after review. Publication remains disconnected.
       # Deliberately no artifact upload, Pages configuration or deploy in this slice.
       # Real private inputs must not be staged in public Actions artifacts.
 

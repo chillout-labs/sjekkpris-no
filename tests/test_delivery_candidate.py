@@ -69,7 +69,7 @@ class CandidateTests(unittest.TestCase):
         target = self.root/'p/legacy/old'
         target.parent.mkdir()
         old.rename(target)
-        for path in (self.root/'search-index.json', self.root/'k/grips/index.html'):
+        for path in (self.root/'search-index.json', self.root/'k/grips/index.html', self.root/'index.html'):
             path.write_text(path.read_text().replace('/p/old/', '/p/legacy/old/'))
         result = candidate.prepare(self.root, indexable=True)
         self.assertIn('/p/legacy/old/', result['product_routes'])
@@ -109,6 +109,69 @@ class CandidateTests(unittest.TestCase):
         new = {'files': [old['files'][0], {'path': 'style.css', 'sha256': 'c'}]}
         with self.assertRaisesRegex(ValueError, 'design'):
             candidate.preservation(old, new)
+
+    def test_empty_category_is_private_and_not_in_sitemap(self):
+        write(self.root, 'k/empty/index.html', html('<h1>Empty</h1>'))
+        report = candidate.prepare(self.root, indexable=True)
+        self.assertNotIn('/k/empty/', report['category_routes'])
+        self.assertIn('noindex', (self.root/'k/empty/index.html').read_text('utf-8'))
+        self.assertNotIn('/k/empty/', (self.root/'sitemap.xml').read_text('utf-8'))
+
+    def test_private_banner_preserved_by_default_and_removed_from_public_copy(self):
+        for name in ('index.html', 'p/new/index.html', 'k/grips/index.html'):
+            path = self.root/name
+            path.write_text(path.read_text('utf-8').replace('<body>', '<body>'+candidate.PRIVATE_BANNER), 'utf-8')
+        candidate.prepare(self.root)
+        self.assertIn(candidate.PRIVATE_BANNER, (self.root/'index.html').read_text('utf-8'))
+        candidate.prepare(self.root, indexable=True)
+        for name in ('index.html', 'p/new/index.html', 'k/grips/index.html'):
+            self.assertNotIn(candidate.PRIVATE_BANNER, (self.root/name).read_text('utf-8'))
+
+    def test_unknown_private_decoration_refuses_public_candidate(self):
+        path = self.root/'index.html'
+        path.write_text(html(candidate.PRIVATE_BANNER.replace('readinessbygg', 'readinessbygg v2')), 'utf-8')
+        with self.assertRaisesRegex(ValueError, 'private presentation'):
+            candidate.prepare(self.root, indexable=True)
+
+    def test_broken_links_on_preserved_pages_are_rejected(self):
+        for link in ('/p/missing/', 'https://sjekkpris.no/p/missing/', '../p/missing/'):
+            with self.subTest(link=link):
+                write(self.root, 'about/index.html', html('<a href="'+link+'">Missing</a>'))
+                with self.assertRaisesRegex(ValueError, 'internal link'):
+                    candidate.prepare(self.root)
+
+    def test_retirement_bound_to_baseline_scope_and_exact_product_files(self):
+        row = {'path': 'p/test/index.html', 'sha256': 'a', 'bytes': 1}
+        protected = {'path': 'about/index.html', 'sha256': 'b', 'bytes': 1}
+        baseline = {'scope': ['sjekkpris-no', 'test'], 'tree_sha256': 'c'*64,
+                    'files': [row, protected]}
+        new = dict(baseline, files=[protected])
+        plan = {'version': 'sjekkpris.test-catalogue-retirement.v1',
+                'scope': baseline['scope'], 'baseline_tree_sha256': 'c'*64, 'files': [row]}
+        candidate.preservation(baseline, new, plan)
+        for changed in (dict(plan, scope=['other', 'test']),
+                        dict(plan, baseline_tree_sha256='d'*64),
+                        dict(plan, files=[dict(row, sha256='wrong')]),
+                        dict(plan, files=[protected]), dict(plan, files=[row, row])):
+            with self.subTest(changed=changed), self.assertRaises(ValueError):
+                candidate.preservation(baseline, new, changed)
+        with self.assertRaisesRegex(ValueError, 'remains'):
+            candidate.preservation(baseline, baseline, plan)
+        with self.assertRaisesRegex(ValueError, 'design'):
+            candidate.preservation(baseline, dict(new, files=[dict(protected, sha256='changed')]), plan)
+
+    def test_retired_product_cannot_survive_in_search_or_preserved_links(self):
+        (self.root/'p/old/index.html').unlink()
+        with self.assertRaisesRegex(ValueError, 'search'):
+            candidate.prepare(self.root, indexable=True)
+        write(self.root, 'search-index.json', json.dumps([{'url': '/p/new/'}]))
+        write(self.root, 'k/grips/index.html', html('<a href="/p/new/">New</a>'))
+        with self.assertRaisesRegex(ValueError, 'internal link'):
+            candidate.prepare(self.root, indexable=True)
+        write(self.root, 'index.html', html('<a href="/p/new/">New</a>'))
+        report = candidate.prepare(self.root, indexable=True)
+        self.assertEqual(report['product_routes'], ['/p/new/'])
+        self.assertNotIn('/p/old/', (self.root/'sitemap.xml').read_text('utf-8'))
 
 
 if __name__ == '__main__':

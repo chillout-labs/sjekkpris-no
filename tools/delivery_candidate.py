@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 import re
 import sys
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urljoin, unquote
 from xml.sax.saxutils import escape
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,6 +20,9 @@ sys.path.insert(0, str(ROOT))
 from check_output import check  # noqa: E402
 
 ORIGIN = "https://sjekkpris.no"
+PRIVATE_BANNER = ('<aside class="sp-panel" aria-label="Privat forhåndsvisning"><p>'
+                  'Privat readinessbygg · datert øyeblikksbilde. '
+                  'Butikkhandlinger er sperret.</p></aside>')
 CLICKOUT = re.compile(r"/go/tgt_[0-9A-HJKMNP-TV-Z]{26}")
 
 
@@ -73,8 +76,11 @@ def inspect(site):
         search.add(url.path)
     if search != products:
         raise ValueError('product missing from search')
-    listed = {urlsplit(a['href']).path for p in categories for a in pages[p].links
-              if not urlsplit(a['href']).scheme and not urlsplit(a['href']).netloc}
+    members = {p: {urlsplit(urljoin(ORIGIN+p, a['href'])).path
+                   for a in pages[p].links
+                   if urlsplit(urljoin(ORIGIN+p, a['href'])).netloc == 'sjekkpris.no'}
+               & products for p in categories}
+    listed = set().union(*members.values()) if members else set()
     if not products <= listed:
         raise ValueError('product missing from category listings')
     for product in products:
@@ -92,7 +98,25 @@ def inspect(site):
                     raise ValueError('clickout contract')
             if target.path.startswith(('/p/', '/k/', '/kategori/')) and target.path not in pages:
                 raise ValueError('broken entity link')
-    return pages, products, categories
+    # Check all HTML, including preserved informational/beta pages and relative links.
+    for path in site.rglob('*.html'):
+        source = '/' + path.relative_to(site).as_posix()
+        for anchor in Page(path.read_text('utf-8')).links:
+            target = urlsplit(urljoin(ORIGIN + source, anchor['href']))
+            if target.scheme not in ('http', 'https') or target.netloc != 'sjekkpris.no':
+                continue
+            local = unquote(target.path)
+            if local.startswith('/go/'):
+                continue  # Existing dynamic resolver; validated separately on products.
+            dest = site / local.lstrip('/')
+            if not dest.resolve().is_relative_to(site.resolve()):
+                raise ValueError('unsafe internal link')
+            if local.endswith('/'):
+                dest /= 'index.html'
+            if not dest.is_file():
+                raise ValueError('broken internal link')
+    return pages, products, {p for p, products_in_category in members.items()
+                             if products_in_category}
 
 
 def prepare(site, *, indexable=False):
@@ -127,6 +151,15 @@ def prepare(site, *, indexable=False):
             if n != 1:
                 raise ValueError('robots markup')
         path.write_text(text, encoding='utf-8')
+    if indexable:
+        # Exact known renderer decoration only. Unknown private markup fails closed.
+        for path in site.rglob('*.html'):
+            original = path.read_text('utf-8')
+            text = original.replace(PRIVATE_BANNER, '')
+            if 'Privat forhåndsvisning' in text or 'Privat readinessbygg' in text:
+                raise ValueError('unknown private presentation')
+            if text != original:
+                path.write_text(text, encoding='utf-8')
     urls = sorted(indexable_routes) if indexable else []
     (site / 'sitemap.xml').write_text(
         '<?xml version="1.0" encoding="UTF-8"?>'
@@ -149,16 +182,36 @@ def prepare(site, *, indexable=False):
                 published=None, publication_authorized=False)
 
 
-def preservation(baseline, candidate):
+def preservation(baseline, candidate, retirement=None):
     """Existing URLs cannot silently vanish during a full catalogue build."""
     old = {f['path']: f for f in baseline['files']}
     new = {f['path']: f for f in candidate['files']}
     removed = sorted(set(old) - set(new))
-    if removed:
+    retired = set()
+    if retirement is not None:
+        if (retirement.get('version') != 'sjekkpris.test-catalogue-retirement.v1'
+                or retirement.get('scope') != baseline.get('scope')
+                or baseline.get('scope', [None])[0] != 'sjekkpris-no'
+                or retirement.get('baseline_tree_sha256') != baseline.get('tree_sha256')
+                or not baseline.get('tree_sha256')
+                or not isinstance(retirement.get('files'), list)
+                or not retirement['files']):
+            raise ValueError('retirement binding')
+        for row in retirement['files']:
+            name = row['path']
+            if (not re.fullmatch(r'p/(?:[a-z0-9-]+/)+index\.html', name)
+                    or name in retired or old.get(name) != row):
+                raise ValueError('retirement descriptor')
+            retired.add(name)
+        if retired & new.keys():
+            raise ValueError('retired product remains')
+    if set(removed) != retired:
         raise ValueError('baseline files missing; explicit migration review required')
     # Shared catalogue surfaces may change; protected design/beta assets may not.
-    changed_protected = [p for p in old if p.startswith(('beta/', 'assets/'))
-                         or p.endswith(('.css', '.js'))]
+    mutable = {'index.html', 'search-index.json', 'robots.txt', 'sitemap.xml'}
+    changed_protected = [p for p in old if p not in mutable
+                         and not (p.startswith(('p/', 'k/', 'kategori/'))
+                                  and p.endswith('/index.html'))]
     if any(old[p] != new[p] for p in changed_protected):
         raise ValueError('existing design or beta changed')
 
