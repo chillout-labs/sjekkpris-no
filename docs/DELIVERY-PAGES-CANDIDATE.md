@@ -393,3 +393,20 @@ approval, durable external handoff/reconciliation and the retained rollback.
 Private operational authority details and artefact evidence remain in platform
 #309; do not copy them into this public repository. No publication is authorized
 by this document, an archive digest, or a historical check receipt.
+
+### 2026-10-31: exact final archive receiver, inactive
+
+`tools/pages_release.py` verifies a prebuilt final-site archive and inventory
+without rendering, credentials, network or publishing. Four targeted tests pass.
+Preserve #304 Path-component inventory ordering, not slash-string ordering; a
+regression covers the difference. The unchanged real Toalson candidate (123
+files) and rollback (128 files) passed both archive and tree hashes in about
+0.109 and 0.113 seconds locally. This is receiving time, not Pages publishing time.
+
+No workflow wiring or permissions changed. A public release's author/uploader
+plus hash is not proof of Core authorization; the draft-release polling prototype
+was rejected and removed. The remaining authenticated Core/Pages runtime connection
+is tracked only in existing Chillout #309, alongside Core commit 7ac2146e and the
+#264 local bridge. Integrity does not remove the native Hovedkvarter gate or prove
+fresh product/image/offer authority. No actual Toalson source was rebuilt or
+published. Original private artifacts/metadata must not become public Actions data.
