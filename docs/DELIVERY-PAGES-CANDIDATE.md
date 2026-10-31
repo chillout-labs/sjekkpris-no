@@ -1,4 +1,4 @@
-# Complete qualified catalogue via existing Pages — Draft integration
+# Complete qualified catalogue via existing Pages â€” Draft integration
 
 Owner clarification 30 October 2026: use normal catalogue publication, not a
 Toalson patch. A complete rebuild is acceptable when existing identities, routes,
@@ -80,8 +80,8 @@ routes into `sitemap.xml`. Search, beta and other non-catalogue HTML stay noinde
 This flag creates an offline review artifact, not permission to publish/index.
 Existing `ROBOTS_NOINDEX` or runtime variables are not changed by the candidate job.
 
-Relative private `/go/tgt_…` anchors are normalized to the exact existing public
-`https://sjekkpris.no/go/tgt_…` form, without changing the target or ranking decision.
+Relative private `/go/tgt_â€¦` anchors are normalized to the exact existing public
+`https://sjekkpris.no/go/tgt_â€¦` form, without changing the target or ranking decision.
 The existing output leak check remains mandatory. Its only additional exception
 is the literal crawler directive `Disallow: /go/` in `robots.txt`; no token, URL
 or other file is exempted. Provider destinations are never derived here.
@@ -148,7 +148,7 @@ Keep this in the existing Delivery/Pages history; no parallel engine or learning
 registry, and no AI promotion of a new platform policy.
 
 
-## Approved review corrections and Pages handoff — 30 October 2026
+## Approved review corrections and Pages handoff â€” 30 October 2026
 
 VEDTATT: The owner identifies the original 16 products as design-test content.
 They may be removed/replaced by the first real qualified catalogue, including
@@ -215,7 +215,7 @@ register. No AI-authored policy promoted; no merge/deploy/publication performed.
 Companion Core pin for staging: `e0cadebd2b1ebde941969ded3da7f7323250e568`
 (#304). Original receiver pin and implementation hash are unchanged.
 
-## 2026-10-30 — bounded catalogue composition and remaining beta conflict
+## 2026-10-30 â€” bounded catalogue composition and remaining beta conflict
 
 VEDTATT: owner permits up to USD 5 additional necessary CI for #304/#41 and
 catalogue composition in this Draft, retaining the reconstructed served beta.
@@ -257,7 +257,7 @@ conflict; it is not waived. The 46 differing beta files must not be overwritten
 with the private renderer's beta. No claim of a complete real candidate, mobile
 QA, fresh Toalson data or public release is made.
 
-FORSLAG/ÅPENT — owner decision: permit a narrowly reviewed link-only change to the
+FORSLAG/Ã…PENT â€” owner decision: permit a narrowly reviewed link-only change to the
 one affected beta page (preserving design/content), or keep referenced test pages
 outside the real catalogue under a separately reviewed nonindexable retention
 contract. Recommend the former: point retired catalogue links to the received
@@ -273,7 +273,7 @@ observed cause and regression live here and in #41/#304, without a new register
 or promotion of an AI-authored policy. Fresh runtime authority/source checks and
 private-to-Pages transport remain separate release work, as documented above.
 
-## 2026-10-30 — approved beta navigation correction
+## 2026-10-30 â€” approved beta navigation correction
 
 VEDTATT: owner explicitly approves changing the 24 links on the single affected
 beta page to existing catalogue navigation while retaining design/content. This
@@ -311,7 +311,7 @@ in both SEO modes: exactly 16 removals, 85 byte-identical beta files, one exact
 No real Toalson qualification or visual/public release acceptance is claimed.
 One normal PR CI run follows push; unchanged Core/workflow checks are not rerun.
 
-## 2026-10-30 — merge/publication boundary secured
+## 2026-10-30 â€” merge/publication boundary secured
 
 VEDTATT: owner authorizes a bounded workflow correction so merge cannot publish;
 public publication may only consume an explicitly approved, exact verified
@@ -369,3 +369,80 @@ rerun of the corrected wiring assertion (14 unchanged event tests plus 5 boundar
 wiring checks). The initial failure was the obsolete test requiring automatic
 Pages build; the replacement checks the approved absence of that path. No broad
 catalogue suite repeated locally. Ordinary PR CI verifies the committed update.
+# Publication handoff follow-up, 2026-10-31 (#309)
+
+OBSERVERT: the final projection can contain an approved public image both in
+an img source and in Product JSON-LD. The origin leak guard previously accepted
+only the former, rejecting an otherwise unchanged candidate when run with the
+actual CHILLOUT_ORIGIN. A composition run without that variable did not exercise
+this rule. Reuse the same origin configuration at composition and release checks.
+
+IMPLEMENTERT locally: the existing image validator now recognizes only the
+top-level image of an exact schema.org Product document, in a plain
+application/ld+json script, when that exact validated URL is also displayed in
+an img src. Duplicate/malformed JSON, unrelated fields, undisplayed URLs, other
+scripts and non-HTML files remain checked. Credential/internal-ID checks still
+scan the original bytes. No generated site bytes or publication workflow changed.
+Seven targeted regressions and five existing media tests pass. Initial local
+attempts failed creating Windows temporary files; only these tests were rerun
+with a writable temporary directory. No full CI or dispatch was requested.
+
+FORSLAG/Ã…PENT: this is not the Core-to-Pages authority transport. That connection
+must still bind current Core authority, exact final package, native environment
+approval, durable external handoff/reconciliation and the retained rollback.
+Private operational authority details and artefact evidence remain in platform
+#309; do not copy them into this public repository. No publication is authorized
+by this document, an archive digest, or a historical check receipt.
+
+### 2026-10-31: exact final archive receiver, inactive
+
+`tools/pages_release.py` verifies a prebuilt final-site archive and inventory
+without rendering, credentials, network or publishing. Four targeted tests pass.
+Preserve #304 Path-component inventory ordering, not slash-string ordering; a
+regression covers the difference. The unchanged real Toalson candidate (123
+files) and rollback (128 files) passed both archive and tree hashes in about
+0.109 and 0.113 seconds locally. This is receiving time, not Pages publishing time.
+
+No workflow wiring or permissions changed. A public release's author/uploader
+plus hash is not proof of Core authorization; the draft-release polling prototype
+was rejected and removed. The remaining authenticated Core/Pages runtime connection
+is tracked only in existing Chillout #309, alongside Core commit 7ac2146e and the
+#264 local bridge. Integrity does not remove the native Hovedkvarter gate or prove
+fresh product/image/offer authority. No actual Toalson source was rebuilt or
+published. Original private artifacts/metadata must not become public Actions data.
+
+### 2026-10-31 owner decision: explicit manually approved first release
+
+This supersedes the requirement to complete automatic Core service transport
+before the first public release. It does not claim that transport now exists.
+The owner expressly approved a hash-bound website release using the existing
+Pages environment. Product approval and fresh source/rights checks remain
+prerequisites; neither the hash nor a dispatch input supplies publication authority.
+
+Procedure: retain the exact site and rollback archives as two assets of a PRIVATE
+DRAFT GitHub release. Never publish that release. Its JSON body must exactly match
+the reviewed plan (asset/tree hashes, baseline deployment and review window <=24h).
+Only final public website bytes belong here, never private Delivery envelopes,
+Core records, SQL credentials or tokens. Use existing gh authentication to stage;
+the workflow's read-only token retrieves these same-repository assets.
+
+Dispatch pages.yml on main with owner_release_plan and no synthetic input. The
+read-only preflight verifies both archives, complete inventories, output safety,
+current successful deployment and review expiry; it records exact hashes in the
+run summary. Then publish-approved MUST wait for the existing github-pages
+Hovedkvarter review. Admin bypass remains disabled and only main is allowed.
+After approval it repeats the checks, uploads _site with the existing pinned
+Pages action and deploys that artifact. It never renders or refetches a feed.
+Push, PR, merge, missing plan, wrong branch or a manual rerun cannot publish.
+
+Unknown publication results require reading the actual deployment and served
+site before any new dispatch. Automatic retries are not a rollback strategy.
+For rollback, retain the verified original archive; prepare another explicit
+owner-release plan selecting those bytes as site, with the then-current deployment
+as baseline and a rollback archive for that current site. The same environment
+approval is mandatory. No silent overwrite or deletion of previous releases.
+
+First release review is recorded in platform #309. Native GitHub review history,
+run commit/inputs, hash summary and deployment record provide release audit;
+no fabricated Core command receipt is written. Later automatic publication and
+service-policy integration remain deferred, with no new services or keys.

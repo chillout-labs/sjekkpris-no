@@ -1,6 +1,7 @@
 """Display only supplied facts and public images; never fetch with a read key."""
 
 import html
+import json
 from html.parser import HTMLParser
 import os
 import re
@@ -63,8 +64,46 @@ def without_public_image_attributes(text):
     """Only the origin-host rule permits validated img src/srcset attributes.
 
     Credential/internal-ID rules must still inspect the original whole text.
-    No exception for scripts, links, CSS, JSON or text containing the same URL.
+    Product JSON-LD may repeat an already displayed, validated image. No other
+    JSON field, script, link, CSS or text receives an exception.
     """
+    class DisplayedImages(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.sources = set()
+
+        def handle_starttag(self, tag, attrs):
+            if tag == "img":
+                sources = [value for name, value in attrs if name == "src"]
+                if len(sources) == 1 and public_image_url(sources[0]):
+                    self.sources.add(sources[0])
+
+    displayed = DisplayedImages()
+    displayed.feed(text)
+    displayed.close()
+
+    def unique_object(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate JSON member")
+            result[key] = value
+        return result
+
+    def product_image(data):
+        try:
+            document = json.loads(data, object_pairs_hook=unique_object)
+        except (ValueError, RecursionError):
+            return data
+        if (isinstance(document, dict)
+                and document.get("@context") == "https://schema.org"
+                and document.get("@type") == "Product"
+                and isinstance(document.get("image"), str)
+                and document["image"] in displayed.sources):
+            document["image"] = ""
+            return json.dumps(document, ensure_ascii=False)
+        return data
+
     def allowed(name, value):
         if name == "src":
             return public_image_url(value)
@@ -81,9 +120,12 @@ def without_public_image_attributes(text):
         def __init__(self):
             super().__init__(convert_charrefs=False)
             self.output = []
+            self.product_json = False
 
         def handle_starttag(self, tag, attrs):
             raw = self.get_starttag_text()
+            if tag == "script":
+                self.product_json = attrs == [("type", "application/ld+json")]
             if tag == "img":
                 # Parse attribute boundaries before exempting values: text like
                 # src="..." inside onload/data-src is not an image source.
@@ -95,12 +137,16 @@ def without_public_image_attributes(text):
 
         def handle_startendtag(self, tag, attrs):
             self.handle_starttag(tag, attrs)
+            if tag == "script":
+                self.product_json = False
 
         def handle_endtag(self, tag):
+            if tag == "script":
+                self.product_json = False
             self.output.append(f"</{tag}>")
 
         def handle_data(self, data):
-            self.output.append(data)
+            self.output.append(product_image(data) if self.product_json else data)
 
         def handle_comment(self, data):
             self.output.append("<!--" + data + "-->")
