@@ -91,6 +91,20 @@ def main():
     plan = validate(json.loads(os.environ["OWNER_RELEASE_PLAN"]))
     prefix = f"repos/{repo}"
     baseline(repo, plan["baseline_deployment_id"])
+    stage = os.environ.get("OWNER_RELEASE_STAGE")
+    if stage not in {"preflight", "publish"}:
+        raise ValueError("owner_release_stage_required")
+    if stage == "preflight":
+        # Draft access requires push permission. The ungated job stays read-only.
+        with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as out:
+            out.write(
+                "## Owner review: exact plan and unchanged public baseline\n\n"
+                "Archive bytes were verified during preparation; the gated job "
+                "must download and verify them again before any Pages upload.\n\n```json\n"
+                + json.dumps(plan, indent=2)
+                + "\n```\n"
+            )
+        return
     ids = assets(api(f"{prefix}/releases/{plan['release_id']}"), plan)
     root = Path(os.environ["RUNNER_TEMP"]) / "owner-release"
     root.mkdir(exist_ok=False)

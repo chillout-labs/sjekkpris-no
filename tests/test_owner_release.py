@@ -71,3 +71,38 @@ class OwnerReleaseTests(unittest.TestCase):
                 changed["assets"].append(dict(name="private-input.json"))
             with self.subTest(case=case), self.assertRaises(ValueError):
                 assets(changed, self.plan)
+
+
+class ReadOnlyPreflight(unittest.TestCase):
+    def test_no_draft_access_before_owner_approval(self):
+        import json
+        import os
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+
+        from tools import owner_release as release
+
+        plan = {"reviewed": "synthetic"}
+        with tempfile.TemporaryDirectory() as tmp:
+            with (
+                patch.dict(
+                    os.environ,
+                    {
+                        "GITHUB_EVENT_NAME": "workflow_dispatch",
+                        "GITHUB_REF": "refs/heads/main",
+                        "GITHUB_RUN_ATTEMPT": "1",
+                        "GITHUB_REPOSITORY": "example/property",
+                        "OWNER_RELEASE_PLAN": json.dumps(plan),
+                        "OWNER_RELEASE_STAGE": "preflight",
+                        "GITHUB_STEP_SUMMARY": str(Path(tmp) / "summary"),
+                    },
+                ),
+                patch.object(release, "validate", return_value={"baseline_deployment_id": 1}),
+                patch.object(release, "baseline") as baseline,
+                patch.object(
+                    release, "api", side_effect=AssertionError("draft read before approval")
+                ),
+            ):
+                release.main()
+                baseline.assert_called_once_with("example/property", 1)
