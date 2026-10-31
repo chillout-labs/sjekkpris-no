@@ -6,16 +6,13 @@ proof, not the design.
 
 ## Current publication boundary (#41)
 
-Pushes/merges to `main` run verification only. `pages.yml` no longer invokes the
-legacy API build, uploads a Pages artifact or deploys. Manual dispatch can only
-review a synthetic Delivery candidate and optionally stage its independently
-reviewed final hash; it cannot publish. Existing deployed content is unaffected.
-
-Public release remains closed until the existing Pages upload/deploy actions are
-connected to a real, explicitly authorized Delivery candidate with current
-release authority/audit and exact final-tree verification. A dispatch input or
-hash alone is not authorization. Do not re-enable API rebuild-on-merge or remove
-synthetic-only as a shortcut. See docs/DELIVERY-PAGES-CANDIDATE.md.
+Pushes/merges to `main` run verification only. Synthetic Delivery review remains
+separate and cannot publish. An explicit `owner_release_plan` dispatch on main
+can publish an already reviewed final archive only after the existing
+`github-pages` required-owner approval. No API build or Core service impersonation
+occurs. Exact archive/tree hashes, rollback, current baseline and a bounded
+review window are checked before and after approval. See
+[the owner-release procedure](docs/DELIVERY-PAGES-CANDIDATE.md).
 
 The description below documents the retained legacy renderer and its contracts;
 it is no longer an automatically executed publication path.

@@ -1,15 +1,17 @@
-name: Verify Pages candidate
+name: Verify Pages candidate and approved owner release
 
-# Push/merge and manual dispatch cannot publish. The legacy API build/upload/deploy
-# branch is removed; unchanged build.py remains available as historical renderer.
-# Publication must later reuse existing Pages actions with a separately authorized
-# exact Delivery tree and current release authority/audit, never an API rebuild.
+# Push and merge verify only. Explicit owner release is gated by github-pages.
+# No API rebuild, Core service impersonation, or automatic publication.
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
     inputs:
+      owner_release_plan:
+        description: 'Exact reviewed owner-release JSON; publication requires github-pages approval'
+        type: string
+        default: ''
       delivery_run_id:
         description: 'Optional SAME-REPO SYNTHETIC delivery-input artifact run; review only, never deploy'
         type: string
@@ -150,3 +152,59 @@ jobs:
       # Deliberately no artifact upload, Pages configuration or deploy in this slice.
       # Real private inputs must not be staged in public Actions artifacts.
 
+
+  owner-release-check:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.owner_release_plan != '' && inputs.delivery_run_id == '' && github.run_attempt == 1
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      deployments: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Verify existing site, rollback and review window
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OWNER_RELEASE_PLAN: ${{ inputs.owner_release_plan }}
+          CHILLOUT_ORIGIN: ${{ vars.CHILLOUT_ORIGIN }}
+        run: python -m tools.owner_release
+
+  publish-approved:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.owner_release_plan != '' && inputs.delivery_run_id == '' && github.run_attempt == 1
+    needs: owner-release-check
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      deployments: read
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Reverify exact bytes after owner approval; no rebuild
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OWNER_RELEASE_PLAN: ${{ inputs.owner_release_plan }}
+          CHILLOUT_ORIGIN: ${{ vars.CHILLOUT_ORIGIN }}
+        run: python -m tools.owner_release
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9
+        with:
+          path: _site
+      - name: Publish exactly the approved artifact
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346

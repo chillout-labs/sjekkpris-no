@@ -410,3 +410,39 @@ is tracked only in existing Chillout #309, alongside Core commit 7ac2146e and th
 #264 local bridge. Integrity does not remove the native Hovedkvarter gate or prove
 fresh product/image/offer authority. No actual Toalson source was rebuilt or
 published. Original private artifacts/metadata must not become public Actions data.
+
+### 2026-10-31 owner decision: explicit manually approved first release
+
+This supersedes the requirement to complete automatic Core service transport
+before the first public release. It does not claim that transport now exists.
+The owner expressly approved a hash-bound website release using the existing
+Pages environment. Product approval and fresh source/rights checks remain
+prerequisites; neither the hash nor a dispatch input supplies publication authority.
+
+Procedure: retain the exact site and rollback archives as two assets of a PRIVATE
+DRAFT GitHub release. Never publish that release. Its JSON body must exactly match
+the reviewed plan (asset/tree hashes, baseline deployment and review window <=24h).
+Only final public website bytes belong here, never private Delivery envelopes,
+Core records, SQL credentials or tokens. Use existing gh authentication to stage;
+the workflow's read-only token retrieves these same-repository assets.
+
+Dispatch pages.yml on main with owner_release_plan and no synthetic input. The
+read-only preflight verifies both archives, complete inventories, output safety,
+current successful deployment and review expiry; it records exact hashes in the
+run summary. Then publish-approved MUST wait for the existing github-pages
+Hovedkvarter review. Admin bypass remains disabled and only main is allowed.
+After approval it repeats the checks, uploads _site with the existing pinned
+Pages action and deploys that artifact. It never renders or refetches a feed.
+Push, PR, merge, missing plan, wrong branch or a manual rerun cannot publish.
+
+Unknown publication results require reading the actual deployment and served
+site before any new dispatch. Automatic retries are not a rollback strategy.
+For rollback, retain the verified original archive; prepare another explicit
+owner-release plan selecting those bytes as site, with the then-current deployment
+as baseline and a rollback archive for that current site. The same environment
+approval is mandatory. No silent overwrite or deletion of previous releases.
+
+First release review is recorded in platform #309. Native GitHub review history,
+run commit/inputs, hash summary and deployment record provide release audit;
+no fabricated Core command receipt is written. Later automatic publication and
+service-policy integration remain deferred, with no new services or keys.
