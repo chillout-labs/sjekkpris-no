@@ -446,3 +446,28 @@ First release review is recorded in platform #309. Native GitHub review history,
 run commit/inputs, hash summary and deployment record provide release audit;
 no fabricated Core command receipt is written. Later automatic publication and
 service-policy integration remain deferred, with no new services or keys.
+
+### First owner-release attempt: draft access boundary (2026-10-31)
+
+PR #42 was merged at b2a449d48c16dafe7d48edb55377eb017cf971d0 after exact
+head approval; main CI passed. Run 41148797096 passed tests and baseline reads,
+but failed at GET /releases/429603803 with github_read_failed. No owner gate was
+reached and no upload/deployment occurred. The logger did not preserve HTTP
+status, so that exact status is not claimed. Owner authentication still reads the
+unchanged private draft. GitHub documents draft visibility as requiring push
+access; the job had contents:read. Local owner-token success was insufficient
+proof of runner-token access.
+
+Prepared correction, REQUIRES APPROVAL before merge/activation: keep ungated
+preflight read-only and restrict it to plan/expiry/current public baseline.
+The owner sees exact hashes plus the independently retained preparation evidence.
+Only publish-approved, behind the existing required Hovedkvarter gate, requests
+contents:write to read the private draft assets. This permission is broader than
+read and technically permits repository-content writes; the reviewed code performs
+only GET/download, credentials are not persisted by checkout, and no release is
+published. Full byte/hash/rollback/output checks remain mandatory before Pages
+upload. No new credential or server is introduced. Workflow tests preserve the
+read-only ungated jobs; a regression rejects draft API use during preflight.
+This correction supersedes earlier wording that runner byte verification occurs
+before owner approval. The actual package hashes and rollback stay unchanged.
+No automatic retry was started; one new dispatch needs approval after the fix.

@@ -33,7 +33,9 @@ class PagesPublicationBoundary(unittest.TestCase):
         self.assertIn('environment:\n      name: github-pages', publisher)
         self.assertLess(publisher.index('python -m tools.owner_release'),
                         publisher.index('upload-pages-artifact@'))
-        self.assertNotIn('contents: write', publisher)
+        self.assertEqual(publisher.count('contents: write'), 1)
+        self.assertIn('OWNER_RELEASE_STAGE: publish', publisher)
+        self.assertIn('OWNER_RELEASE_STAGE: preflight', before)
         self.assertNotIn('write-all', self.active)
 
     def test_other_workflows_have_no_pages_deploy(self):

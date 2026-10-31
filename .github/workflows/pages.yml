@@ -168,9 +168,10 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
-      - name: Verify existing site, rollback and review window
+      - name: Check exact owner plan, baseline and review window
         env:
           GH_TOKEN: ${{ github.token }}
+          OWNER_RELEASE_STAGE: preflight
           OWNER_RELEASE_PLAN: ${{ inputs.owner_release_plan }}
           CHILLOUT_ORIGIN: ${{ vars.CHILLOUT_ORIGIN }}
         run: python -m tools.owner_release
@@ -184,7 +185,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: read
+      contents: write # Required by GitHub to read private draft assets; owner-gated only.
       deployments: read
       pages: write
       id-token: write
@@ -198,6 +199,7 @@ jobs:
       - name: Reverify exact bytes after owner approval; no rebuild
         env:
           GH_TOKEN: ${{ github.token }}
+          OWNER_RELEASE_STAGE: publish
           OWNER_RELEASE_PLAN: ${{ inputs.owner_release_plan }}
           CHILLOUT_ORIGIN: ${{ vars.CHILLOUT_ORIGIN }}
         run: python -m tools.owner_release
