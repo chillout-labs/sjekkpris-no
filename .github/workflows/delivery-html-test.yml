@@ -1,0 +1,19 @@
+name: Isolated HTML Delivery tests
+on:
+  pull_request:
+    paths: ['edge/**', 'tools/render_delivery_html.py', 'tests/test_delivery_html.py', '.github/workflows/delivery-html-test.yml']
+permissions:
+  contents: read
+jobs:
+  local-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+        working-directory: edge
+      - run: npm test
+        working-directory: edge
