@@ -14,7 +14,15 @@ def attributes(items):
 
 def variants(items):
     if not items:return ''
-    return '<nav class="sp-variants" aria-label="Velg variant"><strong>Velg variant</strong><div>'+''.join(f'<a href="{e(url,quote=True)}"'+(' aria-current="page"' if selected else '')+f'>{e(label)}</a>' for label,url,selected in items)+'</div></nav>'
+    def links(values):
+        return ''.join(f'<a href="{e(url,quote=True)}"'+(' aria-current="page"' if selected else '')+f'>{e(label)}</a>' for label,url,selected in values)
+    visible = list(items[:6])
+    selected = next((item for item in items if item[2]), None)
+    if selected and selected not in visible:
+        visible[-1] = selected
+    remaining = [item for item in items if item not in visible]
+    more = ('<details><summary>Vis alle '+str(len(items))+' farger</summary><div>'+links(remaining)+'</div></details>') if remaining else ''
+    return '<nav class="sp-variants" aria-label="Velg variant"><strong>Velg variant</strong><div>'+links(visible)+'</div>'+more+'</nav>'
 
 
 def gallery(images):
@@ -94,7 +102,8 @@ RICH_STYLE=r"""
 .sp-key-attributes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:20px!important }
 .sp-key-attributes>div { padding:10px 8px; border:1px solid var(--sp-line); border-radius:8px; text-align:center }
 .sp-key-attributes dt { color:var(--sp-muted); font-size:11px }.sp-key-attributes dd { margin:4px 0 0; font-size:14px; font-weight:700 }
-.sp-variants { margin-top:20px }.sp-variants strong { font-size:13px }.sp-variants>div { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px }
+.sp-variants { margin-top:20px }.sp-variants strong { font-size:13px }.sp-variants>div,.sp-variants details>div { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px }
+.sp-variants details { margin-top:8px }.sp-variants summary { cursor:pointer;min-height:44px;padding:10px 0;color:var(--sp-green) }.sp-variants summary:focus-visible { outline:3px solid #177fc5;outline-offset:3px }
 .sp-variants a { padding:10px 16px; min-height:44px; border:1px solid var(--sp-line); border-radius:8px; color:var(--sp-ink); text-decoration:none }
 .sp-variants a[aria-current] { color:white; background:var(--sp-green); border-color:var(--sp-green) }
 .sp-thumbnails { display:flex; gap:8px; margin-top:12px; overflow-x:auto }
