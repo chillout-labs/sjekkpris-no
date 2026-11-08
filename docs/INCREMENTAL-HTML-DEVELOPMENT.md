@@ -19,6 +19,7 @@ bucket, route, credentials, migration or publication is supplied by this draft.
   warm full-page cache cannot skip the current validity check. Control is read
   again before returning. Failed/missing active HTML falls back; failed fallback
   returns 503. Unknown/missing/corrupt/expired status never enables offers.
+- The existing output leak gate is reused per generated HTML object.
 - Isolated local runtime CI; no deploy job or external credential.
 
 ## Interoperability contract
@@ -42,7 +43,7 @@ future explicitly scoped routes; this Worker must not replace the entire site.
 
 ## Verification and limits
 
-- Existing 132 Python tests pass (including 3 paired-rendering regressions).
+- Existing 133 Python tests pass (including 4 paired-rendering regressions).
   Category, search, composition, sitemap/SEO and Pages tests remain intact.
 - 11 Node receiver tests pass. Actual local workerd/R2 test also passes for
   response delivery, warm-cache revocation and competing conditional writes.

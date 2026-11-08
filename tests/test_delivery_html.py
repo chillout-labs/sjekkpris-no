@@ -40,3 +40,10 @@ class PairedHTMLTests(unittest.TestCase):
     def test_policy_and_route_required(self):
         with self.assertRaises(ValueError):
             render_pair({}, {}, path='/p/../', noindex=True)
+
+    def test_existing_output_gate_rejects_sensitive_marker(self):
+        product = copy.deepcopy(INDEX['products'][0])
+        product['local_name'] = 'prd_SYNTHETIC_FORBIDDEN'
+        with self.assertRaisesRegex(ValueError, 'output gate'):
+            render_pair(product, COMPARISONS['fixture-lamp'],
+                        path='/p/fixture-lamp/', noindex=True)

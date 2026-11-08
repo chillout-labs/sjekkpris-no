@@ -9,6 +9,7 @@ import re
 from decimal import Decimal
 
 import build
+from check_output import check_text
 
 AVAILABILITY = {'in_stock': 'InStock', 'out_of_stock': 'OutOfStock',
                 'preorder': 'PreOrder', 'backorder': 'BackOrder'}
@@ -57,6 +58,8 @@ def render_pair(product, comparison, *, path, noindex, breadcrumbs=(), presentat
         content += '<script type="application/ld+json">' + schema + '</script>'
         html = build.page(product['local_name'] + ' – SjekkPris', content, base='/', noindex=noindex)
         html = html.replace('</head>', '<link rel="canonical" href="' + build.e(canonical) + '"></head>', 1)
+        if check_text(html, relative_path='product.html'):
+            raise ValueError('incremental HTML failed existing output gate')
         if body is safe and '/go/' in html:
             raise ValueError('fallback contains a purchase link')
         result.append(html.encode())

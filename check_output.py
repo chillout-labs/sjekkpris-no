@@ -40,20 +40,25 @@ def forbidden() -> dict[str, str]:
     return rules
 
 
-def check(out: Path) -> list[str]:
+def check_text(raw: str, *, relative_path: str) -> list[str]:
+    """Same output gate for full sites and individual incremental HTML objects."""
     rules = forbidden()
+    text = CLICKOUT_LINK.sub("", raw).lower()
+    if relative_path == 'robots.txt':
+        text = re.sub(r'^disallow: /go/\r?$', '', text, flags=re.M)
+    problems = []
+    for name, needle in rules.items():
+        checked = without_public_image_attributes(raw).lower() if name == "Chillout origin hostname" and relative_path.endswith('.html') else text
+        if needle.lower() in checked:
+            problems.append(f"{relative_path}: contains the {name}")
+    return problems
+
+
+def check(out: Path) -> list[str]:
     problems = []
     for path in sorted(p for p in out.rglob("*") if p.is_file()):
         raw = path.read_bytes().decode("utf-8", errors="replace")
-        text = CLICKOUT_LINK.sub("", raw).lower()
-        if path.relative_to(out).as_posix() == 'robots.txt':
-            # A crawler exclusion is not a leaked/operative clickout. No other
-            # robots content or file is exempt from the ordinary leak checks.
-            text = re.sub(r'^disallow: /go/\r?$', '', text, flags=re.M)
-        for name, needle in rules.items():
-            checked = without_public_image_attributes(raw).lower() if name == "Chillout origin hostname" and path.suffix == ".html" else text
-            if needle.lower() in checked:
-                problems.append(f"{path.relative_to(out)}: contains the {name}")
+        problems.extend(check_text(raw, relative_path=path.relative_to(out).as_posix()))
     return problems
 
 
