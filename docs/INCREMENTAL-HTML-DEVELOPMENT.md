@@ -73,3 +73,28 @@ budget and cleanup. Test real S3 conditional writes and timeouts, source revocat
 status lease outage and the read-only Worker. A later production decision remains
 separate. 10k local synthetic adapter records are not Cloudflare capacity evidence;
 100k/1m require request-amplification and shard-size measurement.
+
+## Integration follow-up — 2026-11-09
+
+The inactive receiver now requires status `id` and `html` to match the page identity
+and exact HTML SHA-256. Status without this binding selects the no-offer variant.
+This tightens only the unactivated draft wire contract; #41/#42/#43 and the existing
+Pages workflow are unchanged. Rollback retains current status and cannot reuse a
+lease for different HTML. Broken/oversized cached bytes are ignored in favor of
+hash-verified origin data.
+
+Tests: 14 Node receiver tests, local workerd/R2 runtime and all 133 existing Python
+tests pass locally. `tests/fixtures/delivery-html-v1.json` contains synthetic bytes
+also generated and asserted by the adapter tests. No real products or credentials.
+These are local/runtime contract results, not Cloudflare production evidence.
+
+The complete Delivery chain is NOT yet verified: the durable destination/attempt
+binding and final authoritative status call site remain upstream integration work.
+The receiver itself does not gain an upload/status/activation API or Commerce logic.
+Current public baseline visual comparison and price-free search/category integration
+remain open; unchanged existing source is not proof that a future deployed mix of
+static discovery cards and changing offers is consistent. No Pages, DNS, resources,
+real product data, URL registry or indexing policy were changed in this follow-up.
+
+Next approval remains an isolated external test only after those gaps and the
+restricted-role integration run are resolved. This draft is not ready to activate.

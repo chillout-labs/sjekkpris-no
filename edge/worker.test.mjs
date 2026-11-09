@@ -12,7 +12,7 @@ async function fixture() {
   const g=(await hash(bytes(path))).slice(0,2);
   const entry={id:'synthetic-product',revision:2,valid_until:250,html:active,fallback:safe};
   const p=await put({[path]:entry});
-  const s=await put({[path]:{min_revision:2,revoked:false,issued_at:100,valid_until:200}});
+  const s=await put({[path]:{id:entry.id,html:entry.html,min_revision:2,revoked:false,issued_at:100,valid_until:200}});
   let control={contract:'chillout.html.v1',scope,sequence:1,pages:{[g]:p},status:{[g]:s}};
   const bucket={async get(k){reads++;let b=k===prefix+'current'?bytes(control):data.get(k);if(!b)return null;return {etag:String(tag),body:new Response(b).body}}};
   const memory=new Map(); const cache={async match(k){return memory.get(k)?.clone()},async put(k,r){memory.set(k,r.clone())}};
@@ -27,7 +27,7 @@ test('valid HTML and JSON-LD served as the same immutable bytes; HEAD no body',a
 });
 test('revocation precedes new HTML and survives warm immutable cache',async()=>{
  const f=await fixture();await f.request();
- f.control.status[f.g]=await f.put({[ '/p/fixture-product/' ]:{min_revision:2,revoked:true,issued_at:101,valid_until:200}});f.time(101);f.bump();
+ f.control.status[f.g]=await f.put({[ '/p/fixture-product/' ]:{id:f.entry.id,html:f.entry.html,min_revision:2,revoked:true,issued_at:101,valid_until:200}});f.time(101);f.bump();
  const text=await(await f.request()).text();assert.equal(text,'<html>Ingen tilbud</html>');assert.ok(f.memory.size>0);
 });
 test('lease expiry, missing status and malformed values choose fallback',async()=>{
@@ -35,7 +35,7 @@ test('lease expiry, missing status and malformed values choose fallback',async()
   const f=await fixture();
   if(state==='expired')f.time(200);
   if(state==='missing')f.control.status={};
-  if(['string','future','too-long'].includes(state))f.control.status[f.g]=await f.put({[path]:{min_revision:2,revoked:state==='string'?'false':false,issued_at:state==='future'?101:100,valid_until:state==='too-long'?401:200}});
+  if(['string','future','too-long'].includes(state))f.control.status[f.g]=await f.put({[path]:{id:f.entry.id,html:f.entry.html,min_revision:2,revoked:state==='string'?'false':false,issued_at:state==='future'?101:100,valid_until:state==='too-long'?401:200}});
   assert.equal(await(await f.request()).text(),'<html>Ingen tilbud</html>',state);
  }
 });
@@ -75,4 +75,26 @@ test('expired page despite current status and corrupt status use fallback',async
  assert.equal(await(await f.request()).text(),'<html>Ingen tilbud</html>');
  const b=await fixture();b.data.set(b.prefix+'objects/'+b.control.status[b.g],bytes('corrupt'));
  assert.equal(await(await b.request()).text(),'<html>Ingen tilbud</html>');
+});
+test('status cannot authorize a different identity or HTML at the same route',async()=>{
+ for(const change of [{id:'another-product'},{html:'b'.repeat(64)}]){
+  const f=await fixture();
+  f.control.status[f.g]=await f.put({[path]:{id:f.entry.id,html:f.entry.html,min_revision:2,revoked:false,issued_at:100,valid_until:200,...change}});
+  assert.equal(await(await f.request()).text(),'<html>Ingen tilbud</html>');
+ }
+});
+test('oversized or unreadable immutable cache falls back to verified origin',async()=>{
+ for(const broken of ['oversized','stream']){
+  const f=await fixture();
+  f.cache.match=async()=>broken==='oversized'?new Response(new Uint8Array(2*1024*1024+1)):new Response(new ReadableStream({start(c){c.error(Error('broken cache'))}}));
+  assert.match(await(await f.request()).text(),/Pris 100/);
+ }
+});
+test('exact Python adapter contract fixture is readable and expires closed',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const f=JSON.parse(await readFile(new URL('../tests/fixtures/delivery-html-v1.json',import.meta.url),'utf8'));
+ const env={DELIVERY_SCOPE:f.scope,PUBLIC_ORIGIN:f.origin,HTML:{async get(k){return k in f.objects?{etag:'fixture',body:new Response(f.objects[k]).body}:null}}};
+ const req=new Request(f.origin+f.path);
+ assert.match(await(await serve(req,env,{now:()=>100})).text(),/"price":"100"/);
+ assert.equal(await(await serve(req,env,{now:()=>200})).text(),'<html>Ingen tilbud</html>');
 });

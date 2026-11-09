@@ -12,12 +12,12 @@ try {
  const now=Math.floor(Date.now()/1000),g=(await hash(b(path))).slice(0,2);
  const html=await put('<html>synthetic active offer</html>'),fallback=await put('<html>synthetic no offers</html>');
  const pages=await put({[path]:{id:'fixture',revision:1,valid_until:now+300,html,fallback}});
- const status=await put({[path]:{min_revision:1,revoked:false,issued_at:now,valid_until:now+300}});
+ const status=await put({[path]:{id:'fixture',html,min_revision:1,revoked:false,issued_at:now,valid_until:now+300}});
  const root={contract:'chillout.html.v1',scope,sequence:1,pages:{[g]:pages},status:{[g]:status}};
  await bucket.put(prefix+'current',JSON.stringify(root));
  assert.match(await(await mf.dispatchFetch(origin+path)).text(),/active offer/);
  assert.match(await(await mf.dispatchFetch(origin+path)).text(),/active offer/);
- root.status[g]=await put({[path]:{min_revision:1,revoked:true,issued_at:now,valid_until:now+300}});root.sequence++;
+ root.status[g]=await put({[path]:{id:'fixture',html,min_revision:1,revoked:true,issued_at:now,valid_until:now+300}});root.sequence++;
  await bucket.put(prefix+'current',JSON.stringify(root));
  assert.match(await(await mf.dispatchFetch(origin+path)).text(),/no offers/);
  // Actual local binding conditional writes: one ETag, two competitors, one winner.

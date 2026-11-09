@@ -38,7 +38,8 @@ function allowed(status, page, now) {
     status.issued_at <= now && now < status.valid_until &&
     status.valid_until - status.issued_at <= MAX_LEASE &&
     status.revoked === false && number(status.min_revision) && status.min_revision > 0 &&
-    page.revision >= status.min_revision && now < page.valid_until;
+    page.revision >= status.min_revision && status.id === page.id &&
+    status.html === page.html && now < page.valid_until;
 }
 
 export async function serve(req, env, {cache, now = () => Math.floor(Date.now()/1000)} = {}) {
@@ -62,8 +63,10 @@ export async function serve(req, env, {cache, now = () => Math.floor(Date.now()/
     let hit;
     try { hit = await cache?.match(key); } catch {}
     if (hit) {
-      const raw = await bounded(hit.body);
-      if (await hash(raw) === h) return raw;
+      try {
+        const raw = await bounded(hit.body);
+        if (await hash(raw) === h) return raw;
+      } catch {} // Broken or oversized cache entries cannot mask a healthy origin.
     }
     const o = await env.HTML.get(prefix + 'objects/' + h);
     if (!o) throw Error('missing');
