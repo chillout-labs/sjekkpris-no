@@ -1,0 +1,13 @@
+{
+  "scope": "0ef52a28533da54aee838ab5cc0b0304f8ea1c03a456b8016523a4fb4236bd09",
+  "origin": "https://fixture.invalid",
+  "path": "/p/fixture-product/",
+  "objects": {
+    "0ef52a28533da54aee838ab5cc0b0304f8ea1c03a456b8016523a4fb4236bd09/html-v1/current": "{\"contract\":\"chillout.html.v1\",\"pages\":{\"a9\":\"ab53c0a89ec47859870dac5fdf8da80dd3c33f3d8d2aafd18cd9cf8ff6acdf5b\"},\"scope\":\"0ef52a28533da54aee838ab5cc0b0304f8ea1c03a456b8016523a4fb4236bd09\",\"sequence\":2,\"status\":{\"a9\":\"1f2258df98f2f6155a8a623bd1b03457f90ba197cd85f64223131d0efa84b9b6\"}}",
+    "0ef52a28533da54aee838ab5cc0b0304f8ea1c03a456b8016523a4fb4236bd09/html-v1/objects/1f2258df98f2f6155a8a623bd1b03457f90ba197cd85f64223131d0efa84b9b6": "{\"/p/fixture-product/\":{\"html\":\"f76cb62fcf4fedbf522409ff1cfb90148e33b69a1d3905bfe21f3e5b03dbd873\",\"id\":\"synthetic-product\",\"issued_at\":100,\"min_revision\":2,\"revoked\":false,\"valid_until\":200}}",
+    "0ef52a28533da54aee838ab5cc0b0304f8ea1c03a456b8016523a4fb4236bd09/html-v1/objects/768ddd73232b8052ace61d4a5708b0570cc13ce0005a77d63f2bc201c572a64d": "{\"contract\":\"chillout.html.v1\",\"pages\":{\"a9\":\"ab53c0a89ec47859870dac5fdf8da80dd3c33f3d8d2aafd18cd9cf8ff6acdf5b\"},\"scope\":\"0ef52a28533da54aee838ab5cc0b0304f8ea1c03a456b8016523a4fb4236bd09\"}",
+    "0ef52a28533da54aee838ab5cc0b0304f8ea1c03a456b8016523a4fb4236bd09/html-v1/objects/ab53c0a89ec47859870dac5fdf8da80dd3c33f3d8d2aafd18cd9cf8ff6acdf5b": "{\"/p/fixture-product/\":{\"fallback\":\"e57470c793766feed9b6f18205d328aca908f98d301d6d83cc5e88ce8b776cda\",\"html\":\"f76cb62fcf4fedbf522409ff1cfb90148e33b69a1d3905bfe21f3e5b03dbd873\",\"id\":\"synthetic-product\",\"revision\":2,\"valid_until\":250}}",
+    "0ef52a28533da54aee838ab5cc0b0304f8ea1c03a456b8016523a4fb4236bd09/html-v1/objects/e57470c793766feed9b6f18205d328aca908f98d301d6d83cc5e88ce8b776cda": "<html>Ingen tilbud</html>",
+    "0ef52a28533da54aee838ab5cc0b0304f8ea1c03a456b8016523a4fb4236bd09/html-v1/objects/f76cb62fcf4fedbf522409ff1cfb90148e33b69a1d3905bfe21f3e5b03dbd873": "<html>Pris 100 <a href=\"/go/tgt_FIXTURE\">Kjop</a><script type=\"application/ld+json\">{\"@type\":\"Offer\",\"price\":\"100\"}</script></html>"
+  }
+}
