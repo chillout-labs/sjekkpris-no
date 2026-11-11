@@ -1,0 +1,101 @@
+path,source,disposition
+/beta/,built,beta-noindex; retain until reviewed cutover
+/beta/,linked,exact canonical mapping required; do not infer from name
+/beta/404.html,built,beta-noindex; retain until reviewed cutover
+/beta/404.html,linked,exact canonical mapping required; do not infer from name
+/beta/behovssok/,built,beta-noindex; retain until reviewed cutover
+/beta/behovssok/,linked,exact canonical mapping required; do not infer from name
+/beta/butikk/,built,beta-noindex; retain until reviewed cutover
+/beta/butikk/,linked,exact canonical mapping required; do not infer from name
+/beta/butikker/,built,beta-noindex; retain until reviewed cutover
+/beta/butikker/,linked,exact canonical mapping required; do not infer from name
+/beta/butikker/babybrezza/,built,beta-noindex; retain until reviewed cutover
+/beta/butikker/babybrezza/,linked,exact canonical mapping required; do not infer from name
+/beta/butikker/eksempel-a/,built,beta-noindex; retain until reviewed cutover
+/beta/butikker/eksempel-a/,linked,exact canonical mapping required; do not infer from name
+/beta/design-states/,built,beta-noindex; retain until reviewed cutover
+/beta/design-states/,linked,exact canonical mapping required; do not infer from name
+/beta/designoversikt/,built,beta-noindex; retain until reviewed cutover
+/beta/designoversikt/,linked,exact canonical mapping required; do not infer from name
+/beta/favoritter/,built,beta-noindex; retain until reviewed cutover
+/beta/favoritter/,linked,exact canonical mapping required; do not infer from name
+/beta/guide/velg-tv/,built,beta-noindex; retain until reviewed cutover
+/beta/guide/velg-tv/,linked,exact canonical mapping required; do not infer from name
+/beta/guider/,built,beta-noindex; retain until reviewed cutover
+/beta/guider/,linked,exact canonical mapping required; do not infer from name
+/beta/home-catalogue.html,built,beta-noindex; retain until reviewed cutover
+/beta/home-catalogue.html,linked,exact canonical mapping required; do not infer from name
+/beta/kategori/,built,beta-noindex; retain until reviewed cutover
+/beta/kategori/,linked,exact canonical mapping required; do not infer from name
+/beta/kategori/elektronikk/,built,beta-noindex; retain until reviewed cutover
+/beta/kategori/elektronikk/,linked,exact canonical mapping required; do not infer from name
+/beta/kategori/hjem-og-husholdning/,built,beta-noindex; retain until reviewed cutover
+/beta/kategori/hjem-og-husholdning/,linked,exact canonical mapping required; do not infer from name
+/beta/kategori/kontaktlinser/,built,beta-noindex; retain until reviewed cutover
+/beta/kategori/kontaktlinser/,linked,exact canonical mapping required; do not infer from name
+/beta/kategori/tv/,built,beta-noindex; retain until reviewed cutover
+/beta/kategori/tv/,linked,exact canonical mapping required; do not infer from name
+/beta/kategori/tv/led/,built,beta-noindex; retain until reviewed cutover
+/beta/kategori/tv/led/,linked,exact canonical mapping required; do not infer from name
+/beta/kategori/tv/oled/,built,beta-noindex; retain until reviewed cutover
+/beta/kategori/tv/oled/,linked,exact canonical mapping required; do not infer from name
+/beta/kontakt/,built,beta-noindex; retain until reviewed cutover
+/beta/kontakt/,linked,exact canonical mapping required; do not infer from name
+/beta/konto/,built,beta-noindex; retain until reviewed cutover
+/beta/konto/,linked,exact canonical mapping required; do not infer from name
+/beta/korteksempler/,built,beta-noindex; retain until reviewed cutover
+/beta/korteksempler/,linked,exact canonical mapping required; do not infer from name
+/beta/merker/,built,beta-noindex; retain until reviewed cutover
+/beta/merker/,linked,exact canonical mapping required; do not infer from name
+/beta/merker/fjord/,built,beta-noindex; retain until reviewed cutover
+/beta/merker/fjord/,linked,exact canonical mapping required; do not infer from name
+/beta/merker/nord/,built,beta-noindex; retain until reviewed cutover
+/beta/merker/nord/,linked,exact canonical mapping required; do not infer from name
+/beta/om/,built,beta-noindex; retain until reviewed cutover
+/beta/om/,linked,exact canonical mapping required; do not infer from name
+/beta/p/catalogue/demo-bred/,built,beta-noindex; retain until reviewed cutover
+/beta/p/catalogue/demo-bred/,linked,exact canonical mapping required; do not infer from name
+/beta/p/catalogue/demo-hoy/,built,beta-noindex; retain until reviewed cutover
+/beta/p/catalogue/demo-hoy/,linked,exact canonical mapping required; do not infer from name
+/beta/p/catalogue/demo-mange-tilbud/,built,beta-noindex; retain until reviewed cutover
+/beta/p/catalogue/demo-mange-tilbud/,linked,exact canonical mapping required; do not infer from name
+/beta/p/catalogue/demo-pakning/,built,beta-noindex; retain until reviewed cutover
+/beta/p/catalogue/demo-pakning/,linked,exact canonical mapping required; do not infer from name
+/beta/p/catalogue/demo-tv-1/,built,beta-noindex; retain until reviewed cutover
+/beta/p/catalogue/demo-tv-1/,linked,exact canonical mapping required; do not infer from name
+/beta/p/catalogue/demo-tv-2/,built,beta-noindex; retain until reviewed cutover
+/beta/p/catalogue/demo-tv-2/,linked,exact canonical mapping required; do not infer from name
+/beta/p/catalogue/demo-tv-3/,built,beta-noindex; retain until reviewed cutover
+/beta/p/catalogue/demo-tv-3/,linked,exact canonical mapping required; do not infer from name
+/beta/p/catalogue/demo-tv-4/,built,beta-noindex; retain until reviewed cutover
+/beta/p/catalogue/demo-tv-4/,linked,exact canonical mapping required; do not infer from name
+/beta/p/catalogue/demo-tv-5/,built,beta-noindex; retain until reviewed cutover
+/beta/p/catalogue/demo-tv-5/,linked,exact canonical mapping required; do not infer from name
+/beta/p/catalogue/demo-tv-6/,built,beta-noindex; retain until reviewed cutover
+/beta/p/catalogue/demo-tv-6/,linked,exact canonical mapping required; do not infer from name
+/beta/personvern/,built,beta-noindex; retain until reviewed cutover
+/beta/personvern/,linked,exact canonical mapping required; do not infer from name
+/beta/prisvarsler/,built,beta-noindex; retain until reviewed cutover
+/beta/prisvarsler/,linked,exact canonical mapping required; do not infer from name
+/beta/produkttyper/,built,beta-noindex; retain until reviewed cutover
+/beta/produkttyper/,linked,exact canonical mapping required; do not infer from name
+/beta/sammenlign/,built,beta-noindex; retain until reviewed cutover
+/beta/sammenlign/,linked,exact canonical mapping required; do not infer from name
+/beta/search/,built,beta-noindex; retain until reviewed cutover
+/beta/search/,linked,exact canonical mapping required; do not infer from name
+/beta/slik-fungerer-det/,built,beta-noindex; retain until reviewed cutover
+/beta/slik-fungerer-det/,linked,exact canonical mapping required; do not infer from name
+/beta/spor/,built,beta-noindex; retain until reviewed cutover
+/beta/spor/,linked,exact canonical mapping required; do not infer from name
+/p/catalogue/baby-brezza-bottle-washer-pro-hvit/,linked,exact canonical mapping required; do not infer from name
+/p/catalogue/baby-brezza-bottle-washer-pro-svart/,linked,exact canonical mapping required; do not infer from name
+/p/catalogue/baby-brezza-food-maker-deluxe/,linked,exact canonical mapping required; do not infer from name
+/p/catalogue/baby-brezza-formula-pro-advanced-hvit-med-ekstra-trakt/,linked,exact canonical mapping required; do not infer from name
+/p/catalogue/baby-brezza-formula-pro-advanced-slate/,linked,exact canonical mapping required; do not infer from name
+/p/catalogue/baby-brezza-formula-pro-advanced-svart/,linked,exact canonical mapping required; do not infer from name
+/p/catalogue/baby-brezza-formula-pro-mini/,linked,exact canonical mapping required; do not infer from name
+/p/catalogue/baby-brezza-instant-warmer/,linked,exact canonical mapping required; do not infer from name
+/p/catalogue/baby-brezza-safe-smart-bottle-warmer/,linked,exact canonical mapping required; do not infer from name
+/p/catalogue/baby-brezza-sterilizer-dryer-advanced-hvit/,linked,exact canonical mapping required; do not infer from name
+/p/catalogue/baby-brezza-sterilizer-dryer-advanced-svart/,linked,exact canonical mapping required; do not infer from name
+/p/catalogue/baby-brezza-superfast-portable-bottle-warmer/,linked,exact canonical mapping required; do not infer from name

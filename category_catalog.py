@@ -13,7 +13,7 @@ def preview_slug(name):
     return re.sub(r'[^a-z0-9]+', '-', value).strip('-')
 
 
-def category_index(products):
+def category_index(products, *, registry=None):
     nodes, routes = {}, {}
     for product in products:
         facts = product.get('categories') or {}
@@ -24,13 +24,16 @@ def category_index(products):
             path = list(category.get('path') or [])
             if not path or path[-1].get('id') != category.get('id'):
                 path.append(category)
+            if len({part.get('id') for part in path}) != len(path):
+                raise ValueError('Cyclic category ancestry supplied by Chillout')
             parent = None
             for position, fact in enumerate(path):
                 key = fact.get('id')
                 name = fact.get('display_name') or fact.get('name')
                 if not key or not name:
                     raise ValueError('Category path lacks an identity or name')
-                slug = preview_slug(name)
+                public_path = registry.path('category', key) if registry else None
+                slug = public_path.split('/')[-2] if public_path else preview_slug(name)
                 if not slug:
                     raise ValueError('Category cannot form a preview route')
                 if slug in routes and routes[slug] != key:
@@ -38,6 +41,8 @@ def category_index(products):
                 routes[slug] = key
                 node = nodes.setdefault(key, {'name':name, 'slug':slug, 'parent':parent,
                                              'ancestors':[], 'products':{}, 'children':[]})
+                if public_path:
+                    node['_public_path'] = public_path
                 if node['parent'] != parent or node['name'] != name:
                     raise ValueError('Inconsistent category path supplied by Chillout')
                 node['ancestors'] = [part['id'] for part in path[:position]]
@@ -49,7 +54,7 @@ def category_index(products):
 
 
 def category_href(node, base):
-    return f'{base}kategori/{node["slug"]}/'
+    return base + node.get('_public_path', f'/kategori/{node["slug"]}/').lstrip('/')
 
 
 def category_navigation(nodes, base):
