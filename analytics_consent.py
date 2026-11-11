@@ -44,7 +44,7 @@ def body_markup() -> str:
     choice=v;
     try{{localStorage.setItem(key,v);}}catch(e){{}}
     dialog.hidden=true;
-    if(v==="accepted")loadGtm();
+    if(v==="accepted"){{loadGtm();document.dispatchEvent(new Event("sp-analytics-enabled"));}}
     else if(loaded)window.location.reload();
   }}
   dialog.querySelector('[data-choice="accept"]').addEventListener("click",function(){{update("accepted");}});
