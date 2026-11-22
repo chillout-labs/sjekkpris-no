@@ -64,7 +64,8 @@ def compose(core, baseline, baseline_site, received_site, output, scope, retirem
         root, rows = (received_site, incoming) if source.is_relative_to(received_site) else (baseline_site, old)
         descriptors.append(dict(rows[source.relative_to(root).as_posix()], path=name))
     projected = dict(baseline, files=descriptors)
-    preservation(baseline, projected, retirement, navigation_aliases=set(aliases))
+    preservation(baseline, projected, retirement, navigation_aliases=set(aliases),
+                 baseline_site=baseline_site)
     # Validate the entire selection before writing. Caller's temporary directory is
     # published as a candidate only after all website checks and final preservation.
     output.mkdir(parents=True)

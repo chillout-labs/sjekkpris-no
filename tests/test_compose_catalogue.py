@@ -117,5 +117,82 @@ class CompositionTests(unittest.TestCase):
         self.assertEqual(len(prepare(self.out, navigation_aliases=aliases)['product_routes']), 3)
 
 
+    def retire_category(self, body=None, name='k/retired/index.html'):
+        write(self.old, name, html(body if body is not None else
+                                  '<a href="/p/test/">Withdrawn product</a>'))
+        self.base = VerifiedInventory.inventory(self.old, self.scope, '')
+        self.retire['baseline_tree_sha256'] = self.base['tree_sha256']
+        self.retire['files'] = [f for f in self.base['files']
+                                if f['path'] in ('p/test/index.html', name)]
+        return name
+
+    def test_category_with_only_withdrawn_product_is_retired(self):
+        name = self.retire_category()
+        aliases = self.run_composition()
+        self.assertFalse((self.out/name).exists())
+        report = prepare(self.out, indexable=True, navigation_aliases=aliases)
+        self.assertEqual(report['product_routes'], ['/p/new/', '/p/old/'])
+        self.assertNotIn('/k/retired/', (self.out/'sitemap.xml').read_text())
+        preservation(self.base, VerifiedInventory.inventory(self.out, self.scope, ''),
+                     self.retire, navigation_aliases=aliases, baseline_site=self.old)
+
+    def test_already_empty_category_can_be_retired(self):
+        self.retire_category('<h1>Empty category</h1>')
+        self.run_composition()
+
+    def test_category_with_remaining_product_refused_before_output(self):
+        fixture(self.old)  # Contains /p/old/, retained by the incoming catalogue.
+        self.retire_category('<a href="/p/test/">Withdrawn</a>'
+                             '<a href="https://sjekkpris.no/p/old/?view=1">Retained</a>')
+        with self.assertRaisesRegex(ValueError, 'remaining or unknown product'):
+            self.run_composition()
+        self.assertFalse(self.out.exists())
+
+    def test_category_with_unknown_member_refused(self):
+        self.retire_category('<a href="/p/unknown/">Unproven member</a>')
+        with self.assertRaisesRegex(ValueError, 'remaining or unknown product'):
+            self.run_composition()
+        self.assertFalse(self.out.exists())
+
+    def test_category_retirement_requires_exact_descriptor_and_scope(self):
+        self.retire_category()
+        import copy
+        for field, value in (('sha256', '0'*64), ('path', 'k/other/index.html')):
+            bad = copy.deepcopy(self.retire)
+            bad['files'][-1][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                preservation(self.base, {'files': []}, bad, baseline_site=self.old)
+        for changes in ({'scope': ['other', 'test']},
+                        {'baseline_tree_sha256': '0'*64}):
+            with self.subTest(changes=changes), self.assertRaisesRegex(ValueError, 'binding'):
+                preservation(self.base, {'files': []}, dict(self.retire, **changes),
+                             baseline_site=self.old)
+
+    def test_category_membership_cannot_come_from_unverified_content(self):
+        self.retire_category()
+        with self.assertRaisesRegex(ValueError, 'verified baseline content'):
+            preservation(self.base, {'files': []}, self.retire)
+        write(self.old, 'k/retired/index.html', html('Changed after hash'))
+        with self.assertRaisesRegex(ValueError, 'baseline changed'):
+            preservation(self.base, {'files': []}, self.retire, baseline_site=self.old)
+
+    def test_other_page_or_category_index_cannot_be_retired(self):
+        for name in ('k/index.html', 'about/retired/index.html'):
+            with self.subTest(name=name):
+                self.retire_category(name=name)
+                with self.assertRaisesRegex(ValueError, 'descriptor'):
+                    self.run_composition()
+                self.assertFalse(self.out.exists())
+
+    def test_preserved_link_to_retired_category_still_refused(self):
+        self.retire_category()
+        write(self.old, 'about/index.html', html('<a href="/k/retired/">Category</a>'))
+        self.base = VerifiedInventory.inventory(self.old, self.scope, '')
+        self.retire['baseline_tree_sha256'] = self.base['tree_sha256']
+        aliases = self.run_composition()
+        with self.assertRaisesRegex(ValueError, 'broken internal link'):
+            prepare(self.out, navigation_aliases=aliases)
+
+
 if __name__ == '__main__':
     unittest.main()

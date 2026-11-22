@@ -471,3 +471,23 @@ read-only ungated jobs; a regression rejects draft API use during preflight.
 This correction supersedes earlier wording that runner byte verification occurs
 before owner approval. The actual package hashes and rollback stay unchanged.
 No automatic retry was started; one new dispatch needs approval after the fix.
+
+
+## Exact withdrawal of empty category branches (2026-11-22)
+
+The existing baseline-bound retirement descriptor also accepts exact
+`k/<slug>/index.html` detail pages, never the category index or arbitrary files.
+Product and category descriptors retain the same scope, baseline tree, byte count
+and SHA-256 checks; every missing file must still be explicitly listed.
+
+Category withdrawal additionally reads the exact hash-verified baseline HTML.
+Every local product link must identify a known baseline product that is explicitly
+withdrawn and absent from the candidate. A remaining or unknown product refuses
+composition before output. Already empty categories may be withdrawn. The incoming
+catalogue's omission alone never proves that the old category is empty.
+
+The ordinary complete-site checks still reject stale search membership, missing
+product/category listings and broken links on preserved pages. This prepares an
+offline candidate only; it does not authorize a release or alter Core identities,
+route history, offers or category classification. Regression coverage lives in
+`tests/test_compose_catalogue.py` and `tests/test_delivery_candidate.py`.
