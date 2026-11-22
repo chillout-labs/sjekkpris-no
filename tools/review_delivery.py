@@ -75,7 +75,8 @@ def main():
         website = prepare(composed, indexable=args.indexable_candidate,
                           navigation_aliases=aliases, mutable_pages=mutable)
         candidate = core.inventory(composed, scope, args.result_sha256)
-        preservation(baseline, candidate, retirement, navigation_aliases=aliases)
+        preservation(baseline, candidate, retirement, navigation_aliases=aliases,
+                     baseline_site=args.baseline_site)
         composed.rename(args.site)
     report = core.compare(baseline, candidate)
     report.update(received_tree_sha256=received['tree_sha256'], receipt=receipt, website=website)

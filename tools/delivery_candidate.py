@@ -189,7 +189,8 @@ def prepare(site, *, indexable=False, navigation_aliases=(), mutable_pages=None)
                 published=None, publication_authorized=False)
 
 
-def preservation(baseline, candidate, retirement=None, *, navigation_aliases=()):
+def preservation(baseline, candidate, retirement=None, *, navigation_aliases=(),
+                 baseline_site=None):
     """Existing URLs cannot silently vanish during a full catalogue build."""
     old = {f['path']: f for f in baseline['files']}
     new = {f['path']: f for f in candidate['files']}
@@ -206,12 +207,41 @@ def preservation(baseline, candidate, retirement=None, *, navigation_aliases=())
             raise ValueError('retirement binding')
         for row in retirement['files']:
             name = row['path']
-            if (not re.fullmatch(r'p/(?:[a-z0-9-]+/)+index\.html', name)
+            if (not (re.fullmatch(r'p/(?:[a-z0-9-]+/)+index\.html', name)
+                     or re.fullmatch(r'k/[a-z0-9]+(?:-[a-z0-9]+)*/index\.html', name))
                     or name in retired or old.get(name) != row):
                 raise ValueError('retirement descriptor')
             retired.add(name)
         if retired & new.keys():
             raise ValueError('retired product remains')
+        category_files = {name for name in retired if name.startswith('k/')}
+        if category_files:
+            if baseline_site is None:
+                raise ValueError('category retirement requires verified baseline content')
+            root = Path(baseline_site)
+            # Membership comes from the exact old bytes, not operator assertions
+            # or the incoming catalogue (which could simply omit a live category).
+            for name in category_files:
+                path = root / name
+                if (root.is_symlink() or root.is_junction()
+                        or any(p.is_symlink() or p.is_junction()
+                               for p in (path, *path.parents)
+                               if p == root or root in p.parents)
+                        or not path.resolve().is_relative_to(root.resolve())):
+                    raise ValueError('category retirement baseline link')
+                raw = path.read_bytes()
+                if (len(raw) != old[name]['bytes']
+                        or hashlib.sha256(raw).hexdigest() != old[name]['sha256']):
+                    raise ValueError('category retirement baseline changed')
+                route = '/' + name.removesuffix('index.html')
+                for anchor in Page(raw.decode('utf-8')).links:
+                    url = urlsplit(urljoin(ORIGIN + route, anchor['href']))
+                    product = unquote(url.path)
+                    if url.netloc != 'sjekkpris.no' or not product.startswith('/p/'):
+                        continue
+                    member = product.lstrip('/') + 'index.html'
+                    if member not in old or member not in retired or member in new:
+                        raise ValueError('retired category has remaining or unknown product')
     if set(removed) != retired:
         raise ValueError('baseline files missing; explicit migration review required')
     # Shared catalogue surfaces may change; protected design/beta assets may not.
