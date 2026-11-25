@@ -38,6 +38,21 @@ class PagesPublicationBoundary(unittest.TestCase):
         self.assertIn('OWNER_RELEASE_STAGE: preflight', before)
         self.assertNotIn('write-all', self.active)
 
+    def test_metadata_retry_is_only_inside_exact_owner_publisher(self):
+        before, publisher = self.active.split('\n  publish-approved:', 1)
+        self.assertNotIn('./.pages-deploy-action', before)
+        self.assertEqual(publisher.count('uses: ./.pages-deploy-action'), 1)
+        self.assertIn('repository: actions/deploy-pages', publisher)
+        self.assertIn('ref: 368f82528645a54fb793d4d04e342629a3f51346', publisher)
+        self.assertIn('persist-credentials: false', publisher)
+        self.assertIn('id: pages_artifact', publisher)
+        self.assertIn('steps.pages_artifact.outputs.artifact_id', publisher)
+        self.assertIn('PAGES_EXPECTED_RUN_ID: ${{ github.run_id }}', publisher)
+        self.assertLess(publisher.index('python -m tools.owner_release'), publisher.index('prepare_pages_lookup.py'))
+        self.assertLess(publisher.index('prepare_pages_lookup.py'), publisher.index('upload-pages-artifact@'))
+        self.assertLess(publisher.index('upload-pages-artifact@'), publisher.index('uses: ./.pages-deploy-action'))
+        self.assertNotIn('gh run rerun', publisher)
+
     def test_other_workflows_have_no_pages_deploy(self):
         for path in (ROOT / '.github/workflows').glob('*.y*ml'):
             if path.name == 'pages.yml':

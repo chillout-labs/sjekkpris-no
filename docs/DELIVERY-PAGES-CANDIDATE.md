@@ -471,3 +471,46 @@ read-only ungated jobs; a regression rejects draft API use during preflight.
 This correction supersedes earlier wording that runner byte verification occurs
 before owner approval. The actual package hashes and rollback stay unchanged.
 No automatic retry was started; one new dispatch needs approval after the fix.
+
+
+## Bounded Pages artifact metadata lookup (local change, 2026-11-25)
+
+The owner-gated publisher retains the exact deploy-pages commit
+`368f82528645a54fb793d4d04e342629a3f51346`. Its bundled metadata lookup can return
+an empty runtime/Twirp list immediately after a successful upload, as also
+reported upstream in actions/deploy-pages#451. Later REST visibility does not
+prove that the runtime list was ready or establish GitHub's internal cause.
+
+Before upload, the workflow checks out that same upstream action commit and
+`prepare_pages_lookup.py` verifies the original dist/index.js SHA-256
+`63fd34d89cd23d8848618a019f978f2225880a38afe2328e6e7d72f20fc44e89`.
+It changes exactly one expression: the existing client.listArtifacts() call
+uses the local reviewed_artifact_lookup.cjs wrapper. No dependencies, credential,
+permission or deployment implementation is replaced. Unexpected upstream bytes,
+multiple replacement points or a non-pristine helper path stop preparation.
+
+Only successful-but-empty current-run lists are retried, every two seconds for
+at most60 seconds, stopping immediately when the expected artifact appears.
+The bound is finite headroom for reported multi-second visibility delays, not
+a guarantee that GitHub will converge. Each read is bounded by the remaining
+budget. Invalid metadata, failed reads, wrong IDs/names/runs and duplicate
+artifacts fail immediately. The expected ID is the actual upload step output;
+listArtifacts has no findBy/REST fallback and uses the original run-scoped client.
+No artifact or runtime token is logged by the wrapper.
+
+The original action continues from that returned response. Its deployment POST,
+status handling and cancellation remain unchanged; the POST is never retried by
+this change. Hash/rollback/review checks, first-attempt guard, existing owner
+Pages approval and existing job timeout remain mandatory. A later publication
+still requires the ordinary code integration/release authorization.
+
+Targeted regression commands (synthetic responses and time; no deployment):
+- node --test .github/scripts/test_reviewed_artifact_lookup.cjs
+- python -m unittest discover -s .github/scripts -p test_prepare_pages_lookup.py
+- python -m unittest discover -s .github/scripts -p test_pages_publication_boundary.py
+
+Local verification also exercised the patched getArtifactMetadata from the
+actual hash-verified upstream bundle with a simulated existing client and clock;
+no action main/OIDC/deployment request was executed. This verifies the lookup
+integration locally, not an operative publication. No candidate regeneration,
+feed processing or public retry is part of this code change.
